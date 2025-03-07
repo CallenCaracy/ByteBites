@@ -44,8 +44,8 @@ The **Restaurant Food Ordering System** is a microservices-based architecture de
 
 ### Clone the Repository
 ```sh
-git clone https://github.com/your-username/restaurant-food-ordering.git
-cd restaurant-food-ordering
+git clone https://github.com/CallenCaracy/ByteBites.git
+cd ByteBites
 ```
 
 ### Database Setup
