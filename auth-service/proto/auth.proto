@@ -8,6 +8,7 @@ service AuthService {
     rpc Register(RegisterRequest) returns (AuthResponse);
     rpc Login(LoginRequest) returns (AuthResponse);
     rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
+    rpc Recover(RecoverRequest) returns (RecoverResponse);
 }
 
 message RegisterRequest {
@@ -30,4 +31,12 @@ message VerifyTokenRequest {
 
 message VerifyTokenResponse {
     bool valid = 1;
+}
+
+message RecoverRequest {
+    string email = 1;
+}
+
+message RecoverResponse {
+    string token = 1;
 }
