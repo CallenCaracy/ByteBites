@@ -1,10 +1,11 @@
+# BYTEBITES
 # Restaurant Food Ordering System
 
 ## Overview
 The **Restaurant Food Ordering System** is a microservices-based architecture designed to handle restaurant operations efficiently. It includes menu management, order processing, payment handling, and kitchen operations, all communicating through gRPC internally and exposed via a GraphQL API layer.
 
 ## Tech Stack
-- **Frontend:** React
+- **Frontend:** React with Tailwind on Vite
 - **Backend:** Go (GoLang)
 - **Database:** PostgreSQL (Supabase)
 - **API Layer:** GoQL (GraphQL)

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import "../styles/login.css";
 import logo from '../assets/ByteBitesLogo/logo.png';
-import loginWallpaper from '../assets/loginwallpaper.jpg';
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -20,14 +19,7 @@ const LoginPage: React.FC = () => {
     return (
         <div className="py-16 flex justify-center items-center min-h-screen bg-gray-100">
             <div className="flex flex-col lg:flex-row bg-white rounded-lg shadow-lg overflow-hidden mx-auto max-w-sm lg:max-w-4xl w-full">
-            <div
-                    className="hidden lg:block lg:w-1/2 bg-cover"
-                    style={{
-                        backgroundImage: `url(${loginWallpaper})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                    }}
-                ></div>
+            <div className="hidden lg:block lg:w-1/2 login-bg"></div>
                 <form onSubmit={handleLogin} className="w-full p-8 lg:w-1/2 space-y-4">
                 <div className="flex items-center justify-center mt-1 mb-1 w-full">
                     <img src={logo} alt="Logo" className="h-30 w-30" />
