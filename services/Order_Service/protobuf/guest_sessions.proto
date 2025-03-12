@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package guest_sessions;
+
+option go_package = "./pb";
+
+service GuestSessionService {
+  rpc CreateGuestSession(CreateGuestSessionRequest) returns (CreateGuestSessionResponse);
+  rpc GetGuestSession(GetGuestSessionRequest) returns (GetGuestSessionResponse);
+  rpc UpdateGuestSession(UpdateGuestSessionRequest) returns (UpdateGuestSessionResponse);
+  rpc DeleteGuestSession(DeleteGuestSessionRequest) returns (DeleteGuestSessionResponse);
+}
+
+message CreateGuestSessionRequest {
+    string guest_session_id = 1;
+    string guest_id = 2;
+}
+
+message CreateGuestSessionResponse {
+    string guest_session_id = 1;
+    string status = 2;
+}
+
+message GetGuestSessionRequest {
+    string guest_session_id = 1;
+}
+
+message GetGuestSessionResponse {
+    string guest_session_id = 1;
+    string guest_id = 2;
+}
+
+message UpdateGuestSessionRequest {
+    string guest_session_id = 1;
+    string guest_id = 2;
+}
+
+message UpdateGuestSessionResponse {
+    string status = 1;
+}
+
+message DeleteGuestSessionRequest {
+    string guest_session_id = 1;
+}
+
+message DeleteGuestSessionResponse {
+    string status = 1;
+}
+
+message GuestSession {
+    string guest_session_id = 1;
+    string guest_id = 2;
+    string session_start_time = 3;
+    string session_end_time = 4;
+}
