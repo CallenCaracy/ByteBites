@@ -4,6 +4,8 @@ package order;
 
 option go_package = "./pb";
 
+import "google/protobuf/timestamp.proto";
+
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
   rpc GetOrders(GetOrdersRequest) returns (GetOrdersResponse);
@@ -53,5 +55,5 @@ message Order {
   string guest_session_id = 2;
   string menu_item_id = 3;
   int32 quantity = 4;
-  string order_time = 5;
+  google.protobuf.Timestamp order_time = 5;
 }

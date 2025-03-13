@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type OrderServiceServer struct {
@@ -40,7 +41,7 @@ func (s *OrderServiceServer) GetOrders(ctx context.Context, req *pb.GetOrdersReq
 		if err != nil {
 			return nil, err
 		}
-		order.OrderTime = orderTime.Format(time.RFC3339)
+		order.OrderTime = timestamppb.New(orderTime)
 		orders = append(orders, &order)
 	}
 	return &pb.GetOrdersResponse{Orders: orders}, nil
