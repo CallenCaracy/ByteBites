@@ -1,6 +1,7 @@
 # BYTEBITES
 # Restaurant Food Ordering System
 
+## Architecture Diagram
 ![Architecture Diagram](https://github.com/CallenCaracy/ByteBites/blob/main/documents/diagrams/SIA_Final_Project.drawio.png)
 
 ## Overview
