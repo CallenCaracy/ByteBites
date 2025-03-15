@@ -13,3 +13,6 @@ CREATE TABLE transactions (
 -- +goose StatementBegin
 DROP TABLE transactions;
 -- +goose StatementEnd
+
+
+-- This is not final, i repeat this is not final and may subject to change

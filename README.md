@@ -10,7 +10,7 @@ The **Restaurant Food Ordering System** is a microservices-based architecture de
 ## Tech Stack
 - **Frontend:** React with Tailwind on Vite
 - **Backend:** Go (GoLang)
-- **Database:** PostgreSQL (Supabase)
+- **Database:** PostgreSQL (Supabase) (PGX Driver)
 - **API Layer:** GoQL (GraphQL)
 - **Internal Communication:** gRPC
 - **Database Migration:** Goose
@@ -18,24 +18,32 @@ The **Restaurant Food Ordering System** is a microservices-based architecture de
 ## Microservices Architecture
 
 ### 1. **Menu Service**
-   - Manages menu items
-   - Built with GoLang and GraphQL
+   - Manages menu items and employee accounts.
+   - Stores menu data, prices, and availability in the Menu DB.
+   - Built with GoLang.
 
 ### 2. **Order Service**
-   - Handles order placement
-   - Built with GoLang and GraphQL
+   - Handles order placement and tracking.
+   - Stores order data in the Order DB.
+   - Interacts with Payment Service for payment processing.
+   - Built with GoLang.
 
 ### 3. **Payment Service**
-   - Processes payments securely
-   - Built with GoLang and GraphQL
+   - Processes payments securely.
+   - Stores and retrieves payment records from the Payment DB.
+   - Confirms payments for orders.
+   - Built with GoLang.
 
 ### 4. **Kitchen Service**
-   - Manages kitchen operations and order fulfillment
-   - Built with GoLang and GraphQL
+   - Manages kitchen operations and order fulfillment.
+   - Queries orders by first come, first serve.
+   - Reads data from other databases for order tracking.
+   - Built with GoLang.
 
 ### 5. **GraphQL DB Service**
-   - Provides a GraphQL API for database operations
-   - Uses PostgreSQL (Supabase) as the database
+   - Acts as the API layer for data aggregation.
+   - Serves as the main gateway for frontend applications.
+   - Uses GraphQL for efficient data querying.
 
 ## Installation & Setup
 
