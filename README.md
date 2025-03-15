@@ -1,6 +1,8 @@
 # BYTEBITES
 # Restaurant Food Ordering System
 
+![Architecture Diagram](https://github.com/CallenCaracy/ByteBites/blob/main/documents/diagrams/SIA_Final_Project.drawio.png)
+
 ## Overview
 The **Restaurant Food Ordering System** is a microservices-based architecture designed to handle restaurant operations efficiently. It includes menu management, order processing, payment handling, and kitchen operations, all communicating through gRPC internally and exposed via a GraphQL API layer.
 
