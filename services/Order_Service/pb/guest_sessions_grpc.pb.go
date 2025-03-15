@@ -23,6 +23,7 @@ const (
 	GuestSessionService_GetGuestSession_FullMethodName    = "/guest_sessions.GuestSessionService/GetGuestSession"
 	GuestSessionService_UpdateGuestSession_FullMethodName = "/guest_sessions.GuestSessionService/UpdateGuestSession"
 	GuestSessionService_DeleteGuestSession_FullMethodName = "/guest_sessions.GuestSessionService/DeleteGuestSession"
+	GuestSessionService_CheckGuestStatus_FullMethodName   = "/guest_sessions.GuestSessionService/CheckGuestStatus"
 )
 
 // GuestSessionServiceClient is the client API for GuestSessionService service.
@@ -33,6 +34,7 @@ type GuestSessionServiceClient interface {
 	GetGuestSession(ctx context.Context, in *GetGuestSessionRequest, opts ...grpc.CallOption) (*GetGuestSessionResponse, error)
 	UpdateGuestSession(ctx context.Context, in *UpdateGuestSessionRequest, opts ...grpc.CallOption) (*UpdateGuestSessionResponse, error)
 	DeleteGuestSession(ctx context.Context, in *DeleteGuestSessionRequest, opts ...grpc.CallOption) (*DeleteGuestSessionResponse, error)
+	CheckGuestStatus(ctx context.Context, in *CheckGuestStatusRequest, opts ...grpc.CallOption) (*CheckGuestStatusResponse, error)
 }
 
 type guestSessionServiceClient struct {
@@ -83,6 +85,16 @@ func (c *guestSessionServiceClient) DeleteGuestSession(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *guestSessionServiceClient) CheckGuestStatus(ctx context.Context, in *CheckGuestStatusRequest, opts ...grpc.CallOption) (*CheckGuestStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckGuestStatusResponse)
+	err := c.cc.Invoke(ctx, GuestSessionService_CheckGuestStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GuestSessionServiceServer is the server API for GuestSessionService service.
 // All implementations must embed UnimplementedGuestSessionServiceServer
 // for forward compatibility.
@@ -91,6 +103,7 @@ type GuestSessionServiceServer interface {
 	GetGuestSession(context.Context, *GetGuestSessionRequest) (*GetGuestSessionResponse, error)
 	UpdateGuestSession(context.Context, *UpdateGuestSessionRequest) (*UpdateGuestSessionResponse, error)
 	DeleteGuestSession(context.Context, *DeleteGuestSessionRequest) (*DeleteGuestSessionResponse, error)
+	CheckGuestStatus(context.Context, *CheckGuestStatusRequest) (*CheckGuestStatusResponse, error)
 	mustEmbedUnimplementedGuestSessionServiceServer()
 }
 
@@ -112,6 +125,9 @@ func (UnimplementedGuestSessionServiceServer) UpdateGuestSession(context.Context
 }
 func (UnimplementedGuestSessionServiceServer) DeleteGuestSession(context.Context, *DeleteGuestSessionRequest) (*DeleteGuestSessionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGuestSession not implemented")
+}
+func (UnimplementedGuestSessionServiceServer) CheckGuestStatus(context.Context, *CheckGuestStatusRequest) (*CheckGuestStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckGuestStatus not implemented")
 }
 func (UnimplementedGuestSessionServiceServer) mustEmbedUnimplementedGuestSessionServiceServer() {}
 func (UnimplementedGuestSessionServiceServer) testEmbeddedByValue()                             {}
@@ -206,6 +222,24 @@ func _GuestSessionService_DeleteGuestSession_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GuestSessionService_CheckGuestStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckGuestStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GuestSessionServiceServer).CheckGuestStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GuestSessionService_CheckGuestStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GuestSessionServiceServer).CheckGuestStatus(ctx, req.(*CheckGuestStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GuestSessionService_ServiceDesc is the grpc.ServiceDesc for GuestSessionService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +262,10 @@ var GuestSessionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteGuestSession",
 			Handler:    _GuestSessionService_DeleteGuestSession_Handler,
+		},
+		{
+			MethodName: "CheckGuestStatus",
+			Handler:    _GuestSessionService_CheckGuestStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

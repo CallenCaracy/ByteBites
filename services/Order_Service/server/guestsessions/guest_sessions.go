@@ -72,24 +72,25 @@ func (s *GuestSessionServiceServer) GetGuestSession(ctx context.Context, req *pb
 
 func (s *GuestSessionServiceServer) UpdateGuestSession(ctx context.Context, req *pb.UpdateGuestSessionRequest) (*pb.UpdateGuestSessionResponse, error) {
 	// If there is no inputted update for status, then that means it supposed to be updated by default 'complete' assuming the guest has finished their session/order.
-	// status := req.Status
-	// if status == "" {
-	// 	status = "complete"
-	// }
+	status := req.Status
+	if status == "" {
+		status = "complete"
+	}
 
 	query := `
-		UPDATE guest_sessions
-		SET status = $3
-		WHERE id = $1 AND session_token = $2
-	`
-	_, err := s.DB.Exec(ctx, query, req.GuestId, req.SessionToken, req.Status)
+        UPDATE guest_sessions
+        SET status = $3, ended_at = NOW()
+        WHERE id = $1 AND session_token = $2
+    `
+	_, err := s.DB.Exec(ctx, query, req.GuestId, req.SessionToken, status)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update guest session: %w", err)
 	}
 
 	return &pb.UpdateGuestSessionResponse{
-		SessionToken: req.SessionToken,
-		Status:       req.Status,
+		SessionToken:   req.SessionToken,
+		SessionEndTime: timestamppb.Now(),
+		Status:         status,
 	}, nil
 }
 
@@ -104,4 +105,22 @@ func (s *GuestSessionServiceServer) DeleteGuestSession(ctx context.Context, req 
 	}
 
 	return &pb.DeleteGuestSessionResponse{Status: "Deleted"}, nil
+}
+
+// Checks the status of the guest session if its still active or not. For order service logic use.
+func (s *GuestSessionServiceServer) CheckGuestStatus(ctx context.Context, req *pb.CheckGuestStatusRequest) (*pb.CheckGuestStatusResponse, error) {
+	var status string
+
+	query := `
+		SELECT status
+		FROM guest_sessions
+		WHERE id = $1
+	`
+	row := s.DB.QueryRow(ctx, query, req.GuestId)
+	err := row.Scan(&status)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check guest status: %w", err)
+	}
+
+	return &pb.CheckGuestStatusResponse{Status: status}, nil
 }

@@ -50,8 +50,13 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	orderService := &order.OrderServiceServer{DB: conn}
+
 	guestSessionService := &guestsession.GuestSessionServiceServer{DB: conn}
+	orderService := &order.OrderServiceServer{
+		DB:                        conn,
+		GuestSessionServiceServer: guestSessionService,
+	}
+
 	pb.RegisterOrderServiceServer(grpcServer, orderService)
 	pb.RegisterGuestSessionServiceServer(grpcServer, guestSessionService)
 

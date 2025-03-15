@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 
 	"order-service/pb"
 
@@ -13,11 +14,23 @@ import (
 
 type OrderServiceServer struct {
 	pb.UnimplementedOrderServiceServer
-	DB *pgx.Conn
+	DB                        *pgx.Conn
+	GuestSessionServiceServer pb.GuestSessionServiceServer
 }
 
 func (s *OrderServiceServer) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
-	query := `INSERT INTO orders (guest_session_id, menu_item_id, quantity) VALUES ($1, $2, $3)`
+	CheckGuestStatusResponse, errReq := s.GuestSessionServiceServer.CheckGuestStatus(ctx, &pb.CheckGuestStatusRequest{
+		GuestId: req.GuestSessionId,
+	})
+	if errReq != nil {
+		return nil, errReq
+	}
+
+	if CheckGuestStatusResponse.Status != "active" {
+		return nil, fmt.Errorf("guest session is not active")
+	}
+
+	query := `INSERT INTO orders (guest_session_id, menu_item_id, quantity) VALUES ($1, $2, $3) RETURNING id`
 	var orderID string
 	err := s.DB.QueryRow(ctx, query, req.GuestSessionId, req.MenuItemId, req.Quantity).Scan(&orderID)
 	if err != nil {

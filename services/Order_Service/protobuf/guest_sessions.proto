@@ -11,6 +11,7 @@ service GuestSessionService {
   rpc GetGuestSession(GetGuestSessionRequest) returns (GetGuestSessionResponse);
   rpc UpdateGuestSession(UpdateGuestSessionRequest) returns (UpdateGuestSessionResponse);
   rpc DeleteGuestSession(DeleteGuestSessionRequest) returns (DeleteGuestSessionResponse);
+  rpc CheckGuestStatus(CheckGuestStatusRequest) returns (CheckGuestStatusResponse);
 }
 
 message CreateGuestSessionRequest {
@@ -42,7 +43,8 @@ message UpdateGuestSessionRequest {
 
 message UpdateGuestSessionResponse {
     string session_token = 1;
-    string status = 2;
+    google.protobuf.Timestamp session_end_time = 2;
+    string status = 3;
 }
 
 message DeleteGuestSessionRequest {
@@ -50,6 +52,14 @@ message DeleteGuestSessionRequest {
 }
 
 message DeleteGuestSessionResponse {
+    string status = 1;
+}
+
+message CheckGuestStatusRequest {
+    string guest_id = 1;
+}
+
+message CheckGuestStatusResponse {
     string status = 1;
 }
 
