@@ -8,6 +8,10 @@ import (
 	"Menu_Service/utils"
 	"context"
 
+	menu "Menu_Service/server/menus"
+
+	"Menu_Service/pb"
+
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 )
@@ -47,14 +51,9 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 
-	// guestSessionService := &guestsession.GuestSessionServiceServer{DB: conn}
-	// orderService := &order.OrderServiceServer{
-	// 	DB:                        conn,
-	// 	GuestSessionServiceServer: guestSessionService,
-	// }
+	menuService := &menu.MenuServiceServer{DB: conn}
 
-	// pb.RegisterOrderServiceServer(grpcServer, orderService)
-	// pb.RegisterGuestSessionServiceServer(grpcServer, guestSessionService)
+	pb.RegisterMenuServiceServer(grpcServer, menuService)
 
 	log.Info("Order Service running on port 50052...")
 	if err := grpcServer.Serve(lis); err != nil {

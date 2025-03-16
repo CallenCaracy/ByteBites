@@ -13,20 +13,22 @@ service MenuService {
 
 message CreateMenuItemRequest {
   string name = 1;
-  string img_url = 2;
+  string image_url = 2;
   string description = 3;
   float price = 4;
+  string item_status = 5;
 }
 
 message CreateMenuItemResponse {
-  string id = 1;
+  string status = 1;
 }
 
 // Filter by item_status and price range
 message GetMenuItemsRequest {
-  optional string item_status = 1;
-  optional float min_price = 2;
-  optional float max_price = 3;
+  optional string name = 1;
+  optional string item_status = 2;
+  optional float min_price = 3;
+  optional float max_price = 4;
 }
 
 message GetMenuItemsResponse {
@@ -36,21 +38,24 @@ message GetMenuItemsResponse {
 message MenuItem {
   string id = 1;
   string name = 2;
-  string img_url = 3;
+  string image_url = 3;
   string description = 4;
   float price = 5;
 }
 
 message UpdateMenuItemRequest {
   string id = 1;
-  string name = 2;
-  string img_url = 3;
-  string description = 4;
-  float price = 5;
+  optional string name = 2;
+  optional string image_url = 3;
+  optional string description = 4;
+  optional float price = 5;
+  optional string item_status = 6;
 }
 
 message UpdateMenuItemResponse {
   string id = 1;
+  string status = 2;
+  optional string item_status = 3;
 }
 
 message DeleteMenuItemRequest {
