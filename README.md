@@ -2,6 +2,7 @@
 # Restaurant Food Ordering System
 
 ## Architecture Diagram
+## Change this diagram (the Graphql Service is mistakenly placed)
 ![Architecture Diagram](https://github.com/CallenCaracy/ByteBites/blob/main/documents/diagrams/SIA_Final_Project.drawio.png)
 
 ## Overview
