@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "./pb";
+
+service AuthService {
+  rpc SignUp(SignUpRequest) returns (SignUpResponse);
+  rpc SignIn(SignInRequest) returns (SignInResponse);
+  rpc SignOut(SignOutRequest) returns (SignOutResponse);
+  rpc GetUserInfo(GetUserInfoRequest) returns (UserInfoResponse);
+  rpc UpdateUserInfo(UpdateUserInfoRequest) returns (UpdateUserInfoResponse);
+  rpc ReactivateUser(ReactivateUserRequest) returns (ReactivateUserResponse);
+  rpc DeactivateUser(DeactivateUserRequest) returns (DeactivateUserResponse);
+  rpc HashPassword(HashPasswordRequest) returns (HashPasswordResponse);
+}
+
+message SignUpRequest {
+  string email = 1;
+  string password = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string role = 5;
+  optional string address = 6;
+  optional string phone = 7;
+}
+
+message SignUpResponse {
+  string user_id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string role = 5;
+}
+
+message SignInRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message SignInResponse {
+  string user_id = 1;
+  string token = 2;
+  string error = 3;
+}
+
+message SignOutRequest {
+  string user_id = 1;
+}
+
+message SignOutResponse {
+    string message = 1;
+    string error = 2;
+}
+
+message GetUserInfoRequest {
+  string user_id = 1;
+}
+
+message UserInfoResponse {
+    string user_id = 1;
+    string email = 2;
+    string error = 3;
+}
+
+message UpdateUserInfoRequest {
+  string user_id = 1;
+  optional string password = 2;
+  optional string first_name = 3;
+  optional string last_name = 4;
+  optional string role = 5;
+  optional string address = 6;
+  optional string phone = 7;
+}
+
+message UpdateUserInfoResponse {
+  string first_name = 1;
+  string last_name = 2;
+  string role = 3;
+  string address = 4;
+  string phone = 5;
+}
+
+message ReactivateUserRequest {
+  string user_id = 1;
+}
+
+message ReactivateUserResponse {
+    string message = 1;
+}
+
+message DeactivateUserRequest {
+  string user_id = 1;
+}
+
+message DeactivateUserResponse {
+    string message = 1;
+}
+
+message HashPasswordRequest {
+    string password = 1;
+}
+
+message HashPasswordResponse {
+    string hashed_password = 1;
+}
