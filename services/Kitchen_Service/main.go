@@ -40,7 +40,7 @@ func main() {
 		}
 	}()
 
-	lis, err := net.Listen("tcp", ":50051")
+	lis, err := net.Listen("tcp", ":50053")
 	if err != nil {
 		log.Fatal("Failed to listen: %v", err)
 		os.Exit(1)
@@ -52,7 +52,7 @@ func main() {
 	// Make an .env file for private api supabase connection
 	// to run: go run main.go
 
-	log.Info("Order Service running on port 50051...")
+	log.Info("Order Service running on port 50053...")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatal("Failed to serve: %v", err)
 		os.Exit(1)
