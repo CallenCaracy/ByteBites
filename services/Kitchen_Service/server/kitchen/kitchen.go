@@ -4,7 +4,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type PaymentServiceServer struct {
+type KitchenServiceServer struct {
 	DB *pgx.Conn
 }
 
