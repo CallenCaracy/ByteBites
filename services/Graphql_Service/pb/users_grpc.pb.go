@@ -19,14 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthService_SignUp_FullMethodName         = "/auth.AuthService/SignUp"
-	AuthService_SignIn_FullMethodName         = "/auth.AuthService/SignIn"
-	AuthService_SignOut_FullMethodName        = "/auth.AuthService/SignOut"
-	AuthService_GetUserInfo_FullMethodName    = "/auth.AuthService/GetUserInfo"
-	AuthService_UpdateUserInfo_FullMethodName = "/auth.AuthService/UpdateUserInfo"
-	AuthService_ReactivateUser_FullMethodName = "/auth.AuthService/ReactivateUser"
-	AuthService_DeactivateUser_FullMethodName = "/auth.AuthService/DeactivateUser"
-	AuthService_HashPassword_FullMethodName   = "/auth.AuthService/HashPassword"
+	AuthService_SignUp_FullMethodName             = "/auth.AuthService/SignUp"
+	AuthService_SignIn_FullMethodName             = "/auth.AuthService/SignIn"
+	AuthService_SignOut_FullMethodName            = "/auth.AuthService/SignOut"
+	AuthService_GetUserInfo_FullMethodName        = "/auth.AuthService/GetUserInfo"
+	AuthService_UpdateUserInfo_FullMethodName     = "/auth.AuthService/UpdateUserInfo"
+	AuthService_ForgotPassword_FullMethodName     = "/auth.AuthService/ForgotPassword"
+	AuthService_ChangeUserPassword_FullMethodName = "/auth.AuthService/ChangeUserPassword"
+	AuthService_ReactivateUser_FullMethodName     = "/auth.AuthService/ReactivateUser"
+	AuthService_DeactivateUser_FullMethodName     = "/auth.AuthService/DeactivateUser"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -36,11 +37,12 @@ type AuthServiceClient interface {
 	SignUp(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*SignUpResponse, error)
 	SignIn(ctx context.Context, in *SignInRequest, opts ...grpc.CallOption) (*SignInResponse, error)
 	SignOut(ctx context.Context, in *SignOutRequest, opts ...grpc.CallOption) (*SignOutResponse, error)
-	GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
+	GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoResponse, error)
 	UpdateUserInfo(ctx context.Context, in *UpdateUserInfoRequest, opts ...grpc.CallOption) (*UpdateUserInfoResponse, error)
+	ForgotPassword(ctx context.Context, in *ForgotPasswordRequest, opts ...grpc.CallOption) (*ForgotPasswordResponse, error)
+	ChangeUserPassword(ctx context.Context, in *ChangeUserPasswordRequest, opts ...grpc.CallOption) (*ChangeUserPasswordResponse, error)
 	ReactivateUser(ctx context.Context, in *ReactivateUserRequest, opts ...grpc.CallOption) (*ReactivateUserResponse, error)
 	DeactivateUser(ctx context.Context, in *DeactivateUserRequest, opts ...grpc.CallOption) (*DeactivateUserResponse, error)
-	HashPassword(ctx context.Context, in *HashPasswordRequest, opts ...grpc.CallOption) (*HashPasswordResponse, error)
 }
 
 type authServiceClient struct {
@@ -81,9 +83,9 @@ func (c *authServiceClient) SignOut(ctx context.Context, in *SignOutRequest, opt
 	return out, nil
 }
 
-func (c *authServiceClient) GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*UserInfoResponse, error) {
+func (c *authServiceClient) GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UserInfoResponse)
+	out := new(GetUserInfoResponse)
 	err := c.cc.Invoke(ctx, AuthService_GetUserInfo_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -95,6 +97,26 @@ func (c *authServiceClient) UpdateUserInfo(ctx context.Context, in *UpdateUserIn
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateUserInfoResponse)
 	err := c.cc.Invoke(ctx, AuthService_UpdateUserInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) ForgotPassword(ctx context.Context, in *ForgotPasswordRequest, opts ...grpc.CallOption) (*ForgotPasswordResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ForgotPasswordResponse)
+	err := c.cc.Invoke(ctx, AuthService_ForgotPassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) ChangeUserPassword(ctx context.Context, in *ChangeUserPasswordRequest, opts ...grpc.CallOption) (*ChangeUserPasswordResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChangeUserPasswordResponse)
+	err := c.cc.Invoke(ctx, AuthService_ChangeUserPassword_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -121,16 +143,6 @@ func (c *authServiceClient) DeactivateUser(ctx context.Context, in *DeactivateUs
 	return out, nil
 }
 
-func (c *authServiceClient) HashPassword(ctx context.Context, in *HashPasswordRequest, opts ...grpc.CallOption) (*HashPasswordResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(HashPasswordResponse)
-	err := c.cc.Invoke(ctx, AuthService_HashPassword_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
@@ -138,11 +150,12 @@ type AuthServiceServer interface {
 	SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error)
 	SignIn(context.Context, *SignInRequest) (*SignInResponse, error)
 	SignOut(context.Context, *SignOutRequest) (*SignOutResponse, error)
-	GetUserInfo(context.Context, *GetUserInfoRequest) (*UserInfoResponse, error)
+	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error)
 	UpdateUserInfo(context.Context, *UpdateUserInfoRequest) (*UpdateUserInfoResponse, error)
+	ForgotPassword(context.Context, *ForgotPasswordRequest) (*ForgotPasswordResponse, error)
+	ChangeUserPassword(context.Context, *ChangeUserPasswordRequest) (*ChangeUserPasswordResponse, error)
 	ReactivateUser(context.Context, *ReactivateUserRequest) (*ReactivateUserResponse, error)
 	DeactivateUser(context.Context, *DeactivateUserRequest) (*DeactivateUserResponse, error)
-	HashPassword(context.Context, *HashPasswordRequest) (*HashPasswordResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -162,20 +175,23 @@ func (UnimplementedAuthServiceServer) SignIn(context.Context, *SignInRequest) (*
 func (UnimplementedAuthServiceServer) SignOut(context.Context, *SignOutRequest) (*SignOutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignOut not implemented")
 }
-func (UnimplementedAuthServiceServer) GetUserInfo(context.Context, *GetUserInfoRequest) (*UserInfoResponse, error) {
+func (UnimplementedAuthServiceServer) GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserInfo not implemented")
 }
 func (UnimplementedAuthServiceServer) UpdateUserInfo(context.Context, *UpdateUserInfoRequest) (*UpdateUserInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserInfo not implemented")
+}
+func (UnimplementedAuthServiceServer) ForgotPassword(context.Context, *ForgotPasswordRequest) (*ForgotPasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ForgotPassword not implemented")
+}
+func (UnimplementedAuthServiceServer) ChangeUserPassword(context.Context, *ChangeUserPasswordRequest) (*ChangeUserPasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeUserPassword not implemented")
 }
 func (UnimplementedAuthServiceServer) ReactivateUser(context.Context, *ReactivateUserRequest) (*ReactivateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReactivateUser not implemented")
 }
 func (UnimplementedAuthServiceServer) DeactivateUser(context.Context, *DeactivateUserRequest) (*DeactivateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeactivateUser not implemented")
-}
-func (UnimplementedAuthServiceServer) HashPassword(context.Context, *HashPasswordRequest) (*HashPasswordResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HashPassword not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -288,6 +304,42 @@ func _AuthService_UpdateUserInfo_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_ForgotPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ForgotPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).ForgotPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_ForgotPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).ForgotPassword(ctx, req.(*ForgotPasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_ChangeUserPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangeUserPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).ChangeUserPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_ChangeUserPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).ChangeUserPassword(ctx, req.(*ChangeUserPasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AuthService_ReactivateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReactivateUserRequest)
 	if err := dec(in); err != nil {
@@ -324,24 +376,6 @@ func _AuthService_DeactivateUser_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthService_HashPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HashPasswordRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).HashPassword(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthService_HashPassword_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).HashPassword(ctx, req.(*HashPasswordRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -370,16 +404,20 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AuthService_UpdateUserInfo_Handler,
 		},
 		{
+			MethodName: "ForgotPassword",
+			Handler:    _AuthService_ForgotPassword_Handler,
+		},
+		{
+			MethodName: "ChangeUserPassword",
+			Handler:    _AuthService_ChangeUserPassword_Handler,
+		},
+		{
 			MethodName: "ReactivateUser",
 			Handler:    _AuthService_ReactivateUser_Handler,
 		},
 		{
 			MethodName: "DeactivateUser",
 			Handler:    _AuthService_DeactivateUser_Handler,
-		},
-		{
-			MethodName: "HashPassword",
-			Handler:    _AuthService_HashPassword_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
