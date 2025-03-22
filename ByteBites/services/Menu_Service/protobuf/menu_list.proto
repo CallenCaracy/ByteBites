@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package menu_list;
+
+option go_package = "./pb";
+
+import "google/protobuf/timestamp.proto";  // Add this line
+
+// Service definition
+service MenuService {
+    rpc CreateMenuItem(CreateMenuItemRequest) returns (CreateMenuItemResponse);
+    rpc GetMenuItem(GetMenuItemRequest) returns (GetMenuItemResponse);
+    rpc UpdateMenuItem(UpdateMenuItemRequest) returns (UpdateMenuItemResponse);
+    rpc DeleteMenuItem(DeleteMenuItemRequest) returns (DeleteMenuItemResponse);
+    rpc ListMenuItems(ListMenuItemsRequest) returns (ListMenuItemsResponse);
+}
+
+// Menu item message
+message MenuItem {
+    
+    string id = 1;
+  string name = 2;
+  string description = 3;
+  double price = 4;
+  string category = 5;
+  bool availability_status = 6;
+  string image_url = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+    
+}
+
+// Request and Response messages
+message CreateMenuItemRequest {
+        string name = 1;
+    string description = 2;
+    double price = 3;
+    string category = 4;
+    bool availability_status = 5;
+    string image_url = 6;
+}
+
+message CreateMenuItemResponse {
+    MenuItem menu_item = 1;
+}
+
+message GetMenuItemRequest {
+    string id = 1;
+}
+
+message GetMenuItemResponse {
+    MenuItem menu_item = 1;
+}
+
+message UpdateMenuItemRequest {
+    string id = 1;
+    MenuItem menu_item = 2;
+}
+
+message UpdateMenuItemResponse {
+    MenuItem menu_item = 1;
+}
+
+message DeleteMenuItemRequest {
+    string id = 1;
+}
+
+message DeleteMenuItemResponse {
+    bool success = 1;
+}
+
+message ListMenuItemsRequest {
+    int32 page = 1;   // For pagination
+    int32 page_size = 2;
+}
+
+message ListMenuItemsResponse {
+    repeated MenuItem menu_items = 1;
+}
