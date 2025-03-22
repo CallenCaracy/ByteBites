@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package guest_sessions;
+
+option go_package = "./pb";
+
+import "google/protobuf/timestamp.proto";
+
+service GuestSessionService {
+  rpc CreateGuestSession(CreateGuestSessionRequest) returns (CreateGuestSessionResponse);
+  rpc GetGuestSession(GetGuestSessionRequest) returns (GetGuestSessionResponse);
+  rpc UpdateGuestSession(UpdateGuestSessionRequest) returns (UpdateGuestSessionResponse);
+  rpc DeleteGuestSession(DeleteGuestSessionRequest) returns (DeleteGuestSessionResponse);
+  rpc CheckGuestStatus(CheckGuestStatusRequest) returns (CheckGuestStatusResponse);
+}
+
+message CreateGuestSessionRequest {
+    string session_token = 1;
+}
+
+message CreateGuestSessionResponse {
+    string session_token = 1;
+    string status = 2;
+}
+
+message GetGuestSessionRequest {
+    string guest_id = 1;
+}
+
+message GetGuestSessionResponse {
+    string guest_id = 1;
+    string session_token = 2;
+    google.protobuf.Timestamp session_start_time = 3;
+    google.protobuf.Timestamp session_end_time = 4;
+    string status = 5;
+}
+
+message UpdateGuestSessionRequest {
+    string guest_id = 1;
+    string session_token = 2;
+    string status = 3;
+}
+
+message UpdateGuestSessionResponse {
+    string session_token = 1;
+    google.protobuf.Timestamp session_end_time = 2;
+    string status = 3;
+}
+
+message DeleteGuestSessionRequest {
+    string guest_id = 1;
+}
+
+message DeleteGuestSessionResponse {
+    string status = 1;
+}
+
+message CheckGuestStatusRequest {
+    string guest_id = 1;
+}
+
+message CheckGuestStatusResponse {
+    string status = 1;
+}
+
+message GuestSession {
+    string guest_id = 1;
+    string session_token = 2;
+    google.protobuf.Timestamp session_start_time = 3;
+    google.protobuf.Timestamp session_end_time = 4;
+    string status = 5;
+}

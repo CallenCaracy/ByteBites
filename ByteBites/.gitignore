@@ -1,0 +1,41 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build output directories
+/bin/
+/build/
+/dist/
+/out/
+
+# Dependency directories (if using vendor)
+/vendor/
+
+# Test binaries and output
+*.test
+
+# Go workspace files
+go.work
+go.work.sum
+
+# IDE / Editor folders
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Environment variable files
+.env
+.env.local
+.env.*.local
+
+# Log files
+*.log
+
+# Uncomment below if you prefer not to commit generated protobuf files
+# proto/*.pb.go
