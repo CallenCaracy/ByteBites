@@ -6,6 +6,7 @@ import (
 
 	"Graphql_Service/db"
 	"Graphql_Service/pb"
+	transaction_records "Graphql_Service/server/transaction_records"
 	user "Graphql_Service/server/users"
 	"Graphql_Service/utils"
 
@@ -60,6 +61,10 @@ func main() {
 	grpcServer := grpc.NewServer()
 
 	userService := &user.UserServiceServer{DB: conn, AuthClient: client, Logger: log}
+	transactionService := &transaction_records.TransactionServiceServer{
+		DB: conn,
+	}
+	pb.RegisterTransactionServiceServer(grpcServer, transactionService)
 	pb.RegisterAuthServiceServer(grpcServer, userService)
 
 	log.Info("Order Service running on port 50050...")

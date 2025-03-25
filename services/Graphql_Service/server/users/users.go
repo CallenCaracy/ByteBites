@@ -2,13 +2,18 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 
 	"Graphql_Service/pb"
 	"Graphql_Service/utils"
 
 	"strconv"
 	"strings"
+
+	"os"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/supabase-community/auth-go"
@@ -18,9 +23,11 @@ import (
 
 type UserServiceServer struct {
 	pb.UnimplementedAuthServiceServer
-	DB         *pgx.Conn
-	AuthClient auth.Client
-	Logger     *utils.Logger
+	DB          *pgx.Conn
+	AuthClient  auth.Client
+	Logger      *utils.Logger
+	SupabaseURL string
+	APIKey      string
 }
 
 func (s *UserServiceServer) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUpResponse, error) {
@@ -90,35 +97,109 @@ func (s *UserServiceServer) SignIn(ctx context.Context, req *pb.SignInRequest) (
 	}, nil
 }
 
+// func (s *UserServiceServer) SignOut(ctx context.Context, req *pb.SignOutRequest) (*pb.SignOutResponse, error) {
+// 	s.Logger.Info("Signing out user: %v", req.UserId)
+
+// 	md, ok := metadata.FromIncomingContext(ctx)
+// 	if !ok {
+// 		return nil, fmt.Errorf("failed to retrieve metadata")
+// 	}
+
+// 	authHeader := md.Get("authorization")
+// 	if len(authHeader) == 0 {
+// 		return nil, fmt.Errorf("missing authorization token")
+// 	}
+
+// 	token := strings.TrimPrefix(authHeader[0], "Bearer ")
+
+// 	s.AuthClient.WithToken(token)
+
+// 	err := s.AuthClient.Logout()
+// 	if err != nil {
+// 		s.Logger.Error("Failed to sign out user: %v", err)
+// 		return nil, fmt.Errorf("failed to sign out user: %v", err)
+// 	}
+
+// 	s.Logger.Info("User successfully signed out.")
+
+// 	return &pb.SignOutResponse{
+// 		Message: "User successfully signed out.",
+// 		Error:   "",
+// 	}, nil
+// }
+
 func (s *UserServiceServer) SignOut(ctx context.Context, req *pb.SignOutRequest) (*pb.SignOutResponse, error) {
 	s.Logger.Info("Signing out user: %v", req.UserId)
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
+		s.Logger.Error("Failed to retrieve metadata")
 		return nil, fmt.Errorf("failed to retrieve metadata")
 	}
 
 	authHeader := md.Get("authorization")
 	if len(authHeader) == 0 {
+		s.Logger.Error("Missing authorization token")
 		return nil, fmt.Errorf("missing authorization token")
 	}
+	accessToken := strings.TrimSpace(strings.TrimPrefix(authHeader[0], "Bearer "))
 
-	token := strings.TrimPrefix(authHeader[0], "Bearer ")
-
-	s.AuthClient.WithToken(token)
-
-	err := s.AuthClient.Logout()
-	if err != nil {
-		s.Logger.Error("Failed to sign out user: %v", err)
-		return nil, fmt.Errorf("failed to sign out user: %v", err)
+	refreshTokens := md.Get("refresh_token")
+	refreshToken := ""
+	if len(refreshTokens) > 0 {
+		refreshToken = refreshTokens[0]
 	}
 
-	s.Logger.Info("User successfully signed out.")
+	s.SupabaseURL = os.Getenv("SUPABASE_URL_FULL")
+	serviceKey := os.Getenv("SERVICE_KEY")
 
-	return &pb.SignOutResponse{
-		Message: "User successfully signed out.",
-		Error:   "",
-	}, nil
+	s.Logger.Info("Using Supabase URL: %s", s.SupabaseURL)
+	s.Logger.Info("Using API Key: %s", serviceKey)
+
+	if s.SupabaseURL == "" || serviceKey == "" {
+		s.Logger.Error("Missing Supabase environment variables")
+		return nil, fmt.Errorf("missing Supabase URL or API Key")
+	}
+
+	requestBody, err := json.Marshal(map[string]string{
+		"refresh_token": refreshToken,
+	})
+	if err != nil {
+		s.Logger.Error("Error marshaling JSON: %v", err)
+		return nil, fmt.Errorf("failed to create logout request body: %v", err)
+	}
+
+	logoutURL := fmt.Sprintf("%s/auth/v1/logout", s.SupabaseURL)
+	httpReq, err := http.NewRequest("POST", logoutURL, strings.NewReader(string(requestBody)))
+	if err != nil {
+		s.Logger.Error("Error creating logout request: %v", err)
+		return nil, fmt.Errorf("failed to create logout request: %v", err)
+	}
+
+	httpReq.Header.Set("Authorization", "Bearer "+accessToken)
+	httpReq.Header.Set("apikey", serviceKey)
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		s.Logger.Error("Error sending logout request: %v", err)
+		return nil, fmt.Errorf("failed to sign out user: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNoContent { // 204 means successful logout
+		s.Logger.Info("User successfully signed out.")
+		return &pb.SignOutResponse{
+			Message: "User successfully signed out.",
+			Error:   "",
+		}, nil
+	}
+
+	// Read response body (only if it's not 204)
+	body, _ := io.ReadAll(resp.Body)
+	s.Logger.Error("Failed to sign out user: Status %d, Response: %s", resp.StatusCode, string(body))
+	return nil, fmt.Errorf("failed to sign out user: received status %d, response: %s", resp.StatusCode, string(body))
 }
 
 func (s *UserServiceServer) GetUserInfo(ctx context.Context, req *pb.GetUserInfoRequest) (*pb.GetUserInfoResponse, error) {
@@ -372,7 +453,6 @@ func ExtractAuthToken(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("missing metadata")
 	}
 
-	// Always use lowercase for gRPC metadata keys
 	authHeader := md.Get("authorization")
 	if len(authHeader) == 0 {
 		return "", fmt.Errorf("missing authorization token")
