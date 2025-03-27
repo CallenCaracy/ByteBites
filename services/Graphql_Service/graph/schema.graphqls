@@ -1,0 +1,24 @@
+type User {
+  id: ID!
+  email: String!
+  first_name: String!
+  last_name: String!
+  role: String!
+  address: String
+  phone: String
+  is_active: String!
+}
+
+type Query {
+  getUser(id: ID!): User
+}
+
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String!
+  error: String
+}
+
+type Mutation {
+  signInOnlyEmployee(email: String!, password: String!): AuthPayload!
+}

@@ -97,36 +97,39 @@ func (s *UserServiceServer) SignIn(ctx context.Context, req *pb.SignInRequest) (
 	}, nil
 }
 
-// func (s *UserServiceServer) SignOut(ctx context.Context, req *pb.SignOutRequest) (*pb.SignOutResponse, error) {
-// 	s.Logger.Info("Signing out user: %v", req.UserId)
+func (s *UserServiceServer) SignInOnlyEmployee(ctx context.Context, req *pb.SignInOnlyEmployeeRequest) (*pb.SignInOnlyEmployeeResponse, error) {
+	s.Logger.Info("Attempting to sign in %s", req.Email)
 
-// 	md, ok := metadata.FromIncomingContext(ctx)
-// 	if !ok {
-// 		return nil, fmt.Errorf("failed to retrieve metadata")
-// 	}
+	roleResp, err := s.GetUserRole(ctx, &pb.GetUserRoleRequest{Email: req.Email})
+	if err != nil {
+		s.Logger.Error("Error retrieving role for %s: %v", req.Email, err)
+		return nil, fmt.Errorf("failed to retrieve user role: %v", err)
+	}
 
-// 	authHeader := md.Get("authorization")
-// 	if len(authHeader) == 0 {
-// 		return nil, fmt.Errorf("missing authorization token")
-// 	}
+	if roleResp.Role != "employee" {
+		s.Logger.Info("Email %s has role %s; not allowed to sign in as employee", req.Email, roleResp.Role)
+		return nil, fmt.Errorf("user does not have permission to sign in as a employee")
+	}
 
-// 	token := strings.TrimPrefix(authHeader[0], "Bearer ")
+	signInData := types.SignupRequest{
+		Email:    req.Email,
+		Password: req.Password,
+	}
 
-// 	s.AuthClient.WithToken(token)
+	authResponse, err := s.AuthClient.SignInWithEmailPassword(signInData.Email, signInData.Password)
+	if err != nil {
+		s.Logger.Error("Failed to sign in user: %v", err)
+		return nil, fmt.Errorf("failed to sign in user: %v", err)
+	}
 
-// 	err := s.AuthClient.Logout()
-// 	if err != nil {
-// 		s.Logger.Error("Failed to sign out user: %v", err)
-// 		return nil, fmt.Errorf("failed to sign out user: %v", err)
-// 	}
+	s.Logger.Info("User %s signed in successfully", authResponse.User.ID.String())
 
-// 	s.Logger.Info("User successfully signed out.")
-
-// 	return &pb.SignOutResponse{
-// 		Message: "User successfully signed out.",
-// 		Error:   "",
-// 	}, nil
-// }
+	return &pb.SignInOnlyEmployeeResponse{
+		AccessToken:  authResponse.AccessToken,
+		RefreshToken: authResponse.RefreshToken,
+		Error:        "",
+	}, nil
+}
 
 func (s *UserServiceServer) SignOut(ctx context.Context, req *pb.SignOutRequest) (*pb.SignOutResponse, error) {
 	s.Logger.Info("Signing out user: %v", req.UserId)
@@ -200,6 +203,31 @@ func (s *UserServiceServer) SignOut(ctx context.Context, req *pb.SignOutRequest)
 	body, _ := io.ReadAll(resp.Body)
 	s.Logger.Error("Failed to sign out user: Status %d, Response: %s", resp.StatusCode, string(body))
 	return nil, fmt.Errorf("failed to sign out user: received status %d, response: %s", resp.StatusCode, string(body))
+}
+
+func (s *UserServiceServer) GetUserRole(ctx context.Context, req *pb.GetUserRoleRequest) (*pb.GetUserRoleResponse, error) {
+	s.Logger.Info("Fetching user info from public.users for email: %s", req.Email)
+
+	if req.Email == "" {
+		return &pb.GetUserRoleResponse{Message: "user email cannot be empty"}, nil
+	}
+
+	query := `SELECT role FROM public.users WHERE email = $1`
+
+	var role string
+	row := s.DB.QueryRow(ctx, query, req.Email)
+	err := row.Scan(&role)
+	if err != nil {
+		s.Logger.Error("Error fetching user role: %v", err)
+		return &pb.GetUserRoleResponse{
+			Message: "failed to fetch user role",
+		}, err
+	}
+
+	return &pb.GetUserRoleResponse{
+		Role:    role,
+		Message: "Role retrieved successfully",
+	}, nil
 }
 
 func (s *UserServiceServer) GetUserInfo(ctx context.Context, req *pb.GetUserInfoRequest) (*pb.GetUserInfoResponse, error) {
