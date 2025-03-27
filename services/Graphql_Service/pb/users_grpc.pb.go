@@ -21,7 +21,9 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	AuthService_SignUp_FullMethodName             = "/auth.AuthService/SignUp"
 	AuthService_SignIn_FullMethodName             = "/auth.AuthService/SignIn"
+	AuthService_SignInOnlyEmployee_FullMethodName = "/auth.AuthService/SignInOnlyEmployee"
 	AuthService_SignOut_FullMethodName            = "/auth.AuthService/SignOut"
+	AuthService_GetUserRole_FullMethodName        = "/auth.AuthService/GetUserRole"
 	AuthService_GetUserInfo_FullMethodName        = "/auth.AuthService/GetUserInfo"
 	AuthService_UpdateUserInfo_FullMethodName     = "/auth.AuthService/UpdateUserInfo"
 	AuthService_ForgotPassword_FullMethodName     = "/auth.AuthService/ForgotPassword"
@@ -36,7 +38,9 @@ const (
 type AuthServiceClient interface {
 	SignUp(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*SignUpResponse, error)
 	SignIn(ctx context.Context, in *SignInRequest, opts ...grpc.CallOption) (*SignInResponse, error)
+	SignInOnlyEmployee(ctx context.Context, in *SignInOnlyEmployeeRequest, opts ...grpc.CallOption) (*SignInOnlyEmployeeResponse, error)
 	SignOut(ctx context.Context, in *SignOutRequest, opts ...grpc.CallOption) (*SignOutResponse, error)
+	GetUserRole(ctx context.Context, in *GetUserRoleRequest, opts ...grpc.CallOption) (*GetUserRoleResponse, error)
 	GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoResponse, error)
 	UpdateUserInfo(ctx context.Context, in *UpdateUserInfoRequest, opts ...grpc.CallOption) (*UpdateUserInfoResponse, error)
 	ForgotPassword(ctx context.Context, in *ForgotPasswordRequest, opts ...grpc.CallOption) (*ForgotPasswordResponse, error)
@@ -73,10 +77,30 @@ func (c *authServiceClient) SignIn(ctx context.Context, in *SignInRequest, opts 
 	return out, nil
 }
 
+func (c *authServiceClient) SignInOnlyEmployee(ctx context.Context, in *SignInOnlyEmployeeRequest, opts ...grpc.CallOption) (*SignInOnlyEmployeeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SignInOnlyEmployeeResponse)
+	err := c.cc.Invoke(ctx, AuthService_SignInOnlyEmployee_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *authServiceClient) SignOut(ctx context.Context, in *SignOutRequest, opts ...grpc.CallOption) (*SignOutResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SignOutResponse)
 	err := c.cc.Invoke(ctx, AuthService_SignOut_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) GetUserRole(ctx context.Context, in *GetUserRoleRequest, opts ...grpc.CallOption) (*GetUserRoleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUserRoleResponse)
+	err := c.cc.Invoke(ctx, AuthService_GetUserRole_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +173,9 @@ func (c *authServiceClient) DeactivateUser(ctx context.Context, in *DeactivateUs
 type AuthServiceServer interface {
 	SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error)
 	SignIn(context.Context, *SignInRequest) (*SignInResponse, error)
+	SignInOnlyEmployee(context.Context, *SignInOnlyEmployeeRequest) (*SignInOnlyEmployeeResponse, error)
 	SignOut(context.Context, *SignOutRequest) (*SignOutResponse, error)
+	GetUserRole(context.Context, *GetUserRoleRequest) (*GetUserRoleResponse, error)
 	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error)
 	UpdateUserInfo(context.Context, *UpdateUserInfoRequest) (*UpdateUserInfoResponse, error)
 	ForgotPassword(context.Context, *ForgotPasswordRequest) (*ForgotPasswordResponse, error)
@@ -172,8 +198,14 @@ func (UnimplementedAuthServiceServer) SignUp(context.Context, *SignUpRequest) (*
 func (UnimplementedAuthServiceServer) SignIn(context.Context, *SignInRequest) (*SignInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignIn not implemented")
 }
+func (UnimplementedAuthServiceServer) SignInOnlyEmployee(context.Context, *SignInOnlyEmployeeRequest) (*SignInOnlyEmployeeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SignInOnlyEmployee not implemented")
+}
 func (UnimplementedAuthServiceServer) SignOut(context.Context, *SignOutRequest) (*SignOutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignOut not implemented")
+}
+func (UnimplementedAuthServiceServer) GetUserRole(context.Context, *GetUserRoleRequest) (*GetUserRoleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserRole not implemented")
 }
 func (UnimplementedAuthServiceServer) GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserInfo not implemented")
@@ -250,6 +282,24 @@ func _AuthService_SignIn_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_SignInOnlyEmployee_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignInOnlyEmployeeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).SignInOnlyEmployee(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_SignInOnlyEmployee_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).SignInOnlyEmployee(ctx, req.(*SignInOnlyEmployeeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AuthService_SignOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SignOutRequest)
 	if err := dec(in); err != nil {
@@ -264,6 +314,24 @@ func _AuthService_SignOut_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServiceServer).SignOut(ctx, req.(*SignOutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_GetUserRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).GetUserRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_GetUserRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).GetUserRole(ctx, req.(*GetUserRoleRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -392,8 +460,16 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AuthService_SignIn_Handler,
 		},
 		{
+			MethodName: "SignInOnlyEmployee",
+			Handler:    _AuthService_SignInOnlyEmployee_Handler,
+		},
+		{
 			MethodName: "SignOut",
 			Handler:    _AuthService_SignOut_Handler,
+		},
+		{
+			MethodName: "GetUserRole",
+			Handler:    _AuthService_GetUserRole_Handler,
 		},
 		{
 			MethodName: "GetUserInfo",
