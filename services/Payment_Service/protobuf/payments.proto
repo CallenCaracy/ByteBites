@@ -4,5 +4,78 @@ package payment;
 
 option go_package = "./pb";
 
-// Here make your proto to generate pb
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
 // protoc --go_out=. --go-grpc_out=. --proto_path=protobuf proto/payments.proto
+
+// Order message (minimal version for reference)
+message Order {
+  int32 order_id = 1;
+  double total_amount = 2;
+  int32 user_id = 3;
+}
+
+// Payment message definition
+message Payment {
+  int32 payment_id = 1;
+  int32 order_id = 2;
+  double amount = 3;
+  string payment_method = 4;  // "Cash", "Credit Card", "Apple Pay", "Google Pay", "GCash"
+  string status = 5;         // "Pending", "Completed", "Failed"
+  google.protobuf.Timestamp created_at = 6;
+}
+
+// Tip message definition
+message Tip {
+  int32 tip_id = 1;
+  int32 order_id = 2;
+  double tip_amount = 3;
+  string payment_method = 4;  // Optional field
+  google.protobuf.Timestamp created_at = 5;
+}
+
+// Request messages
+message PaymentRequest {
+  int32 payment_id = 1;
+}
+
+message TipRequest {
+  int32 tip_id = 1;
+}
+
+message OrderRequest {
+  int32 order_id = 1;
+}
+
+// Payment service definition
+service PaymentService {
+  // Create
+  rpc CreatePayment (Payment) returns (Payment);
+  // Read
+  rpc GetPayment (PaymentRequest) returns (Payment);
+  rpc ListPaymentsByOrder (OrderRequest) returns (stream Payment);
+  // Update
+  rpc UpdatePayment (Payment) returns (Payment);
+  // Delete
+  rpc DeletePayment (PaymentRequest) returns (google.protobuf.Empty);
+}
+
+// Tip service definition
+service TipService {
+  // Create
+  rpc CreateTip (Tip) returns (Tip);
+  // Read
+  rpc GetTip (TipRequest) returns (Tip);
+  rpc ListTipsByOrder (OrderRequest) returns (stream Tip);
+  // Update
+  rpc UpdateTip (Tip) returns (Tip);
+  // Delete
+  rpc DeleteTip (TipRequest) returns (google.protobuf.Empty);
+}
+
+// Order service (minimal, for payment/tip interactions)
+service OrderService {
+  rpc GetOrder (OrderRequest) returns (Order);
+  rpc UpdateOrder (Order) returns (Order);
+}

@@ -4,9 +4,8 @@ import (
 	"net"
 	"os"
 
-	"payment-service/db"
-	"payment-service/utils"
-
+	"Payment_Service/db"
+	"Payment_Service/utils"
 	"context"
 
 	"github.com/joho/godotenv"
