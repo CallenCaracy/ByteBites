@@ -1,0 +1,73 @@
+
+syntax = "proto3";
+
+package inventory;
+
+option go_package = "./pb";
+
+message InventoryRequest {
+    string item = 1;
+}
+
+message InventoryResponse {
+    int32 quantity = 1;
+}
+
+service InventoryService {
+  rpc CreateItem (CreateItemRequest) returns (ItemResponse);
+  rpc GetItem (GetItemRequest) returns (ItemResponse);
+  rpc UpdateItem (UpdateItemRequest) returns (ItemResponse);
+  rpc DeleteItem (DeleteItemRequest) returns (DeleteItemResponse);
+  rpc ListItems (ListItemsRequest) returns (ListItemsResponse);
+}
+
+message Item {
+  string id = 1;
+  string item_name = 2;
+  int32 quantity = 3;
+  string unit = 4;
+  int32 low_stock_threshold = 5;
+  string expiry_date = 6; 
+  string last_updated = 7;
+}
+
+message CreateItemRequest {
+  string item_name = 1;
+  int32 quantity = 2;
+  string unit = 3;
+  int32 low_stock_threshold = 4;
+  string expiry_date = 5;
+}
+
+message GetItemRequest {
+  string id = 1;
+}
+
+message UpdateItemRequest {
+  string id = 1;
+  string item_name = 2;
+  int32 quantity = 3;
+  string unit = 4;
+  int32 low_stock_threshold = 5;
+  string expiry_date = 6;
+}
+
+message DeleteItemRequest {
+  string id = 1;
+}
+
+message DeleteItemResponse {
+  bool success = 1;
+}
+
+message ItemResponse {
+  Item item = 1;
+}
+
+message ListItemsRequest {}
+
+message ListItemsResponse {
+  repeated Item items = 1;
+}
+
+//protoc --go_out=. --go-grpc_out=. --proto_path=protobuf protobuf/inventory.proto

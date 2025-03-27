@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package orderqueue;
+
+option go_package = "./pb";
+
+message OrderQueue {
+    string id = 1;
+    string order_id = 2;
+    string status = 3;
+    int32 priority = 4;
+    string last_updated = 5;
+}
+
+message CreateOrderQueueRequest {
+    string order_id = 1;
+    string status = 2;
+    int32 priority = 3;
+}
+
+message CreateOrderQueueResponse {
+    string id = 1;
+}
+
+message GetOrderQueueRequest {
+    string id = 1;
+}
+
+message GetOrderQueueResponse {
+    OrderQueue order_queue = 1;
+}
+
+message UpdateOrderQueueRequest {
+    string id = 1;
+    string status = 2;
+    int32 priority = 3;
+}
+
+message UpdateOrderQueueResponse {
+    bool success = 1;
+}
+
+message DeleteOrderQueueRequest {
+    string id = 1;
+}
+
+message DeleteOrderQueueResponse {
+    bool success = 1;
+}
+
+message ListOrderQueueRequest {}
+
+message ListOrderQueueResponse {
+    repeated OrderQueue order_queues = 1;
+}
+
+service OrderQueueService {
+    rpc CreateOrderQueue(CreateOrderQueueRequest) returns (CreateOrderQueueResponse);
+    rpc GetOrderQueue(GetOrderQueueRequest) returns (GetOrderQueueResponse);
+    rpc UpdateOrderQueue(UpdateOrderQueueRequest) returns (UpdateOrderQueueResponse);
+    rpc DeleteOrderQueue(DeleteOrderQueueRequest) returns (DeleteOrderQueueResponse);
+    rpc ListOrderQueue(ListOrderQueueRequest) returns (ListOrderQueueResponse);
+}
