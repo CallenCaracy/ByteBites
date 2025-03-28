@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"Graphql_Service/pb"
+	"User_Service/pb"
 
 	"github.com/jackc/pgx/v5"
 )

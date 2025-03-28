@@ -7,11 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"Graphql_Service/db"
-	"Graphql_Service/pb"
-	server "Graphql_Service/server/graphql_server"
-	user "Graphql_Service/server/users"
-	"Graphql_Service/utils"
+	"User_Service/db"
+	"User_Service/pb"
+	user "User_Service/server/users"
+	"User_Service/utils"
 
 	"github.com/joho/godotenv"
 	"github.com/supabase-community/auth-go"
@@ -53,8 +52,6 @@ func main() {
 			log.Fatal("Failed to close database connection: %v", err)
 		}
 	}()
-
-	go server.StartGraphQLServer(conn)
 
 	port := os.Getenv("GRPC_PORT")
 	if port == "" {

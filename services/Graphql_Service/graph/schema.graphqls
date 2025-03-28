@@ -1,24 +1,32 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
 type User {
   id: ID!
   email: String!
-  first_name: String!
-  last_name: String!
+  firstName: String!
+  lastName: String!
   role: String!
   address: String
   phone: String
-  is_active: String!
+  isActive: String!
+  createdAt: String!
+  updatedAt: String
+}
+
+type MenuItem {
+  id: ID!
+  name: String!
+  imageUrl: String
+  description: String
+  price: Float!
+  itemStatus: String!
+  createdAt: String!
+  updatedAt: String
 }
 
 type Query {
-  getUser(id: ID!): User
-}
-
-type AuthPayload {
-  accessToken: String!
-  refreshToken: String!
-  error: String
-}
-
-type Mutation {
-  signInOnlyEmployee(email: String!, password: String!): AuthPayload!
+  getUserById(id: ID!): User
+  getMenuItemById(id: ID!): MenuItem
 }
