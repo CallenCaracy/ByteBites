@@ -1,15 +1,16 @@
 package main
 
 import (
+	"context"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 
-	"Graphql_Service/db"
-	"Graphql_Service/pb"
-	user "Graphql_Service/server/users"
-	"Graphql_Service/utils"
-
-	"context"
+	"User_Service/db"
+	"User_Service/pb"
+	user "User_Service/server/users"
+	"User_Service/utils"
 
 	"github.com/joho/godotenv"
 	"github.com/supabase-community/auth-go"
@@ -52,18 +53,38 @@ func main() {
 		}
 	}()
 
-	lis, err := net.Listen("tcp", ":50050")
+	port := os.Getenv("GRPC_PORT")
+	if port == "" {
+		port = "50060"
+	}
+
+	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatal("Failed to listen: %v", err)
 	}
 
 	grpcServer := grpc.NewServer()
-
 	userService := &user.UserServiceServer{DB: conn, AuthClient: client, Logger: log}
 	pb.RegisterAuthServiceServer(grpcServer, userService)
 
-	log.Info("Order Service running on port 50050...")
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatal("Failed to serve: %v", err)
+	go func() {
+		log.Info("gRPC Service running on port 50050...")
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatal("Failed to serve gRPC: %v", err)
+		}
+	}()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	<-sigChan
+	log.Info("Shutting down servers...")
+
+	grpcServer.GracefulStop()
+
+	if err := conn.Close(context.Background()); err != nil {
+		log.Fatal("Failed to close database connection: %v", err)
 	}
+
+	log.Info("Servers shut down gracefully.")
 }

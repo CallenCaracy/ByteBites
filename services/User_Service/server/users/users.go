@@ -2,13 +2,18 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 
-	"Graphql_Service/pb"
-	"Graphql_Service/utils"
+	"User_Service/pb"
+	"User_Service/utils"
 
 	"strconv"
 	"strings"
+
+	"os"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/supabase-community/auth-go"
@@ -18,9 +23,11 @@ import (
 
 type UserServiceServer struct {
 	pb.UnimplementedAuthServiceServer
-	DB         *pgx.Conn
-	AuthClient auth.Client
-	Logger     *utils.Logger
+	DB          *pgx.Conn
+	AuthClient  auth.Client
+	Logger      *utils.Logger
+	SupabaseURL string
+	APIKey      string
 }
 
 func (s *UserServiceServer) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUpResponse, error) {
@@ -90,34 +97,136 @@ func (s *UserServiceServer) SignIn(ctx context.Context, req *pb.SignInRequest) (
 	}, nil
 }
 
+func (s *UserServiceServer) SignInOnlyEmployee(ctx context.Context, req *pb.SignInOnlyEmployeeRequest) (*pb.SignInOnlyEmployeeResponse, error) {
+	s.Logger.Info("Attempting to sign in %s", req.Email)
+
+	roleResp, err := s.GetUserRole(ctx, &pb.GetUserRoleRequest{Email: req.Email})
+	if err != nil {
+		s.Logger.Error("Error retrieving role for %s: %v", req.Email, err)
+		return nil, fmt.Errorf("failed to retrieve user role: %v", err)
+	}
+
+	if roleResp.Role != "employee" {
+		s.Logger.Error("Email %s has role %s; not allowed to sign in as employee", req.Email, roleResp.Role)
+		return nil, fmt.Errorf("user does not have permission to sign in as an employee")
+	}
+
+	signInData := types.SignupRequest{
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
+	authResponse, err := s.AuthClient.SignInWithEmailPassword(signInData.Email, signInData.Password)
+	if err != nil {
+		s.Logger.Error("Failed to sign in user: %v", err)
+		return nil, fmt.Errorf("failed to sign in user: %v", err)
+	}
+
+	s.Logger.Info("User %s signed in successfully", authResponse.User.ID.String())
+
+	return &pb.SignInOnlyEmployeeResponse{
+		AccessToken:  authResponse.AccessToken,
+		RefreshToken: authResponse.RefreshToken,
+		Error:        "",
+	}, nil
+}
+
 func (s *UserServiceServer) SignOut(ctx context.Context, req *pb.SignOutRequest) (*pb.SignOutResponse, error) {
 	s.Logger.Info("Signing out user: %v", req.UserId)
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
+		s.Logger.Error("Failed to retrieve metadata")
 		return nil, fmt.Errorf("failed to retrieve metadata")
 	}
 
 	authHeader := md.Get("authorization")
 	if len(authHeader) == 0 {
+		s.Logger.Error("Missing authorization token")
 		return nil, fmt.Errorf("missing authorization token")
 	}
+	accessToken := strings.TrimSpace(strings.TrimPrefix(authHeader[0], "Bearer "))
 
-	token := strings.TrimPrefix(authHeader[0], "Bearer ")
-
-	s.AuthClient.WithToken(token)
-
-	err := s.AuthClient.Logout()
-	if err != nil {
-		s.Logger.Error("Failed to sign out user: %v", err)
-		return nil, fmt.Errorf("failed to sign out user: %v", err)
+	refreshTokens := md.Get("refresh_token")
+	refreshToken := ""
+	if len(refreshTokens) > 0 {
+		refreshToken = refreshTokens[0]
 	}
 
-	s.Logger.Info("User successfully signed out.")
+	s.SupabaseURL = os.Getenv("SUPABASE_URL_FULL")
+	serviceKey := os.Getenv("SERVICE_KEY")
 
-	return &pb.SignOutResponse{
-		Message: "User successfully signed out.",
-		Error:   "",
+	s.Logger.Info("Using Supabase URL: %s", s.SupabaseURL)
+	s.Logger.Info("Using API Key: %s", serviceKey)
+
+	if s.SupabaseURL == "" || serviceKey == "" {
+		s.Logger.Error("Missing Supabase environment variables")
+		return nil, fmt.Errorf("missing Supabase URL or API Key")
+	}
+
+	requestBody, err := json.Marshal(map[string]string{
+		"refresh_token": refreshToken,
+	})
+	if err != nil {
+		s.Logger.Error("Error marshaling JSON: %v", err)
+		return nil, fmt.Errorf("failed to create logout request body: %v", err)
+	}
+
+	logoutURL := fmt.Sprintf("%s/auth/v1/logout", s.SupabaseURL)
+	httpReq, err := http.NewRequest("POST", logoutURL, strings.NewReader(string(requestBody)))
+	if err != nil {
+		s.Logger.Error("Error creating logout request: %v", err)
+		return nil, fmt.Errorf("failed to create logout request: %v", err)
+	}
+
+	httpReq.Header.Set("Authorization", "Bearer "+accessToken)
+	httpReq.Header.Set("apikey", serviceKey)
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		s.Logger.Error("Error sending logout request: %v", err)
+		return nil, fmt.Errorf("failed to sign out user: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNoContent { // 204 means successful logout
+		s.Logger.Info("User successfully signed out.")
+		return &pb.SignOutResponse{
+			Message: "User successfully signed out.",
+			Error:   "",
+		}, nil
+	}
+
+	// Read response body (only if it's not 204)
+	body, _ := io.ReadAll(resp.Body)
+	s.Logger.Error("Failed to sign out user: Status %d, Response: %s", resp.StatusCode, string(body))
+	return nil, fmt.Errorf("failed to sign out user: received status %d, response: %s", resp.StatusCode, string(body))
+}
+
+func (s *UserServiceServer) GetUserRole(ctx context.Context, req *pb.GetUserRoleRequest) (*pb.GetUserRoleResponse, error) {
+	s.Logger.Info("Fetching user info from public.users for email: %s", req.Email)
+
+	if req.Email == "" {
+		return &pb.GetUserRoleResponse{Message: "user email cannot be empty"}, nil
+	}
+
+	query := `SELECT role FROM public.users WHERE email = $1`
+
+	var role string
+	row := s.DB.QueryRow(ctx, query, req.Email)
+	err := row.Scan(&role)
+	if err != nil {
+		s.Logger.Error("Error fetching user role: %v", err)
+		return &pb.GetUserRoleResponse{
+			Message: "failed to fetch user role",
+		}, err
+	}
+
+	return &pb.GetUserRoleResponse{
+		Role:    role,
+		Message: "Role retrieved successfully",
 	}, nil
 }
 
@@ -372,7 +481,6 @@ func ExtractAuthToken(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("missing metadata")
 	}
 
-	// Always use lowercase for gRPC metadata keys
 	authHeader := md.Get("authorization")
 	if len(authHeader) == 0 {
 		return "", fmt.Errorf("missing authorization token")

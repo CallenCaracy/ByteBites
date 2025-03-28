@@ -1,0 +1,32 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type User {
+  id: ID!
+  email: String!
+  firstName: String!
+  lastName: String!
+  role: String!
+  address: String
+  phone: String
+  isActive: String!
+  createdAt: String!
+  updatedAt: String
+}
+
+type MenuItem {
+  id: ID!
+  name: String!
+  imageUrl: String
+  description: String
+  price: Float!
+  itemStatus: String!
+  createdAt: String!
+  updatedAt: String
+}
+
+type Query {
+  getUserById(id: ID!): User
+  getMenuItemById(id: ID!): MenuItem
+}
