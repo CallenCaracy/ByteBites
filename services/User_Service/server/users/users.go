@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 
-	"Graphql_Service/pb"
-	"Graphql_Service/utils"
+	"User_Service/pb"
+	"User_Service/utils"
 
 	"strconv"
 	"strings"
@@ -107,8 +107,8 @@ func (s *UserServiceServer) SignInOnlyEmployee(ctx context.Context, req *pb.Sign
 	}
 
 	if roleResp.Role != "employee" {
-		s.Logger.Info("Email %s has role %s; not allowed to sign in as employee", req.Email, roleResp.Role)
-		return nil, fmt.Errorf("user does not have permission to sign in as a employee")
+		s.Logger.Error("Email %s has role %s; not allowed to sign in as employee", req.Email, roleResp.Role)
+		return nil, fmt.Errorf("user does not have permission to sign in as an employee")
 	}
 
 	signInData := types.SignupRequest{
