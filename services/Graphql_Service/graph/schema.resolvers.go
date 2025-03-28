@@ -29,8 +29,142 @@ func (r *queryResolver) GetUserByID(ctx context.Context, id string) (*model.User
 	return &user, nil
 }
 
-// GetMenuItemByID is the resolver for the getMenuItemById field.
-func (r *queryResolver) GetMenuItemByID(ctx context.Context, id string) (*model.MenuItem, error) {
+// ! READ
+
+// GetAllMenuItems is the resolver for the getAllMenuItems field.
+func (r *queryResolver) GetAllMenuItems(ctx context.Context) ([]*model.MenuItem, error) {
+	query := `SELECT id, name, description, price, category, availability_status, image_url, created_at, updated_at FROM public.menu_list`
+	rows, err := r.Resolver.DB2.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var menuItems []*model.MenuItem
+
+	for rows.Next() {
+		var item model.MenuItem
+		err := rows.Scan(
+			&item.ID, &item.Name, &item.Description, &item.Price,
+			&item.Category, &item.AvailabilityStatus, &item.ImageURL,
+			&item.CreatedAt, &item.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		menuItems = append(menuItems, &item)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return menuItems, nil
+}
+
+// ! other crud of menu_service
+
+// GetMenuItemById - Fetch a menu item by ID
+func (r *queryResolver) GetMenuItemById(ctx context.Context, id string) (*model.MenuItem, error) {
+	query := `SELECT id, name, description, price, category, availability_status, image_url, created_at, updated_at FROM public.menu_list WHERE id = $1`
+	row := r.Resolver.DB2.QueryRow(query, id)
+
+	var item model.MenuItem
+	err := row.Scan(
+		&item.ID, &item.Name, &item.Description, &item.Price,
+		&item.Category, &item.AvailabilityStatus, &item.ImageURL,
+		&item.CreatedAt, &item.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // No item found
+		}
+		return nil, err
+	}
+
+	return &item, nil
+}
+
+// CreateMenuItem - Insert a new menu item
+func (r *mutationResolver) CreateMenuItem(ctx context.Context, input model.NewMenuItem) (*model.MenuItem, error) {
+	// Generate a new UUID for the menu item
+
+	query := `INSERT INTO public.menu_list (name, description, price, category, availability_status, image_url, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id, name, description, price, category, availability_status, image_url, created_at, updated_at`
+
+	item := &model.MenuItem{
+		Name:               input.Name,
+		Description:        input.Description,
+		Price:              input.Price,
+		Category:           input.Category,
+		AvailabilityStatus: input.AvailabilityStatus,
+		ImageURL:           input.ImageURL,
+	}
+
+	err := r.Resolver.DB2.QueryRow(query,
+		item.Name, item.Description, item.Price,
+		item.Category, item.AvailabilityStatus, item.ImageURL,
+	).Scan(
+		&item.ID, &item.Name, &item.Description, &item.Price,
+		&item.Category, &item.AvailabilityStatus, &item.ImageURL,
+		&item.CreatedAt, &item.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return item, nil
+}
+
+// UpdateMenuItem - Update an existing menu item
+func (r *mutationResolver) UpdateMenuItem(ctx context.Context, id string, input model.UpdateMenuItem) (*model.MenuItem, error) {
+	query := `UPDATE public.menu_list SET name = $1, description = $2, price = $3, category = $4, availability_status = $5, image_url = $6, updated_at = NOW() WHERE id = $7 RETURNING id, name, description, price, category, availability_status, image_url, created_at, updated_at`
+
+	var item model.MenuItem
+	err := r.Resolver.DB2.QueryRow(query,
+		input.Name, input.Description, input.Price, input.Category,
+		input.AvailabilityStatus, input.ImageURL, id,
+	).Scan(
+		&item.ID, &item.Name, &item.Description, &item.Price,
+		&item.Category, &item.AvailabilityStatus, &item.ImageURL,
+		&item.CreatedAt, &item.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &item, nil
+}
+
+// DeleteMenuItem - Delete a menu item by ID
+func (r *mutationResolver) DeleteMenuItem(ctx context.Context, id string) (bool, error) {
+	query := `DELETE FROM public.menu_list WHERE id = $1`
+	_, err := r.Resolver.DB2.Exec(query, id)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// Query returns QueryResolver implementation.
+func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
+func (r *Resolver) Mutation() MutationResolver {
+	return &mutationResolver{r}
+}
+
+type queryResolver struct{ *Resolver }
+type mutationResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *queryResolver) GetMenuItemByID(ctx context.Context, id string) (*model.MenuItem, error) {
 	var menuItem model.MenuItem
 
 	query := `SELECT id, name, image_url, description, price, item_status, created_at, updated_at FROM menu_items WHERE id = $1`
@@ -47,11 +181,4 @@ func (r *queryResolver) GetMenuItemByID(ctx context.Context, id string) (*model.
 	}
 	return &menuItem, nil
 }
-
-// GetTransactionRecord is the resolver for the getTransactionRecord field.
-// GetTransactionRecord is the resolver for the getTransactionRecord field.
-
-// Query returns QueryResolver implementation.
-func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
-
-type queryResolver struct{ *Resolver }
+*/
