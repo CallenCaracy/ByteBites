@@ -2,6 +2,7 @@
 #
 # https://gqlgen.com/getting-started/
 
+# Auth Service
 type User {
   id: ID!
   email: String!
@@ -15,6 +16,51 @@ type User {
   updatedAt: String
 }
 
+
+# Menu Service
+type MenuItem {
+  id: ID!
+  name: String!
+  description: String
+  price: Float!
+  category: String
+  availability_status: Boolean!
+  image_url: String
+  created_at: String!
+  updated_at: String
+}
+
+input NewMenuItem {
+  name: String!
+  description: String
+  price: Float!
+  category: String
+  availability_status: Boolean!
+  image_url: String
+}
+
+input UpdateMenuItem {
+  name: String
+  description: String
+  price: Float
+  category: String
+  availability_status: Boolean
+  image_url: String
+}
+
+# Payment Service
+
+
+# Queries
 type Query {
   getUserById(id: ID!): User
+  getAllMenuItems: [MenuItem!]!
+  
+}
+
+# Mutation
+type Mutation {
+  createMenuItem(input: NewMenuItem!): MenuItem!
+  updateMenuItem(id: ID!, input: UpdateMenuItem!): MenuItem!
+  deleteMenuItem(id: ID!): Boolean!
 }
