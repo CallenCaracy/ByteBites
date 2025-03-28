@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-package kitchen;
-
-option go_package = "./pb";
-
-// Here make your proto to generate pb
-// protoc --go_out=. --go-grpc_out=. --proto_path=protobuf proto/kitchen.proto
