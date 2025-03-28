@@ -29,29 +29,14 @@ func (r *queryResolver) GetUserByID(ctx context.Context, id string) (*model.User
 	return &user, nil
 }
 
-// GetMenuItemByID is the resolver for the getMenuItemById field.
-func (r *queryResolver) GetMenuItemByID(ctx context.Context, id string) (*model.MenuItem, error) {
-	var menuItem model.MenuItem
-
-	query := `SELECT id, name, image_url, description, price, item_status, created_at, updated_at FROM menu_items WHERE id = $1`
-	err := r.Resolver.DB2.QueryRow(query, id).Scan(
-		&menuItem.ID, &menuItem.Name, &menuItem.ImageURL,
-		&menuItem.Description, &menuItem.Price, &menuItem.ItemStatus,
-		&menuItem.CreatedAt, &menuItem.UpdatedAt,
-	)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return &menuItem, nil
-}
-
-// GetTransactionRecord is the resolver for the getTransactionRecord field.
-// GetTransactionRecord is the resolver for the getTransactionRecord field.
-
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type queryResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
