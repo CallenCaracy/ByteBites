@@ -18,15 +18,44 @@ type User {
 type MenuItem {
   id: ID!
   name: String!
-  imageUrl: String
   description: String
   price: Float!
-  itemStatus: String!
-  createdAt: String!
-  updatedAt: String
+  category: String
+  availability_status: Boolean!
+  image_url: String
+  created_at: String!
+  updated_at: String
+}
+
+
+
+input NewMenuItem {
+  name: String!
+  description: String
+  price: Float!
+  category: String
+  availability_status: Boolean!
+  image_url: String
+}
+
+input UpdateMenuItem {
+  name: String
+  description: String
+  price: Float
+  category: String
+  availability_status: Boolean
+  image_url: String
 }
 
 type Query {
   getUserById(id: ID!): User
-  getMenuItemById(id: ID!): MenuItem
+  getAllMenuItems: [MenuItem!]!
+  
+}
+
+
+type Mutation {
+  createMenuItem(input: NewMenuItem!): MenuItem!
+  updateMenuItem(id: ID!, input: UpdateMenuItem!): MenuItem!
+  deleteMenuItem(id: ID!): Boolean!
 }
