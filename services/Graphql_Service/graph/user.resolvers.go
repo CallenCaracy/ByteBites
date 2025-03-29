@@ -57,17 +57,110 @@ func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) 
 
 // SignIn is the resolver for the signIn field.
 func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) (*model.AuthResponse, error) {
-	panic(fmt.Errorf("not implemented: SignIn - signIn"))
+	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewAuthServiceClient(conn)
+
+	req := &pb.SignInRequest{
+		Email:    input.Email,
+		Password: input.Password,
+	}
+
+	res, err := client.SignIn(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to login user: %v", err)
+	}
+
+	return &model.AuthResponse{
+		AccessToken:  res.AccessToken,
+		RefreshToken: res.RefreshToken,
+		Error:        &res.Error,
+	}, nil
 }
 
 // SignInOnlyEmployee is the resolver for the signInOnlyEmployee field.
 func (r *mutationResolver) SignInOnlyEmployee(ctx context.Context, input model.SignInEmployeeInput) (*model.AuthResponse, error) {
-	panic(fmt.Errorf("not implemented: SignInOnlyEmployee - signInOnlyEmployee"))
+	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewAuthServiceClient(conn)
+
+	req := &pb.SignInOnlyEmployeeRequest{
+		Email:    input.Email,
+		Password: input.Password,
+	}
+
+	res, err := client.SignInOnlyEmployee(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to login user: %v", err)
+	}
+
+	return &model.AuthResponse{
+		AccessToken:  res.AccessToken,
+		RefreshToken: res.RefreshToken,
+		Error:        &res.Error,
+	}, nil
 }
 
 // SignOut is the resolver for the signOut field.
 func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
-	panic(fmt.Errorf("not implemented: SignOut - signOut"))
+	// Extract HTTP headers from the request
+	// requestCtx := graphql.GetOperationContext(ctx)
+	// if requestCtx == nil {
+	//     return false, fmt.Errorf("missing HTTP request context")
+	// }
+
+	// httpRequest, ok := requestCtx.RawRequest.(*http.Request)
+	// if !ok {
+	//     return false, fmt.Errorf("failed to extract HTTP request")
+	// }
+
+	// authToken := httpRequest.Header.Get("Authorization")
+	// refreshToken := httpRequest.Header.Get("refresh_token")
+
+	// if authToken == "" || refreshToken == "" {
+	//     return false, fmt.Errorf("missing Authorization or refresh_token headers")
+	// }
+
+	// // Debugging logs
+	// fmt.Println("Extracted Authorization:", authToken)
+	// fmt.Println("Extracted Refresh Token:", refreshToken)
+
+	// // Attach headers as metadata to gRPC request
+	// md := metadata.New(map[string]string{
+	//     "authorization": authToken,
+	//     "refresh_token": refreshToken,
+	// })
+	// ctx = metadata.NewOutgoingContext(ctx, md)
+
+	// // Establish gRPC connection
+	// conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
+	// if err != nil {
+	//     return false, fmt.Errorf("failed to connect to gRPC server: %v", err)
+	// }
+	// defer conn.Close()
+
+	// client := pb.NewAuthServiceClient(conn)
+
+	// // Make the gRPC call
+	// res, err := client.SignOut(ctx, &pb.SignOutRequest{})
+	// if err != nil {
+	//     return false, fmt.Errorf("sign out failed: %v", err)
+	// }
+
+	// if res.Error != "" {
+	//     return false, fmt.Errorf("sign out error: %s", res.Error)
+	// }
+
+	// return true, nil
+	panic(fmt.Errorf("not implemented: UpdateUser - updateUser"))
 }
 
 // UpdateUser is the resolver for the updateUser field.
