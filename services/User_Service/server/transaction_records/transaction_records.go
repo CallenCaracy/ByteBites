@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"User_Service/pb"
+	"github.com/CallenCaracy/ByteBites/services/User_Service/pb"
 
 	"github.com/jackc/pgx/v5"
 )

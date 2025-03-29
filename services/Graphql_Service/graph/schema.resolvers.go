@@ -10,27 +10,7 @@ import (
 	"database/sql"
 )
 
-// GetUserByID is the resolver for the getUserById field.
-func (r *queryResolver) GetUserByID(ctx context.Context, id string) (*model.User, error) {
-	var user model.User
-
-	query := `SELECT id, email, first_name, last_name, role, address, phone, is_active, created_at, updated_at FROM public.users WHERE id = $1`
-	err := r.Resolver.DB1.QueryRow(query, id).Scan(
-		&user.ID, &user.Email, &user.FirstName, &user.LastName,
-		&user.Role, &user.Address, &user.Phone, &user.IsActive,
-		&user.CreatedAt, &user.UpdatedAt,
-	)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil // Return nil if user not found
-		}
-		return nil, err
-	}
-	return &user, nil
-}
-
-// ! READ
-
+// Menu Service
 // GetAllMenuItems is the resolver for the getAllMenuItems field.
 func (r *queryResolver) GetAllMenuItems(ctx context.Context) ([]*model.MenuItem, error) {
 	query := `SELECT id, name, description, price, category, availability_status, image_url, created_at, updated_at FROM public.menu_list`
@@ -62,32 +42,8 @@ func (r *queryResolver) GetAllMenuItems(ctx context.Context) ([]*model.MenuItem,
 	return menuItems, nil
 }
 
-// ! other crud of menu_service
-
-// GetMenuItemById - Fetch a menu item by ID
-func (r *queryResolver) GetMenuItemById(ctx context.Context, id string) (*model.MenuItem, error) {
-	query := `SELECT id, name, description, price, category, availability_status, image_url, created_at, updated_at FROM public.menu_list WHERE id = $1`
-	row := r.Resolver.DB2.QueryRow(query, id)
-
-	var item model.MenuItem
-	err := row.Scan(
-		&item.ID, &item.Name, &item.Description, &item.Price,
-		&item.Category, &item.AvailabilityStatus, &item.ImageURL,
-		&item.CreatedAt, &item.UpdatedAt,
-	)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil // No item found
-		}
-		return nil, err
-	}
-
-	return &item, nil
-}
-
 // CreateMenuItem - Insert a new menu item
 func (r *mutationResolver) CreateMenuItem(ctx context.Context, input model.NewMenuItem) (*model.MenuItem, error) {
-	// Generate a new UUID for the menu item
 
 	query := `INSERT INTO public.menu_list (name, description, price, category, availability_status, image_url, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id, name, description, price, category, availability_status, image_url, created_at, updated_at`
@@ -148,14 +104,34 @@ func (r *mutationResolver) DeleteMenuItem(ctx context.Context, id string) (bool,
 	return true, nil
 }
 
-// Query returns QueryResolver implementation.
-func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
-func (r *Resolver) Mutation() MutationResolver {
-	return &mutationResolver{r}
+// User Auth
+// GetUserByID is the resolver for the getUserById field.
+func (r *queryResolver) GetUserByID(ctx context.Context, id string) (*model.User, error) {
+	var user model.User
+
+	query := `SELECT id, email, first_name, last_name, role, address, phone, is_active, created_at, updated_at FROM public.users WHERE id = $1`
+	err := r.Resolver.DB1.QueryRow(query, id).Scan(
+		&user.ID, &user.Email, &user.FirstName, &user.LastName,
+		&user.Role, &user.Address, &user.Phone, &user.IsActive,
+		&user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // Return nil if user not found
+		}
+		return nil, err
+	}
+	return &user, nil
 }
 
-type queryResolver struct{ *Resolver }
+// Mutation returns MutationResolver implementation.
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
+// Query returns QueryResolver implementation.
+func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
+
 type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }
 
 // !!! WARNING !!!
 // The code below was going to be deleted when updating resolvers. It has been copied here so you have
@@ -163,22 +139,3 @@ type mutationResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func (r *queryResolver) GetMenuItemByID(ctx context.Context, id string) (*model.MenuItem, error) {
-	var menuItem model.MenuItem
-
-	query := `SELECT id, name, image_url, description, price, item_status, created_at, updated_at FROM menu_items WHERE id = $1`
-	err := r.Resolver.DB2.QueryRow(query, id).Scan(
-		&menuItem.ID, &menuItem.Name, &menuItem.ImageURL,
-		&menuItem.Description, &menuItem.Price, &menuItem.ItemStatus,
-		&menuItem.CreatedAt, &menuItem.UpdatedAt,
-	)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return &menuItem, nil
-}
-*/

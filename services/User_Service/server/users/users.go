@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 
-	"User_Service/pb"
-	"User_Service/utils"
+	"github.com/CallenCaracy/ByteBites/services/User_Service/pb"
+	"github.com/CallenCaracy/ByteBites/services/User_Service/utils"
 
 	"strconv"
 	"strings"

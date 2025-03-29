@@ -7,10 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"User_Service/db"
-	"User_Service/pb"
-	user "User_Service/server/users"
-	"User_Service/utils"
+	"github.com/CallenCaracy/ByteBites/services/User_Service/db"
+	"github.com/CallenCaracy/ByteBites/services/User_Service/pb"
+	user "github.com/CallenCaracy/ByteBites/services/User_Service/server/users"
+	"github.com/CallenCaracy/ByteBites/services/User_Service/utils"
 
 	"github.com/joho/godotenv"
 	"github.com/supabase-community/auth-go"
