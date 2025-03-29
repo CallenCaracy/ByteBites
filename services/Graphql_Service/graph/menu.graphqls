@@ -1,0 +1,40 @@
+type MenuItem {
+  id: ID!
+  name: String!
+  description: String
+  price: Float!
+  category: String
+  availability_status: Boolean!
+  image_url: String
+  created_at: String!
+  updated_at: String
+}
+
+input NewMenuItem {
+  name: String!
+  description: String
+  price: Float!
+  category: String
+  availability_status: Boolean!
+  image_url: String
+}
+
+input UpdateMenuItem {
+  name: String
+  description: String
+  price: Float
+  category: String
+  availability_status: Boolean
+  image_url: String
+}
+
+extend type Query {
+  getAllMenuItems: [MenuItem!]!
+  getMenuItemById(id: ID!): MenuItem
+}
+
+extend type Mutation {
+  createMenuItem(input: NewMenuItem!): MenuItem!
+  updateMenuItem(id: ID!, input: UpdateMenuItem!): MenuItem!
+  deleteMenuItem(id: ID!): Boolean!
+}
