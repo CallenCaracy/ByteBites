@@ -1,4 +1,4 @@
-module User_Service
+module github.com/CallenCaracy/ByteBites/services/User_Service
 
 go 1.24.0
 
