@@ -1,0 +1,61 @@
+type User {
+  id: ID!
+  email: String!
+  firstName: String!
+  lastName: String!
+  role: String!
+  address: String
+  phone: String
+  isActive: String!
+  createdAt: String!
+  updatedAt: String
+}
+
+type AuthResponse {
+  accessToken: String!
+  refreshToken: String!
+  error: String
+}
+
+input SignUpInput {
+  email: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+  role: String!
+  address: String
+  phone: String
+}
+
+input SignInInput {
+  email: String!
+  password: String!
+}
+
+input SignInEmployeeInput {
+  email: String!
+  password: String!
+}
+
+input UpdateUserInput {
+  firstName: String
+  lastName: String
+  role: String
+  address: String
+  phone: String
+  isActive: Boolean
+}
+
+# Queries
+extend type Query {
+  getUserById(id: ID!): User
+}
+
+# Mutation
+extend type Mutation {
+  signUp(input: SignUpInput!): User!
+  signIn(input: SignInInput!): AuthResponse!
+  signInOnlyEmployee(input: SignInEmployeeInput!): AuthResponse!
+  signOut: Boolean!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+}

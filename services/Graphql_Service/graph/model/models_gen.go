@@ -2,6 +2,12 @@
 
 package model
 
+type AuthResponse struct {
+	AccessToken  string  `json:"accessToken"`
+	RefreshToken string  `json:"refreshToken"`
+	Error        *string `json:"error,omitempty"`
+}
+
 type MenuItem struct {
 	ID                 string  `json:"id"`
 	Name               string  `json:"name"`
@@ -29,6 +35,26 @@ type NewMenuItem struct {
 type Query struct {
 }
 
+type SignInEmployeeInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type SignInInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type SignUpInput struct {
+	Email     string  `json:"email"`
+	Password  string  `json:"password"`
+	FirstName string  `json:"firstName"`
+	LastName  string  `json:"lastName"`
+	Role      string  `json:"role"`
+	Address   *string `json:"address,omitempty"`
+	Phone     *string `json:"phone,omitempty"`
+}
+
 type UpdateMenuItem struct {
 	Name               *string  `json:"name,omitempty"`
 	Description        *string  `json:"description,omitempty"`
@@ -36,6 +62,15 @@ type UpdateMenuItem struct {
 	Category           *string  `json:"category,omitempty"`
 	AvailabilityStatus *bool    `json:"availability_status,omitempty"`
 	ImageURL           *string  `json:"image_url,omitempty"`
+}
+
+type UpdateUserInput struct {
+	FirstName *string `json:"firstName,omitempty"`
+	LastName  *string `json:"lastName,omitempty"`
+	Role      *string `json:"role,omitempty"`
+	Address   *string `json:"address,omitempty"`
+	Phone     *string `json:"phone,omitempty"`
+	IsActive  *bool   `json:"isActive,omitempty"`
 }
 
 type User struct {
