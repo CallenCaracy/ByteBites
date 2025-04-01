@@ -14,6 +14,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -59,16 +60,24 @@ func main() {
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
 
-	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
-
 	srv.Use(extension.Introspection{})
+	srv.SetQueryCache(lru.New[*ast.QueryDocument](100)) // Set LRU cache size to 100
+
 	srv.Use(extension.AutomaticPersistedQuery{
 		Cache: lru.New[string](100),
 	})
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	mux := http.NewServeMux()
+	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	mux.Handle("/query", srv)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"}, // Allow frontend URL
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}).Handler(mux)
+
+	log.Printf("🚀 GraphQL server running at http://localhost:%s/", port)
+	log.Fatal(http.ListenAndServe(":"+port, corsHandler))
 }

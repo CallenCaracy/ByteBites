@@ -3,6 +3,7 @@ module github.com/CallenCaracy/ByteBites/services/User_Service
 go 1.24.0
 
 require (
+	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
 	github.com/supabase-community/auth-go v1.3.2
