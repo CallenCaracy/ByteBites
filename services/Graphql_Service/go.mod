@@ -4,12 +4,12 @@ go 1.24.0
 
 require (
 	github.com/99designs/gqlgen v0.17.70
-	github.com/CallenCaracy/ByteBites/services/User_Service v0.0.0-20250329004736-2d5d9e2ed6ba
+	github.com/CallenCaracy/ByteBites/services/User_Service v0.0.0-20250401094800-3da278d121ba
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
 	github.com/rs/cors v1.11.1
 	github.com/vektah/gqlparser/v2 v2.5.23
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 )
 
 require (

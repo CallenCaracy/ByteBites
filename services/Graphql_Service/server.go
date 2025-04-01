@@ -2,6 +2,7 @@ package main
 
 import (
 	"Graphql_Service/graph"
+	"Graphql_Service/middleware"
 	"database/sql"
 	"log"
 	"net/http"
@@ -69,7 +70,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	mux.Handle("/query", srv)
+
+	mux.Handle("/query", middleware.AuthMiddleware(srv))
 
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173"}, // Allow frontend URL

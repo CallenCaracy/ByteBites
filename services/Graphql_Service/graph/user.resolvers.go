@@ -9,9 +9,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/CallenCaracy/ByteBites/services/User_Service/pb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 // SignUp is the resolver for the signUp field.
@@ -185,4 +188,51 @@ func (r *queryResolver) GetUserByID(ctx context.Context, id string) (*model.User
 		return nil, err
 	}
 	return &user, nil
+}
+
+// GetAuthenticatedUser is the resolver for the getAuthenticatedUser field.
+func (r *queryResolver) GetAuthenticatedUser(ctx context.Context) (*model.User, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("missing metadata in context")
+	}
+	log.Printf("Received metadata: %+v\n", md)
+
+	tokenList := md.Get("authorization")
+	if len(tokenList) == 0 {
+		return nil, fmt.Errorf("missing token in metadata")
+	}
+
+	token := strings.TrimPrefix(tokenList[0], "Bearer ")
+
+	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewAuthServiceClient(conn)
+
+	resp, err := client.VerifyToken(ctx, &pb.TokenRequest{Token: token})
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify token: %v", err)
+	}
+
+	user, err := r.GetUserByID(ctx, resp.Id)
+	if err != nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	return &model.User{
+		ID:        user.ID,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		Role:      user.Role,
+		Address:   user.Address,
+		Phone:     user.Phone,
+		IsActive:  user.IsActive,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}, nil
 }

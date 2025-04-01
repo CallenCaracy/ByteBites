@@ -49,6 +49,7 @@ input UpdateUserInput {
 # Queries
 extend type Query {
   getUserById(id: ID!): User
+  getAuthenticatedUser: User!
 }
 
 # Mutation
