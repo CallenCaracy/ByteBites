@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,11 +11,11 @@ import (
 	"github.com/CallenCaracy/ByteBites/services/User_Service/pb"
 	"github.com/CallenCaracy/ByteBites/services/User_Service/utils"
 
-	"strconv"
 	"strings"
 
 	"os"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/jackc/pgx/v5"
 	"github.com/supabase-community/auth-go"
 	"github.com/supabase-community/auth-go/types"
@@ -230,93 +231,6 @@ func (s *UserServiceServer) GetUserRole(ctx context.Context, req *pb.GetUserRole
 	}, nil
 }
 
-func (s *UserServiceServer) GetUserInfo(ctx context.Context, req *pb.GetUserInfoRequest) (*pb.GetUserInfoResponse, error) {
-	s.Logger.Info("Fetching user info from public.users for user_id: %s", req.UserId)
-
-	if req.UserId == "" {
-		return &pb.GetUserInfoResponse{Error: "user_id cannot be empty"}, nil
-	}
-
-	var user struct {
-		UserID    string
-		Email     string
-		FirstName string
-		LastName  string
-		Role      string
-		Address   string
-		Phone     string
-	}
-
-	query := `SELECT id, email, first_name, last_name, role, address, phone FROM public.users WHERE id = $1`
-
-	row := s.DB.QueryRow(ctx, query, req.UserId)
-	err := row.Scan(&user.UserID, &user.Email, &user.FirstName, &user.LastName, &user.Role, &user.Address, &user.Phone)
-	if err != nil {
-		s.Logger.Error("Failed to fetch user info from public.users: %v", err)
-		return &pb.GetUserInfoResponse{Error: "failed to fetch user info"}, nil
-	}
-
-	return &pb.GetUserInfoResponse{
-		UserId:    user.UserID,
-		Email:     user.Email,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Role:      user.Role,
-		Address:   user.Address,
-		Phone:     user.Phone,
-	}, nil
-}
-
-func (s *UserServiceServer) UpdateUserInfo(ctx context.Context, req *pb.UpdateUserInfoRequest) (*pb.UpdateUserInfoResponse, error) {
-	s.Logger.Info("Updating user info for user_id: %s", req.UserId)
-
-	if req.UserId == "" {
-		return nil, fmt.Errorf("user_id cannot be empty")
-	}
-
-	updates := []string{}
-	args := []interface{}{req.UserId}
-
-	if req.FirstName != nil {
-		updates = append(updates, "first_name = $"+strconv.Itoa(len(args)+1))
-		args = append(args, *req.FirstName)
-	}
-	if req.LastName != nil {
-		updates = append(updates, "last_name = $"+strconv.Itoa(len(args)+1))
-		args = append(args, *req.LastName)
-	}
-	if req.Role != nil {
-		updates = append(updates, "role = $"+strconv.Itoa(len(args)+1))
-		args = append(args, *req.Role)
-	}
-	if req.Address != nil {
-		updates = append(updates, "address = $"+strconv.Itoa(len(args)+1))
-		args = append(args, *req.Address)
-	}
-	if req.Phone != nil {
-		updates = append(updates, "phone = $"+strconv.Itoa(len(args)+1))
-		args = append(args, *req.Phone)
-	}
-
-	// If no fields to update, return an error
-	if len(updates) == 0 {
-		return nil, fmt.Errorf("no fields to update")
-	}
-
-	query := fmt.Sprintf("UPDATE public.users SET %s WHERE id = $1 RETURNING first_name, last_name, role, address, phone", strings.Join(updates, ", "))
-
-	var updatedUser pb.UpdateUserInfoResponse
-	row := s.DB.QueryRow(ctx, query, args...)
-	err := row.Scan(&updatedUser.FirstName, &updatedUser.LastName, &updatedUser.Role, &updatedUser.Address, &updatedUser.Phone)
-	if err != nil {
-		s.Logger.Error("Failed to update user info for user_id %s: %v", req.UserId, err)
-		return nil, fmt.Errorf("failed to update user info: %v", err)
-	}
-
-	s.Logger.Info("Successfully updated user info for user_id: %s", req.UserId)
-	return &updatedUser, nil
-}
-
 // For authenticated Users
 // func (s *UserServiceServer) ChangeUserPassword(ctx context.Context, req *pb.ChangeUserPasswordRequest) (*pb.ChangeUserPasswordResponse, error) {
 // 	s.Logger.Info("Changing password for user: %s", req.UserId)
@@ -392,61 +306,38 @@ func (s *UserServiceServer) UpdateUserInfo(ctx context.Context, req *pb.UpdateUs
 // 	}, nil
 // }
 
-func (s *UserServiceServer) DeactivateUser(ctx context.Context, req *pb.DeactivateUserRequest) (*pb.DeactivateUserResponse, error) {
-	s.Logger.Info("Received request to deactivate user: %s", req.UserId)
-
-	var isActive string
-	err := s.DB.QueryRow(ctx, `SELECT is_active FROM users WHERE id = $1`, req.UserId).Scan(&isActive)
-	if err != nil {
-		s.Logger.Error("Failed to check user status: %v", err)
-		return nil, fmt.Errorf("failed to check user status: %v", err)
+func (s *UserServiceServer) VerifyToken(ctx context.Context, req *pb.TokenRequest) (*pb.TokenResponse, error) {
+	secretKey := os.Getenv("JWT_SECRET")
+	if secretKey == "" {
+		return nil, errors.New("JWT secret key is not set")
 	}
 
-	if isActive == "inactive" {
-		return &pb.DeactivateUserResponse{
-			Message: "User is already deactivated",
-		}, nil
+	token, err := jwt.Parse(req.Token, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(secretKey), nil
+	})
+
+	if err != nil || !token.Valid {
+		return nil, errors.New("invalid or expired token")
 	}
 
-	_, err = s.DB.Exec(ctx, `UPDATE users SET is_active = 'inactive', updated_at = NOW() WHERE id = $1`, req.UserId)
-	if err != nil {
-		s.Logger.Error("Failed to deactivate user: %v", err)
-		return nil, fmt.Errorf("failed to deactivate user: %v", err)
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("invalid token claims")
 	}
 
-	s.Logger.Info("User %s successfully deactivated", req.UserId)
-
-	return &pb.DeactivateUserResponse{
-		Message: "User deactivated successfully",
-	}, nil
-}
-
-func (s *UserServiceServer) ReactivateUser(ctx context.Context, req *pb.ReactivateUserRequest) (*pb.ReactivateUserResponse, error) {
-	s.Logger.Info("Received request to reactivate user: %s", req.UserId)
-
-	var isActive string
-	err := s.DB.QueryRow(ctx, `SELECT is_active FROM users WHERE id = $1`, req.UserId).Scan(&isActive)
-	if err != nil {
-		s.Logger.Error("Failed to check user status: %v", err)
-		return nil, fmt.Errorf("failed to check user status: %v", err)
+	id, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("invalid user ID in token")
 	}
 
-	if isActive == "active" {
-		return &pb.ReactivateUserResponse{
-			Message: "User is already active",
-		}, nil
-	}
+	email, _ := claims["email"].(string)
 
-	_, err = s.DB.Exec(ctx, `UPDATE users SET is_active = 'active', updated_at = NOW() WHERE id = $1`, req.UserId)
-	if err != nil {
-		s.Logger.Error("Failed to reactivate user: %v", err)
-		return nil, fmt.Errorf("failed to reactivate user: %v", err)
-	}
-
-	s.Logger.Info("User %s successfully reactivated", req.UserId)
-
-	return &pb.ReactivateUserResponse{
-		Message: "User reactivated successfully",
+	return &pb.TokenResponse{
+		Id:    id,
+		Email: email,
 	}, nil
 }
 
