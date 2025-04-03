@@ -5,79 +5,12 @@ package auth;
 option go_package = "./pb";
 
 service AuthService {
-  rpc SignUp(SignUpRequest) returns (SignUpResponse);
-  rpc SignIn(SignInRequest) returns (SignInResponse);
-  rpc SignInOnlyEmployee(SignInOnlyEmployeeRequest) returns (SignInOnlyEmployeeResponse);
-  rpc SignOut(SignOutRequest) returns (SignOutResponse);
   rpc GetUserRole(GetUserRoleRequest) returns (GetUserRoleResponse);
   rpc VerifyToken(TokenRequest) returns (TokenResponse);
-  // rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse); Moved to gqlgen
-  // rpc UpdateUserInfo(UpdateUserInfoRequest) returns (UpdateUserInfoResponse); Moved to gqlgen
   rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse); //Not working
   rpc ChangeUserPassword(ChangeUserPasswordRequest) returns (ChangeUserPasswordResponse); //Not working
   // rpc ReactivateUser(ReactivateUserRequest) returns (ReactivateUserResponse); Moved to gqlgen
   // rpc DeactivateUser(DeactivateUserRequest) returns (DeactivateUserResponse); Moved to gqlgen
-}
-
-message User {
-  string id = 1;
-  string email = 2;
-  string first_name = 3;
-  string last_name = 4;
-  string role = 5;
-  string address = 6;
-  string phone = 7;
-  string is_active = 8;
-  string created_at = 9;
-  string updated_at = 10;
-}
-
-message SignUpRequest {
-  string email = 1;
-  string password = 2;
-  string first_name = 3;
-  string last_name = 4;
-  string role = 5;
-  optional string address = 6;
-  optional string phone = 7;
-}
-
-message SignUpResponse {
-  string user_id = 1;
-  string first_name = 2;
-  string last_name = 3;
-  string role = 5;
-}
-
-message SignInRequest {
-  string email = 1;
-  string password = 2;
-}
-
-message SignInResponse {
-  string access_token = 1;
-  string refresh_token = 2;
-  string error = 3;
-}
-
-message SignInOnlyEmployeeRequest {
-  string email = 1;
-  string password = 2;
-}
-
-message SignInOnlyEmployeeResponse {
-  string access_token = 1;
-  string refresh_token = 2;
-  string error = 3;
-}
-
-message SignOutRequest {
-  string user_id = 1;
-}
-
-message SignOutResponse {
-    string message = 1;
-    string error = 2;
 }
 
 message GetUserRoleRequest {

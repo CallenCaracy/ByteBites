@@ -62,6 +62,7 @@ const LoginPage: React.FC = () => {
                             placeholder="Enter your email"
                             onChange={(e) => setEmail(e.target.value)}
                             required 
+                            autoComplete="username"
                         />
                     </div>
                     <div className="mt-4">
@@ -77,6 +78,7 @@ const LoginPage: React.FC = () => {
                                 placeholder="Enter your password"
                                 onChange={(e) => setPassword(e.target.value)}
                                 required 
+                                autoComplete="current-password"
                             />
                             <button
                                 type="button"
@@ -102,6 +104,9 @@ const LoginPage: React.FC = () => {
                         </button>
                     </div>
                     {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
+                    <p className="text-center text-gray-600 text-sm mt-4">
+                        Don't have an account? <span className="text-blue-500 cursor-pointer" onClick={() => navigate("/register")}>Register here</span>
+                    </p>
                 </form>
             </div>
         </div>

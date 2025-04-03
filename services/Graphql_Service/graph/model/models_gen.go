@@ -3,9 +3,8 @@
 package model
 
 type AuthResponse struct {
-	AccessToken  string  `json:"accessToken"`
-	RefreshToken string  `json:"refreshToken"`
-	Error        *string `json:"error,omitempty"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }
 
 type MenuItem struct {
@@ -35,11 +34,6 @@ type NewMenuItem struct {
 type Query struct {
 }
 
-type SignInEmployeeInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 type SignInInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -67,7 +61,6 @@ type UpdateMenuItem struct {
 type UpdateUserInput struct {
 	FirstName *string `json:"firstName,omitempty"`
 	LastName  *string `json:"lastName,omitempty"`
-	Role      *string `json:"role,omitempty"`
 	Address   *string `json:"address,omitempty"`
 	Phone     *string `json:"phone,omitempty"`
 	IsActive  *bool   `json:"isActive,omitempty"`

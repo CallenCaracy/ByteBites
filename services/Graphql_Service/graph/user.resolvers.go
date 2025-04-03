@@ -8,85 +8,92 @@ import (
 	"Graphql_Service/graph/model"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
+	"os"
 	"strings"
 
 	"github.com/CallenCaracy/ByteBites/services/User_Service/pb"
+	"github.com/supabase-community/auth-go/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
 // SignUp is the resolver for the signUp field.
 func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) (*model.User, error) {
-	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
-	}
-	defer conn.Close()
+	r.Logger.Info("Received signup request for email: %s", input.Email)
 
-	client := pb.NewAuthServiceClient(conn)
-
-	req := &pb.SignUpRequest{
-		Email:     input.Email,
-		Password:  input.Password,
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
-		Role:      input.Role,
+	req := types.SignupRequest{
+		Email:    input.Email,
+		Password: input.Password,
 	}
 
-	if input.Address != nil {
-		req.Address = input.Address
-	}
-	if input.Phone != nil {
-		req.Phone = input.Phone
-	}
-
-	res, err := client.SignUp(ctx, req)
+	res, err := r.AuthClient.Signup(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign up user: %v", err)
 	}
 
+	r.Logger.Info("Successfully signed up user: %s", res.ID.String())
+
+	var address, phone *string
+	if input.Address != nil {
+		address = input.Address
+	}
+	if input.Phone != nil {
+		phone = input.Phone
+	}
+
+	_, err = r.DB1.Exec(`
+		INSERT INTO public.users (id, email, first_name, last_name, role, address, phone)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		res.ID, input.Email, input.FirstName, input.LastName, input.Role, address, phone,
+	)
+	if err != nil {
+		r.Logger.Error("Failed to insert user into database: %v", err)
+		return nil, fmt.Errorf("failed to insert user into database: %v", err)
+	}
+
+	r.Logger.Info("User %s successfully inserted into the database", res.ID.String())
+
 	return &model.User{
-		ID:        res.UserId,
+		ID:        res.ID.String(),
 		Email:     input.Email,
-		FirstName: res.FirstName,
-		LastName:  res.LastName,
-		Role:      res.Role,
-		Address:   input.Address,
-		Phone:     input.Phone,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		Role:      input.Role,
+		Address:   address,
+		Phone:     phone,
 	}, nil
 }
 
 // SignIn is the resolver for the signIn field.
 func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) (*model.AuthResponse, error) {
-	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
-	}
-	defer conn.Close()
+	r.Logger.Info("Signing in %s", input.Email)
 
-	client := pb.NewAuthServiceClient(conn)
-
-	req := &pb.SignInRequest{
+	signInData := model.SignInInput{
 		Email:    input.Email,
 		Password: input.Password,
 	}
 
-	res, err := client.SignIn(ctx, req)
+	authResponse, err := r.AuthClient.SignInWithEmailPassword(signInData.Email, signInData.Password)
 	if err != nil {
-		return nil, fmt.Errorf("failed to login user: %v", err)
+		r.Logger.Error("Failed to sign in user: %v", err)
+		return nil, fmt.Errorf("failed to sign in user: %v", err)
 	}
 
+	r.Logger.Info("User %s signed in successfully", authResponse.User.ID.String())
+
 	return &model.AuthResponse{
-		AccessToken:  res.AccessToken,
-		RefreshToken: res.RefreshToken,
-		Error:        &res.Error,
+		AccessToken:  authResponse.AccessToken,
+		RefreshToken: authResponse.RefreshToken,
 	}, nil
 }
 
 // SignInOnlyEmployee is the resolver for the signInOnlyEmployee field.
-func (r *mutationResolver) SignInOnlyEmployee(ctx context.Context, input model.SignInEmployeeInput) (*model.AuthResponse, error) {
+func (r *mutationResolver) SignInOnlyEmployee(ctx context.Context, input model.SignInInput) (*model.AuthResponse, error) {
 	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
@@ -95,75 +102,115 @@ func (r *mutationResolver) SignInOnlyEmployee(ctx context.Context, input model.S
 
 	client := pb.NewAuthServiceClient(conn)
 
-	req := &pb.SignInOnlyEmployeeRequest{
-		Email:    input.Email,
-		Password: input.Password,
+	req := model.SignInInput(input)
+
+	// Get user role via gRPC
+	getRole, err := client.GetUserRole(ctx, &pb.GetUserRoleRequest{Email: req.Email})
+	if err != nil {
+		r.Logger.Error("Error retrieving role for %s: %v", req.Email, err)
+		return nil, fmt.Errorf("failed to retrieve user role: %v", err)
 	}
 
-	res, err := client.SignInOnlyEmployee(ctx, req)
+	if getRole.Role != "employee" {
+		r.Logger.Error("Email %s has role %s; not allowed to sign in as employee", req.Email, getRole.Role)
+		return nil, fmt.Errorf("user does not have permission to sign in as an employee")
+	}
+
+	authResponse, err := r.SignIn(ctx, model.SignInInput{
+		Email:    input.Email,
+		Password: input.Password,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to login user: %v", err)
 	}
 
 	return &model.AuthResponse{
-		AccessToken:  res.AccessToken,
-		RefreshToken: res.RefreshToken,
-		Error:        &res.Error,
+		AccessToken:  authResponse.AccessToken,
+		RefreshToken: authResponse.RefreshToken,
 	}, nil
 }
 
 // SignOut is the resolver for the signOut field.
 func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
-	// Extract HTTP headers from the request
-	// requestCtx := graphql.GetOperationContext(ctx)
-	// if requestCtx == nil {
-	//     return false, fmt.Errorf("missing HTTP request context")
-	// }
+	r.Logger.Info("Attempting to sign out user")
 
-	// httpRequest, ok := requestCtx.RawRequest.(*http.Request)
-	// if !ok {
-	//     return false, fmt.Errorf("failed to extract HTTP request")
-	// }
+	// Extract metadata (headers) from the GraphQL context
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		r.Logger.Error("Failed to retrieve metadata")
+		return false, fmt.Errorf("failed to retrieve metadata")
+	}
 
-	// authToken := httpRequest.Header.Get("Authorization")
-	// refreshToken := httpRequest.Header.Get("refresh_token")
+	r.Logger.Info("Received Metadata: %+v\n", md)
 
-	// if authToken == "" || refreshToken == "" {
-	//     return false, fmt.Errorf("missing Authorization or refresh_token headers")
-	// }
+	// Get the authorization token from metadata
+	authHeader := md.Get("authorization")
+	if len(authHeader) == 0 {
+		r.Logger.Error("Missing authorization token")
+		return false, fmt.Errorf("missing authorization token")
+	}
+	accessToken := strings.TrimSpace(strings.TrimPrefix(authHeader[0], "Bearer "))
 
-	// // Debugging logs
-	// fmt.Println("Extracted Authorization:", authToken)
-	// fmt.Println("Extracted Refresh Token:", refreshToken)
+	// Optionally extract refresh token from metadata
+	refreshTokens := md.Get("refresh_token")
+	refreshToken := ""
+	if len(refreshTokens) > 0 {
+		refreshToken = refreshTokens[0]
+	}
 
-	// // Attach headers as metadata to gRPC request
-	// md := metadata.New(map[string]string{
-	//     "authorization": authToken,
-	//     "refresh_token": refreshToken,
-	// })
-	// ctx = metadata.NewOutgoingContext(ctx, md)
+	// Retrieve Supabase configuration from environment variables
+	supabaseURL := os.Getenv("SUPABASE_URL_FULL")
+	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-	// // Establish gRPC connection
-	// conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
-	// if err != nil {
-	//     return false, fmt.Errorf("failed to connect to gRPC server: %v", err)
-	// }
-	// defer conn.Close()
+	r.Logger.Info("Using Supabase URL: %s", supabaseURL)
+	r.Logger.Info("Using API Key: %s", serviceKey)
 
-	// client := pb.NewAuthServiceClient(conn)
+	if supabaseURL == "" || serviceKey == "" {
+		r.Logger.Error("Missing Supabase environment variables")
+		return false, fmt.Errorf("missing Supabase URL or API Key")
+	}
 
-	// // Make the gRPC call
-	// res, err := client.SignOut(ctx, &pb.SignOutRequest{})
-	// if err != nil {
-	//     return false, fmt.Errorf("sign out failed: %v", err)
-	// }
+	// Prepare the logout request body (refresh token is optional)
+	requestBody, err := json.Marshal(map[string]string{
+		"refresh_token": refreshToken,
+	})
+	if err != nil {
+		r.Logger.Error("Error marshaling JSON: %v", err)
+		return false, fmt.Errorf("failed to create logout request body: %v", err)
+	}
 
-	// if res.Error != "" {
-	//     return false, fmt.Errorf("sign out error: %s", res.Error)
-	// }
+	// Construct the Supabase logout URL
+	logoutURL := fmt.Sprintf("%s/auth/v1/logout", supabaseURL)
+	httpReq, err := http.NewRequest("POST", logoutURL, strings.NewReader(string(requestBody)))
+	if err != nil {
+		r.Logger.Error("Error creating logout request: %v", err)
+		return false, fmt.Errorf("failed to create logout request: %v", err)
+	}
 
-	// return true, nil
-	panic(fmt.Errorf("not implemented: UpdateUser - updateUser"))
+	// Set request headers
+	httpReq.Header.Set("Authorization", "Bearer "+accessToken)
+	httpReq.Header.Set("apikey", serviceKey)
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	// Execute the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		r.Logger.Error("Error sending logout request: %v", err)
+		return false, fmt.Errorf("failed to sign out user: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Check if logout was successful (204 No Content)
+	if resp.StatusCode == http.StatusNoContent {
+		r.Logger.Info("User successfully signed out.")
+		return true, nil
+	}
+
+	// Handle errors: read response body for details
+	body, _ := io.ReadAll(resp.Body)
+	r.Logger.Error("Failed to sign out user: Status %d, Response: %s", resp.StatusCode, string(body))
+	return false, fmt.Errorf("failed to sign out user: received status %d, response: %s", resp.StatusCode, string(body))
 }
 
 // UpdateUser is the resolver for the updateUser field.
@@ -183,7 +230,7 @@ func (r *queryResolver) GetUserByID(ctx context.Context, id string) (*model.User
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // Return nil if user not found
+			return nil, nil
 		}
 		return nil, err
 	}

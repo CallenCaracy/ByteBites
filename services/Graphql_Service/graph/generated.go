@@ -49,7 +49,6 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	AuthResponse struct {
 		AccessToken  func(childComplexity int) int
-		Error        func(childComplexity int) int
 		RefreshToken func(childComplexity int) int
 	}
 
@@ -69,7 +68,7 @@ type ComplexityRoot struct {
 		CreateMenuItem     func(childComplexity int, input model.NewMenuItem) int
 		DeleteMenuItem     func(childComplexity int, id string) int
 		SignIn             func(childComplexity int, input model.SignInInput) int
-		SignInOnlyEmployee func(childComplexity int, input model.SignInEmployeeInput) int
+		SignInOnlyEmployee func(childComplexity int, input model.SignInInput) int
 		SignOut            func(childComplexity int) int
 		SignUp             func(childComplexity int, input model.SignUpInput) int
 		UpdateMenuItem     func(childComplexity int, id string, input model.UpdateMenuItem) int
@@ -103,7 +102,7 @@ type MutationResolver interface {
 	DeleteMenuItem(ctx context.Context, id string) (bool, error)
 	SignUp(ctx context.Context, input model.SignUpInput) (*model.User, error)
 	SignIn(ctx context.Context, input model.SignInInput) (*model.AuthResponse, error)
-	SignInOnlyEmployee(ctx context.Context, input model.SignInEmployeeInput) (*model.AuthResponse, error)
+	SignInOnlyEmployee(ctx context.Context, input model.SignInInput) (*model.AuthResponse, error)
 	SignOut(ctx context.Context) (bool, error)
 	UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error)
 }
@@ -139,13 +138,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AuthResponse.AccessToken(childComplexity), true
-
-	case "AuthResponse.error":
-		if e.complexity.AuthResponse.Error == nil {
-			break
-		}
-
-		return e.complexity.AuthResponse.Error(childComplexity), true
 
 	case "AuthResponse.refreshToken":
 		if e.complexity.AuthResponse.RefreshToken == nil {
@@ -263,7 +255,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SignInOnlyEmployee(childComplexity, args["input"].(model.SignInEmployeeInput)), true
+		return e.complexity.Mutation.SignInOnlyEmployee(childComplexity, args["input"].(model.SignInInput)), true
 
 	case "Mutation.signOut":
 		if e.complexity.Mutation.SignOut == nil {
@@ -425,7 +417,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputNewMenuItem,
-		ec.unmarshalInputSignInEmployeeInput,
 		ec.unmarshalInputSignInInput,
 		ec.unmarshalInputSignUpInput,
 		ec.unmarshalInputUpdateMenuItem,
@@ -607,13 +598,13 @@ func (ec *executionContext) field_Mutation_signInOnlyEmployee_args(ctx context.C
 func (ec *executionContext) field_Mutation_signInOnlyEmployee_argsInput(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (model.SignInEmployeeInput, error) {
+) (model.SignInInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSignInEmployeeInput2Graphql_ServiceᚋgraphᚋmodelᚐSignInEmployeeInput(ctx, tmp)
+		return ec.unmarshalNSignInInput2Graphql_ServiceᚋgraphᚋmodelᚐSignInInput(ctx, tmp)
 	}
 
-	var zeroVal model.SignInEmployeeInput
+	var zeroVal model.SignInInput
 	return zeroVal, nil
 }
 
@@ -990,47 +981,6 @@ func (ec *executionContext) _AuthResponse_refreshToken(ctx context.Context, fiel
 }
 
 func (ec *executionContext) fieldContext_AuthResponse_refreshToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _AuthResponse_error(ctx context.Context, field graphql.CollectedField, obj *model.AuthResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthResponse_error(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Error, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AuthResponse_error(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "AuthResponse",
 		Field:      field,
@@ -1752,8 +1702,6 @@ func (ec *executionContext) fieldContext_Mutation_signIn(ctx context.Context, fi
 				return ec.fieldContext_AuthResponse_accessToken(ctx, field)
 			case "refreshToken":
 				return ec.fieldContext_AuthResponse_refreshToken(ctx, field)
-			case "error":
-				return ec.fieldContext_AuthResponse_error(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AuthResponse", field.Name)
 		},
@@ -1786,7 +1734,7 @@ func (ec *executionContext) _Mutation_signInOnlyEmployee(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SignInOnlyEmployee(rctx, fc.Args["input"].(model.SignInEmployeeInput))
+		return ec.resolvers.Mutation().SignInOnlyEmployee(rctx, fc.Args["input"].(model.SignInInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1815,8 +1763,6 @@ func (ec *executionContext) fieldContext_Mutation_signInOnlyEmployee(ctx context
 				return ec.fieldContext_AuthResponse_accessToken(ctx, field)
 			case "refreshToken":
 				return ec.fieldContext_AuthResponse_refreshToken(ctx, field)
-			case "error":
-				return ec.fieldContext_AuthResponse_error(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AuthResponse", field.Name)
 		},
@@ -4807,40 +4753,6 @@ func (ec *executionContext) unmarshalInputNewMenuItem(ctx context.Context, obj a
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSignInEmployeeInput(ctx context.Context, obj any) (model.SignInEmployeeInput, error) {
-	var it model.SignInEmployeeInput
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"email", "password"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "email":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Email = data
-		case "password":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Password = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputSignInInput(ctx context.Context, obj any) (model.SignInInput, error) {
 	var it model.SignInInput
 	asMap := map[string]any{}
@@ -5013,7 +4925,7 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"firstName", "lastName", "role", "address", "phone", "isActive"}
+	fieldsInOrder := [...]string{"firstName", "lastName", "address", "phone", "isActive"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -5034,13 +4946,6 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 				return it, err
 			}
 			it.LastName = data
-		case "role":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("role"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Role = data
 		case "address":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -5097,8 +5002,6 @@ func (ec *executionContext) _AuthResponse(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "error":
-			out.Values[i] = ec._AuthResponse_error(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5948,11 +5851,6 @@ func (ec *executionContext) marshalNMenuItem2ᚖGraphql_Serviceᚋgraphᚋmodel�
 
 func (ec *executionContext) unmarshalNNewMenuItem2Graphql_ServiceᚋgraphᚋmodelᚐNewMenuItem(ctx context.Context, v any) (model.NewMenuItem, error) {
 	res, err := ec.unmarshalInputNewMenuItem(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNSignInEmployeeInput2Graphql_ServiceᚋgraphᚋmodelᚐSignInEmployeeInput(ctx context.Context, v any) (model.SignInEmployeeInput, error) {
-	res, err := ec.unmarshalInputSignInEmployeeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

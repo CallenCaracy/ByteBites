@@ -1,15 +1,31 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/ByteBitesLogo/logo.png";
+import { useMutation } from "@apollo/client";
+import { SIGN_OUT_USER } from "../graphql/Userqueries";
 
 const Navbar: React.FC = () => {
     const navigate = useNavigate();
     const isAuthenticated = Boolean(localStorage.getItem("accessToken"));
 
-    const handleLogout = () => {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        navigate("/login");
+    const [signOut, { loading, error }] = useMutation(SIGN_OUT_USER);
+
+    const handleLogout = async () => {
+        try {
+            const { data } = await signOut();
+            if (data?.signOut) {
+                if (loading) return <p className="text-center text-gray-600">Signing out...</p>;
+                if (error) return <p className="text-center text-red-500">Error signing out.</p>;
+                console.log("Logout successful");
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
+                navigate("/login");
+            } else {
+                console.error("Logout failed");
+            }
+        } catch (err) {
+            console.error("Error signing out:", err);
+        }
     };
 
     return (
