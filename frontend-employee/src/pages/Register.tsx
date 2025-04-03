@@ -46,6 +46,11 @@ const RegisterPage: React.FC = () => {
             return;
         }
 
+        if (formData.password.length < 8) {
+            alert("Password must be at least 8 characters long.");
+            return;
+        }
+
         try {
             const { data } = await signUp({
                 variables: {
@@ -69,6 +74,9 @@ const RegisterPage: React.FC = () => {
             }
         } catch (err) {
             console.error("Registration error:", err);
+            if ((err as any)?.graphQLErrors && (err as any).graphQLErrors.length > 0) {
+                (err as any).graphQLErrors.forEach((e: any) => console.error("GraphQL error:", e.message));
+            }
             alert("Something went wrong. Please try again.");
         }
     };
@@ -125,7 +133,14 @@ const RegisterPage: React.FC = () => {
                             {loading ? "Registering..." : "Sign Up"}
                         </button>
                     </div>
-                    {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
+                    {error && (
+                        <p className="text-red-500 text-sm mt-2">
+                            {error.message.includes("duplicate key value violates unique constraint") 
+                                ? "This email is already registered. Try logging in." 
+                                : "Registration failed. Please try again."
+                            }
+                        </p>
+                    )}
                     <p className="text-center text-gray-600 text-sm mt-4">
                         Already have an account? <span className="text-blue-500 cursor-pointer" onClick={() => navigate("/login")}>Login here</span>
                     </p>
