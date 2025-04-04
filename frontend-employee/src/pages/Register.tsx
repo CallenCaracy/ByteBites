@@ -16,11 +16,14 @@ const RegisterPage: React.FC = () => {
         phone: "",
         password: "",
         confirmPassword: "",
-    });
+        age: "",
+        userType: "",
+        gender: "",
+    });    
     const navigate = useNavigate();
     const [signUp, { loading, error }] = useMutation(SIGN_UP_MUTATION);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
 
         if (name === "phone") {
@@ -29,6 +32,10 @@ const RegisterPage: React.FC = () => {
         }
     
         if (name === "role") return;
+
+        if (name === "age") {
+            if (!/^\d*$/.test(value)) return;
+        }
     
         setFormData({ ...formData, [name]: value });
     };
@@ -62,6 +69,9 @@ const RegisterPage: React.FC = () => {
                         role: formData.role,
                         address: formData.address,
                         phone: formData.phone,
+                        age: parseInt(formData.age),
+                        userType: formData.userType,
+                        gender: formData.gender,
                     },
                 },
             });
@@ -93,37 +103,156 @@ const RegisterPage: React.FC = () => {
                     </div>
                     <h2 className="text-3xl font-semibold text-gray-700 text-center mt-1 mb-1">ByteBites</h2>
                     <p className="text-lg text-gray-600 text-center mt-1 mb-1">Hello Employee!<br></br>Let's get started.</p>
-                    {Object.keys(formData).map((key) => (
-                        key !== "confirmPassword" && (
-                        <div key={key} className="mt-4">
-                            <label className="block text-gray-700 text-sm font-bold mb-2">
-                                {key.charAt(0).toUpperCase() + key.slice(1)}
-                            </label>
-                            <input
-                                className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                                type={key === "password" ? "password" : "text"}
-                                name={key}
-                                value={formData[key as keyof typeof formData]}
-                                placeholder={`Enter your ${key}`}
-                                onChange={handleChange}
-                                required
-                                autoComplete="new-password"
-                            />
-                        </div>)
-                    ))}
+                    
+                    {/* Email */}
                     <div className="mt-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Confirm Password</label>
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
                         <input
-                            className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                            type="password"
-                            name="confirmPassword"
-                            value={formData.confirmPassword}
-                            placeholder="Confirm your password"
+                            type="email"
+                            name="email"
+                            value={formData.email}
                             onChange={handleChange}
                             required
+                            placeholder="Enter your email"
+                            className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
+                        />
+                    </div>
+
+                    {/* First Name */}
+                    <div className="mt-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">First Name</label>
+                        <input
+                            type="text"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            required
+                            placeholder="Enter your First Name"
+                            className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
+                        />
+                    </div>
+
+                    {/* Last Name */}
+                    <div className="mt-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Last Name</label>
+                        <input
+                            type="text"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            required
+                            placeholder="Enter your Last Name"
+                            className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
+                        />
+                    </div>
+
+                    {/* Address */}
+                    <div className="mt-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Address</label>
+                        <input
+                            type="text"
+                            name="address"
+                            value={formData.address}
+                            onChange={handleChange}
+                            placeholder="Enter your Address"
+                            className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
+                        />
+                    </div>
+
+                    {/* Phone */}
+                    <div className="mt-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Phone</label>
+                        <input
+                            type="text"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleChange}
+                            maxLength={11}
+                            placeholder="Enter your phone number"
+                            className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
+                        />
+                    </div>
+
+                    {/* Age */}
+                    <div className="mt-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Age</label>
+                        <input
+                            type="number"
+                            name="age"
+                            value={formData.age}
+                            onChange={handleChange}
+                            required
+                            placeholder="Enter your age"
+                            className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
+                        />
+                    </div>
+
+                    {/* User Type */}
+                    <div className="mt-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">User Type</label>
+                        <select
+                            name="userType"
+                            value={formData.userType}
+                            onChange={handleChange}
+                            required
+                            title="Select User Type"
+                            className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
+                        >
+                            <option value="">Select User Type</option>
+                            <option value="staff">Staff</option>
+                            <option value="manager">Manager</option>
+                            <option value="chef">Chef</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+
+                    {/* Gender */}
+                    <div className="mt-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Gender</label>
+                        <select
+                            name="gender"
+                            value={formData.gender}
+                            onChange={handleChange}
+                            title="Select Gender"
+                            className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
+                        >
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    {/* Password */}
+                    <div className="mt-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                        <input
+                            type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                            placeholder="Enter your password"
+                            className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
                             autoComplete="new-password"
                         />
                     </div>
+
+                    {/* Confirm Password */}
+                    <div className="mt-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Confirm Password</label>
+                        <input
+                            type="password"
+                            name="confirmPassword"
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            required
+                            placeholder="Enter your confirm password"
+                            className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
+                            autoComplete="new-password"
+                        />
+                    </div>
+
                     <div className="mt-8">
                         <button
                             type="submit"
@@ -133,6 +262,7 @@ const RegisterPage: React.FC = () => {
                             {loading ? "Registering..." : "Sign Up"}
                         </button>
                     </div>
+
                     {error && (
                         <p className="text-red-500 text-sm mt-2">
                             {error.message.includes("duplicate key value violates unique constraint") 
@@ -141,6 +271,7 @@ const RegisterPage: React.FC = () => {
                             }
                         </p>
                     )}
+
                     <p className="text-center text-gray-600 text-sm mt-4">
                         Already have an account? <span className="text-blue-500 cursor-pointer" onClick={() => navigate("/login")}>Login here</span>
                     </p>

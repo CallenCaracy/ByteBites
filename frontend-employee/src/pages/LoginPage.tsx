@@ -103,7 +103,13 @@ const LoginPage: React.FC = () => {
                             {loading ? "Logging in..." : "Login"}
                         </button>
                     </div>
-                    {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
+                    {error && (
+                        <p className="text-red-500 text-sm mt-2">
+                            {error.message.includes("email_not_confirmed")
+                            ? "Email not confirmed. Please check your inbox for a confirmation link."
+                            : "Login failed. Please try again."}
+                        </p>
+                    )}
                     <p className="text-center text-gray-600 text-sm mt-4">
                         Don't have an account? <span className="text-blue-500 cursor-pointer" onClick={() => navigate("/register")}>Register here</span>
                     </p>

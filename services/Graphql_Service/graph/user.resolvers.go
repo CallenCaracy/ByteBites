@@ -38,7 +38,7 @@ func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) 
 
 	r.Logger.Info("Successfully signed up user: %s", res.ID.String())
 
-	var address, phone *string
+	var address, phone, gender *string
 	if input.Address != nil {
 		address = input.Address
 	}
@@ -46,10 +46,14 @@ func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) 
 		phone = input.Phone
 	}
 
+	if input.Gender != nil {
+		gender = input.Gender
+	}
+
 	_, err = r.DB1.Exec(`
-		INSERT INTO public.users (id, email, first_name, last_name, role, address, phone)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		res.ID, input.Email, input.FirstName, input.LastName, input.Role, address, phone,
+		INSERT INTO public.users (id, email, first_name, last_name, role, address, phone, age, user_type, gender)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+		res.ID, input.Email, input.FirstName, input.LastName, input.Role, address, phone, input.Age, input.UserType, gender,
 	)
 	if err != nil {
 		r.Logger.Error("Failed to insert user into database: %v", err)
@@ -66,6 +70,9 @@ func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) 
 		Role:      input.Role,
 		Address:   address,
 		Phone:     phone,
+		Age:       input.Age,
+		UserType:  input.UserType,
+		Gender:    gender,
 	}, nil
 }
 
@@ -222,11 +229,12 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input mode
 func (r *queryResolver) GetUserByID(ctx context.Context, id string) (*model.User, error) {
 	var user model.User
 
-	query := `SELECT id, email, first_name, last_name, role, address, phone, is_active, created_at, updated_at FROM public.users WHERE id = $1`
+	query := `SELECT id, email, first_name, last_name, role, address, phone, is_active, created_at, updated_at, age, user_type, pfp, gender FROM public.users WHERE id = $1`
 	err := r.Resolver.DB1.QueryRow(query, id).Scan(
 		&user.ID, &user.Email, &user.FirstName, &user.LastName,
 		&user.Role, &user.Address, &user.Phone, &user.IsActive,
-		&user.CreatedAt, &user.UpdatedAt,
+		&user.CreatedAt, &user.UpdatedAt, &user.Age, &user.UserType,
+		&user.Pfp, &user.Gender,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -281,5 +289,9 @@ func (r *queryResolver) GetAuthenticatedUser(ctx context.Context) (*model.User, 
 		IsActive:  user.IsActive,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
+		Age:       user.Age,
+		UserType:  user.UserType,
+		Pfp:       user.Pfp,
+		Gender:    user.Gender,
 	}, nil
 }

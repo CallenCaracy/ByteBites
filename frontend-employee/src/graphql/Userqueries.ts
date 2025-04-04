@@ -11,7 +11,12 @@ export const SIGN_UP_MUTATION = gql`
       address
       phone
       isActive
+      age
+      userType
+      pfp
+      gender
       createdAt
+      updatedAt
     }
   }
 `;
@@ -36,6 +41,10 @@ export const GET_AUTHENTICATED_USER = gql`
       address
       phone
       isActive
+      age
+      userType
+      pfp
+      gender
       createdAt
       updatedAt
     }

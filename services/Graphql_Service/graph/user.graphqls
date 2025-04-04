@@ -7,6 +7,10 @@ type User {
   address: String
   phone: String
   isActive: String!
+  age: Int!
+  userType: String!
+  pfp: String
+  gender: String
   createdAt: String!
   updatedAt: String
 }
@@ -24,6 +28,9 @@ input SignUpInput {
   role: String!
   address: String
   phone: String
+  age: Int!
+  userType: String!
+  gender: String
 }
 
 input SignInInput {
@@ -36,6 +43,10 @@ input UpdateUserInput {
   lastName: String
   address: String
   phone: String
+  age: Int
+  userType: String
+  gender: String
+  pfp: String
   isActive: Boolean
 }
 
