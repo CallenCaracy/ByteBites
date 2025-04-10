@@ -68,7 +68,7 @@ const LoginPage: React.FC = () => {
                     <div className="mt-4">
                         <div className="flex justify-between">
                             <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
-                            <a href="#" className="text-xs text-gray-500">Forget Password?</a>
+                            <span className="text-xs text-blue-500 cursor-pointer" onClick={() => navigate("/forgot")}>Forgot Password</span>
                         </div>
                         <div className="relative">
                             <input 
@@ -78,7 +78,7 @@ const LoginPage: React.FC = () => {
                                 placeholder="Enter your password"
                                 onChange={(e) => setPassword(e.target.value)}
                                 required 
-                                autoComplete="current-password"
+                                autoComplete="new-password"
                             />
                             <button
                                 type="button"
@@ -87,9 +87,9 @@ const LoginPage: React.FC = () => {
                                 className="absolute inset-y-0 right-3 flex items-center text-gray-500 m-1 rounded-full"
                             >
                                 {showPassword ? (
-                                    <EyeOffIcon size={20} className="text-white" /> // Increased size
+                                    <EyeOffIcon size={20} className="text-white" />
                                 ) : (
-                                    <EyeIcon size={20} className="text-white" /> // Increased size
+                                    <EyeIcon size={20} className="text-white" />
                                 )}
                             </button>
                         </div>
@@ -105,9 +105,13 @@ const LoginPage: React.FC = () => {
                     </div>
                     {error && (
                         <p className="text-red-500 text-sm mt-2">
-                            {error.message.includes("email_not_confirmed")
-                            ? "Email not confirmed. Please check your inbox for a confirmation link."
-                            : "Login failed. Please try again."}
+                            {error.message.includes("email_not_confirmed") ? (
+                                "Email not confirmed. Please check your inbox for a confirmation link."
+                            ) : error.message.includes("no rows in result set") || error.message.includes("Error retrieving role for") ? (
+                                "This email is unknown or unregistered. Please sign up first."
+                            ) : (
+                                "Login failed. Please try again."
+                            )}
                         </p>
                     )}
                     <p className="text-center text-gray-600 text-sm mt-4">

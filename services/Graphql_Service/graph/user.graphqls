@@ -47,13 +47,28 @@ input UpdateUserInput {
   userType: String
   gender: String
   pfp: String
-  isActive: Boolean
+  isActive: String
+}
+
+type TokenCheckResponse {
+  id: ID!
+  email: String!
+}
+
+input ForgotPasswordInput {
+  email: String!
+}
+
+type ForgotPasswordResponse {
+  success: Boolean!
+  message: String
 }
 
 # Queries
 extend type Query {
   getUserById(id: ID!): User
   getAuthenticatedUser: User!
+  checkToken(token: String!): TokenCheckResponse!
 }
 
 # Mutation
@@ -63,4 +78,5 @@ extend type Mutation {
   signInOnlyEmployee(input: SignInInput!): AuthResponse!
   signOut: Boolean!
   updateUser(id: ID!, input: UpdateUserInput!): User!
+  forgotPassword(input: ForgotPasswordInput!): ForgotPasswordResponse!
 }

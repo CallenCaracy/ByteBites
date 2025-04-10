@@ -6,8 +6,8 @@ import Navbar from "../components/NavBar";
 
 const Dashboard: React.FC = () => {
     const { data: menuData, loading: menuLoading, error: menuError } = useQuery(GET_MENU_ITEMS);
-
     const { data: userData, loading: userLoading, error: userError } = useQuery(GET_AUTHENTICATED_USER);
+    
 
     if (menuLoading || userLoading) return <p className="text-center text-gray-600">Loading...</p>;
     if (menuError || userError) return <p className="text-center text-red-500">Error loading data.</p>;
@@ -16,7 +16,7 @@ const Dashboard: React.FC = () => {
 
     return (
         <div>
-            <Navbar />
+            <Navbar userId={userData?.getAuthenticatedUser?.id} />
             <div className="container mx-auto p-8">
                 <h1 className="text-3xl font-semibold text-gray-800 mb-6">Menu</h1>
                 <h2 className="text-3xl font-semibold text-gray-800 mb-6">

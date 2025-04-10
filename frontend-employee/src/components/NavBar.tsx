@@ -1,14 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "../assets/ByteBitesLogo/logo.png";
-import { useMutation } from "@apollo/client";
+import logo from "../assets/ByteBitesLogo/logo-transparent.png";
+import { useApolloClient, useMutation } from "@apollo/client";
 import { SIGN_OUT_USER } from "../graphql/Userqueries";
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+    userId: string | undefined;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ userId }) => {
     const navigate = useNavigate();
     const isAuthenticated = Boolean(localStorage.getItem("accessToken"));
 
     const [signOut, { loading, error }] = useMutation(SIGN_OUT_USER);
+
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    const client = useApolloClient();
 
     const handleLogout = async () => {
         try {
@@ -17,8 +25,11 @@ const Navbar: React.FC = () => {
                 if (loading) return <p className="text-center text-gray-600">Signing out...</p>;
                 if (error) return <p className="text-center text-red-500">Error signing out.</p>;
                 console.log("Logout successful");
+
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("refreshToken");
+
+                client.resetStore();
                 navigate("/login");
             } else {
                 console.error("Logout failed");
@@ -26,28 +37,65 @@ const Navbar: React.FC = () => {
         } catch (err) {
             console.error("Error signing out:", err);
         }
+    }
+
+    const handleViewAccountClick = () => {
+        if (userId) {
+            navigate(`/account/${userId}`);
+        }
+    };
+
+    const handleHomeClick = () => {
+        if (userId) {
+            navigate(`/dashboard`);
+        }
     };
 
     return (
         <nav className="bg-gray-800 text-white p-4 shadow-md">
             <div className="container mx-auto flex justify-between items-center">
                 <Link to="/" className="flex items-center space-x-2">
-                    <img src={logo} alt="Logo" className="h-10 w-10 object-contain" />
+                    <img src={logo} alt="Logo" className="h-15 w-15 object-contain" />
                     <span className="text-xl font-semibold">ByteBites</span>
                 </Link>
                 <ul className="hidden md:flex space-x-6">
-                    <li><Link to="/dashboard" className="hover:text-gray-400">Home</Link></li>
-                    <li><Link to="/menu" className="hover:text-gray-400">Menu</Link></li>
-                    <li><Link to="/about" className="hover:text-gray-400">About</Link></li>
-                    <li><Link to="/account" className="hover:text-gray-400">Account</Link></li>
+                    <li>
+                        <button
+                            onClick={handleHomeClick}
+                            className="block px-4 py-2 text-white hover:bg-gray-600 w-full text-left"
+                            >Home
+                        </button>
+                    </li>
                     {isAuthenticated ? (
-                        <li>
-                            <button 
-                                onClick={handleLogout} 
-                                className="bg-red-500 px-4 py-2 rounded hover:bg-red-600"
+                        <li className="relative">
+                            <button
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
                             >
-                                Logout
+                                Account
                             </button>
+                            {isDropdownOpen && (
+                                <div className="absolute left-0 mt-2 w-48 bg-gray-800 rounded shadow-lg z-10">
+                                    <ul>
+                                        <li>
+                                            <button
+                                                onClick={handleViewAccountClick}
+                                                className="block px-4 py-2 text-white hover:bg-gray-600 w-full text-left"
+                                            >
+                                                Account
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button
+                                                onClick={handleLogout}
+                                                className="block px-4 py-2 text-white hover:bg-gray-600 w-full text-left"
+                                            >
+                                                Logout
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            )}
                         </li>
                     ) : (
                         <li><Link to="/login" className="hover:text-gray-400">Login</Link></li>

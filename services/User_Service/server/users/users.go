@@ -125,6 +125,8 @@ func (s *UserServiceServer) GetUserRole(ctx context.Context, req *pb.GetUserRole
 // }
 
 func (s *UserServiceServer) VerifyToken(ctx context.Context, req *pb.TokenRequest) (*pb.TokenResponse, error) {
+	s.Logger.Info("Verifying token...")
+
 	supabaseURL := os.Getenv("SUPABASE_URL_FULL")
 	supabaseKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 
@@ -138,6 +140,8 @@ func (s *UserServiceServer) VerifyToken(ctx context.Context, req *pb.TokenReques
 	if err != nil {
 		return nil, fmt.Errorf("invalid or expired token: %v", err)
 	}
+
+	s.Logger.Info("Successfully verified token")
 
 	return &pb.TokenResponse{
 		Id:    userResponse.ID,

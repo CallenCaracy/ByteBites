@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/CallenCaracy/ByteBites/services/User_Service/pb"
+	"github.com/nedpals/supabase-go"
 	"github.com/supabase-community/auth-go/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -141,7 +142,6 @@ func (r *mutationResolver) SignInOnlyEmployee(ctx context.Context, input model.S
 func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
 	r.Logger.Info("Attempting to sign out user")
 
-	// Extract metadata (headers) from the GraphQL context
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		r.Logger.Error("Failed to retrieve metadata")
@@ -150,7 +150,6 @@ func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
 
 	r.Logger.Info("Received Metadata: %+v\n", md)
 
-	// Get the authorization token from metadata
 	authHeader := md.Get("authorization")
 	if len(authHeader) == 0 {
 		r.Logger.Error("Missing authorization token")
@@ -158,14 +157,12 @@ func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
 	}
 	accessToken := strings.TrimSpace(strings.TrimPrefix(authHeader[0], "Bearer "))
 
-	// Optionally extract refresh token from metadata
 	refreshTokens := md.Get("refresh_token")
 	refreshToken := ""
 	if len(refreshTokens) > 0 {
 		refreshToken = refreshTokens[0]
 	}
 
-	// Retrieve Supabase configuration from environment variables
 	supabaseURL := os.Getenv("SUPABASE_URL_FULL")
 	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 
@@ -177,7 +174,6 @@ func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("missing Supabase URL or API Key")
 	}
 
-	// Prepare the logout request body (refresh token is optional)
 	requestBody, err := json.Marshal(map[string]string{
 		"refresh_token": refreshToken,
 	})
@@ -186,7 +182,6 @@ func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("failed to create logout request body: %v", err)
 	}
 
-	// Construct the Supabase logout URL
 	logoutURL := fmt.Sprintf("%s/auth/v1/logout", supabaseURL)
 	httpReq, err := http.NewRequest("POST", logoutURL, strings.NewReader(string(requestBody)))
 	if err != nil {
@@ -194,12 +189,10 @@ func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("failed to create logout request: %v", err)
 	}
 
-	// Set request headers
 	httpReq.Header.Set("Authorization", "Bearer "+accessToken)
 	httpReq.Header.Set("apikey", serviceKey)
 	httpReq.Header.Set("Content-Type", "application/json")
 
-	// Execute the HTTP request
 	client := &http.Client{}
 	resp, err := client.Do(httpReq)
 	if err != nil {
@@ -208,13 +201,11 @@ func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
 	}
 	defer resp.Body.Close()
 
-	// Check if logout was successful (204 No Content)
 	if resp.StatusCode == http.StatusNoContent {
 		r.Logger.Info("User successfully signed out.")
 		return true, nil
 	}
 
-	// Handle errors: read response body for details
 	body, _ := io.ReadAll(resp.Body)
 	r.Logger.Error("Failed to sign out user: Status %d, Response: %s", resp.StatusCode, string(body))
 	return false, fmt.Errorf("failed to sign out user: received status %d, response: %s", resp.StatusCode, string(body))
@@ -222,7 +213,110 @@ func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
 
 // UpdateUser is the resolver for the updateUser field.
 func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: UpdateUser - updateUser"))
+	var user model.User
+	err := r.DB1.QueryRowContext(ctx,
+		`SELECT id, email, first_name, last_name, role, address, phone, is_active, age, user_type, pfp, gender, created_at, updated_at
+		FROM users
+		WHERE id = $1`,
+		id).Scan(
+		&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.Role, &user.Address,
+		&user.Phone, &user.IsActive, &user.Age, &user.UserType, &user.Pfp, &user.Gender,
+		&user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+
+	// Update the fields that were provided in the input
+	if input.FirstName != nil {
+		user.FirstName = *input.FirstName
+	}
+	if input.LastName != nil {
+		user.LastName = *input.LastName
+	}
+	if input.Address != nil {
+		user.Address = input.Address
+	}
+	if input.Phone != nil {
+		user.Phone = input.Phone
+	}
+	if input.Age != nil {
+		user.Age = *input.Age
+	}
+	if input.UserType != nil {
+		user.UserType = *input.UserType
+	}
+	if input.Gender != nil {
+		user.Gender = input.Gender
+	}
+	if input.Pfp != nil {
+		user.Pfp = input.Pfp
+	}
+	if input.IsActive != nil {
+		user.IsActive = *input.IsActive
+	}
+
+	updateQuery := `
+    UPDATE users
+    SET first_name = $1, last_name = $2, address = $3, phone = $4, age = $5, user_type = $6,
+        gender = $7, pfp = $8, is_active = $9, updated_at = NOW()
+    WHERE id = $10
+    RETURNING id, first_name, last_name, address, phone, is_active, age, user_type, gender, pfp, updated_at;
+  `
+	err = r.DB1.QueryRowContext(ctx, updateQuery, user.FirstName, user.LastName, user.Address, user.Phone,
+		user.Age, user.UserType, user.Gender, user.Pfp, user.IsActive, user.ID).Scan(
+		&user.ID, &user.FirstName, &user.LastName, &user.Address, &user.Phone, &user.IsActive, &user.Age,
+		&user.UserType, &user.Gender, &user.Pfp, &user.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error updating user: %w", err)
+	}
+
+	return &model.User{
+		ID:        user.ID,
+		Email:     user.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Role:      user.Role,
+		Address:   user.Address,
+		Phone:     user.Phone,
+		IsActive:  user.IsActive,
+		Age:       user.Age,
+		UserType:  user.UserType,
+		Pfp:       user.Pfp,
+		Gender:    user.Gender,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}, nil
+}
+
+// ForgotPassword is the resolver for the forgotPassword field.
+func (r *mutationResolver) ForgotPassword(ctx context.Context, input model.ForgotPasswordInput) (*model.ForgotPasswordResponse, error) {
+	ptr := func(s string) *string { return &s }
+	var err error
+	supabaseURL := os.Getenv("SUPABASE_URL_FULL")
+	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
+	supabaseClient := supabase.CreateClient(supabaseURL, serviceKey)
+	redirectURL := os.Getenv("REDIRECT_URL")
+	if redirectURL == "" {
+		return &model.ForgotPasswordResponse{
+			Success: false,
+			Message: ptr("Missing redirect URL environment variable"),
+		}, nil
+	}
+
+	err = supabaseClient.Auth.ResetPasswordForEmail(ctx, input.Email, redirectURL)
+	if err != nil {
+		return &model.ForgotPasswordResponse{
+			Success: false,
+			Message: ptr(fmt.Sprintf("Error sending reset link: %v", err)),
+		}, nil
+	}
+
+	return &model.ForgotPasswordResponse{
+		Success: true,
+		Message: ptr("If the email exists, a reset link has been sent to the provided email address."),
+	}, nil
 }
 
 // GetUserByID - Fetch a user by ID
@@ -293,5 +387,28 @@ func (r *queryResolver) GetAuthenticatedUser(ctx context.Context) (*model.User, 
 		UserType:  user.UserType,
 		Pfp:       user.Pfp,
 		Gender:    user.Gender,
+	}, nil
+}
+
+// CheckToken is the resolver for the checkToken field.
+func (r *queryResolver) CheckToken(ctx context.Context, token string) (*model.TokenCheckResponse, error) {
+	r.Logger.Info("Checking token...")
+
+	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewAuthServiceClient(conn)
+
+	resp, err := client.VerifyToken(ctx, &pb.TokenRequest{Token: token})
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify token: %v", err)
+	}
+
+	return &model.TokenCheckResponse{
+		ID:    resp.Id,
+		Email: resp.Email,
 	}, nil
 }

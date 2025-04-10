@@ -13,6 +13,8 @@ require (
 	google.golang.org/grpc v1.71.1
 )
 
+require github.com/google/go-querystring v1.1.0 // indirect
+
 require (
 	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
@@ -22,6 +24,7 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/nedpals/supabase-go v0.5.0
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
 	golang.org/x/crypto v0.36.0 // indirect

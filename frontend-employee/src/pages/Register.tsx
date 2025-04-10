@@ -18,6 +18,7 @@ const RegisterPage: React.FC = () => {
         confirmPassword: "",
         age: "",
         userType: "",
+        pfp: "https://hzjjmfwrtvqjwxunfcue.supabase.co/storage/v1/object/public/pictures/pfp/defualtpic.jpg",
         gender: "",
     });    
     const navigate = useNavigate();
@@ -25,6 +26,11 @@ const RegisterPage: React.FC = () => {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+
+        if (name === "email") {
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            setEmailError(emailRegex.test(value) ? "" : "Invalid email format");
+        }
 
         if (name === "phone") {
             if (!/^\d*$/.test(value)) return;
@@ -34,10 +40,24 @@ const RegisterPage: React.FC = () => {
         if (name === "role") return;
 
         if (name === "age") {
-            if (!/^\d*$/.test(value)) return;
-        }
+            if (!/^\d*$/.test(value) || +value < 1 || +value > 100) return;
+            setFormData({ ...formData, [name]: value });
+            return;
+        }        
     
         setFormData({ ...formData, [name]: value });
+    };
+
+    const [emailError, setEmailError] = useState("");
+
+    const validateEmail = () => {
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        
+        if (!emailRegex.test(formData.email)) {
+            setEmailError("Invalid email format");
+        } else {
+            setEmailError("");
+        }
     };
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -112,10 +132,12 @@ const RegisterPage: React.FC = () => {
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
+                            onBlur={validateEmail}
                             required
                             placeholder="Enter your email"
                             className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
                         />
+                        <p className="text-red-500 text-sm">{emailError}</p>
                     </div>
 
                     {/* First Name */}
@@ -198,7 +220,6 @@ const RegisterPage: React.FC = () => {
                             title="Select User Type"
                             className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
                         >
-                            <option value="">Select User Type</option>
                             <option value="staff">Staff</option>
                             <option value="manager">Manager</option>
                             <option value="chef">Chef</option>
@@ -216,7 +237,6 @@ const RegisterPage: React.FC = () => {
                             title="Select Gender"
                             className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
                         >
-                            <option value="">Select Gender</option>
                             <option value="male">Male</option>
                             <option value="female">Female</option>
                             <option value="other">Other</option>
@@ -265,14 +285,14 @@ const RegisterPage: React.FC = () => {
 
                     {error && (
                         <p className="text-red-500 text-sm mt-2">
-                            {error.message.includes("duplicate key value violates unique constraint") 
+                            {error.message.includes("User already registered") 
                                 ? "This email is already registered. Try logging in." 
                                 : "Registration failed. Please try again."
                             }
                         </p>
                     )}
 
-                    <p className="text-center text-gray-600 text-sm mt-4">
+                    <p className="text-</p>center text-gray-600 text-sm mt-4">
                         Already have an account? <span className="text-blue-500 cursor-pointer" onClick={() => navigate("/login")}>Login here</span>
                     </p>
                 </form>

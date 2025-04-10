@@ -7,6 +7,15 @@ type AuthResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
+type ForgotPasswordInput struct {
+	Email string `json:"email"`
+}
+
+type ForgotPasswordResponse struct {
+	Success bool    `json:"success"`
+	Message *string `json:"message,omitempty"`
+}
+
 type MenuItem struct {
 	ID                 string  `json:"id"`
 	Name               string  `json:"name"`
@@ -52,6 +61,11 @@ type SignUpInput struct {
 	Gender    *string `json:"gender,omitempty"`
 }
 
+type TokenCheckResponse struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+}
+
 type UpdateMenuItem struct {
 	Name               *string  `json:"name,omitempty"`
 	Description        *string  `json:"description,omitempty"`
@@ -70,7 +84,7 @@ type UpdateUserInput struct {
 	UserType  *string `json:"userType,omitempty"`
 	Gender    *string `json:"gender,omitempty"`
 	Pfp       *string `json:"pfp,omitempty"`
-	IsActive  *bool   `json:"isActive,omitempty"`
+	IsActive  *string `json:"isActive,omitempty"`
 }
 
 type User struct {

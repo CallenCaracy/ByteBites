@@ -56,3 +56,55 @@ export const SIGN_OUT_USER = gql`
     signOut
   }
 `
+
+export const GET_USER_BY_ID = gql`
+  query GetUserByID($id: ID!) {
+    getUserById(id: $id) {
+        id
+        email
+        firstName
+        lastName
+        role
+        address
+        phone
+        isActive
+        age
+        userType
+        pfp
+        gender
+        createdAt
+        updatedAt
+    }
+  }
+`
+
+export const UPDATE_USER = gql`
+  mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {
+    updateUser(id: $id, input: $input) {
+      id
+      email
+      firstName
+      lastName
+      role
+      address
+      phone
+      isActive
+      age
+      userType
+      pfp
+      gender
+      createdAt
+      updatedAt
+    }
+  }
+`
+
+export const Check_Token = gql`
+  query CheckToken($token: String!) {
+    checkToken(token: $token) {
+      id
+      email
+    }
+  }
+`
+
