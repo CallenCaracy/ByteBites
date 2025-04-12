@@ -8,6 +8,7 @@ import "database/sql"
 type Resolver struct {
 	DB1 *sql.DB // Supabase Database USER
 	DB2 *sql.DB // Supabase Database MENU
+	DB3 *sql.DB // Supabase Database KITCHEN
 }
 
 // Mutation returns MutationResolver implementation.

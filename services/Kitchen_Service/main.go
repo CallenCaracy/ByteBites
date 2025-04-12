@@ -4,14 +4,16 @@ import (
 	"net"
 	"os"
 
-	"kitchen-service/db"
-	"kitchen-service/utils"
-
+	"Kitchen_Service/db"
+	"Kitchen_Service/utils"
 	"context"
+
+	"Kitchen_Service/pb"
 
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
-)
+);
+
 
 func main() {
 	log, err := utils.NewLogger()

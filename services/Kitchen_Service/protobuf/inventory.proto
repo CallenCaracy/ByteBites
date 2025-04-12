@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package inventory;
+
+option go_package = "./pb";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// Represents one row in the inventory table.
+message InventoryItem {
+  string id = 1;                          // UUID
+  string item_name = 2;                   // Name of the item
+  int32 quantity = 3;                     // Quantity on hand (>= 0)
+  string unit = 4;                        // Unit of measure
+  int32 low_stock_threshold = 5;          // Threshold for low stock
+  google.protobuf.Timestamp expiry_date = 6;   // Nullable expiry date
+  google.protobuf.Timestamp last_updated = 7;  // Timestamp of last update
+}
+
+// Create request: omit id and last_updated (and expiry_date if null).
+message CreateInventoryRequest {
+  string item_name = 1;
+  int32 quantity = 2;
+  string unit = 3;
+  int32 low_stock_threshold = 4;
+  // expiry_date is optional; if omitted, remains null
+  google.protobuf.Timestamp expiry_date = 5;
+}
+
+// Response returns the fully populated item.
+message CreateInventoryResponse {
+  InventoryItem item = 1;
+}
+
+// Get request by id.
+message GetInventoryRequest {
+  string id = 1;
+}
+
+// Response returns the item.
+message GetInventoryResponse {
+  InventoryItem item = 1;
+}
+
+// Update request: supply the full item (id required).
+message UpdateInventoryRequest {
+  InventoryItem item = 1;
+}
+
+// Response returns the updated item.
+message UpdateInventoryResponse {
+  InventoryItem item = 1;
+}
+
+// Delete request by id.
+message DeleteInventoryRequest {
+  string id = 1;
+}
+
+// Response is empty.
+message DeleteInventoryResponse {
+  google.protobuf.Empty empty = 1;
+}
+
+// List request, with optional low-stock filter.
+message ListInventoryRequest {
+  // If true, only return items with quantity <= low_stock_threshold
+  bool low_stock_only = 1;
+  // Pagination
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+// List response with pagination token.
+message ListInventoryResponse {
+  repeated InventoryItem items = 1;
+  string next_page_token = 2;
+}
+
+// The CRUD service for inventory.
+service InventoryService {
+  // Create a new inventory row
+  rpc CreateItem (CreateInventoryRequest) returns (CreateInventoryResponse);
+
+  // Read an inventory row by id
+  rpc GetItem (GetInventoryRequest) returns (GetInventoryResponse);
+
+  // Update an existing inventory row
+  rpc UpdateItem (UpdateInventoryRequest) returns (UpdateInventoryResponse);
+
+  // Delete an inventory row
+  rpc DeleteItem (DeleteInventoryRequest) returns (DeleteInventoryResponse);
+
+  // List inventory items, optionally filtering low stock
+  rpc ListItems (ListInventoryRequest) returns (ListInventoryResponse);
+}

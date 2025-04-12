@@ -2,10 +2,26 @@
 
 package model
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
 type AuthResponse struct {
 	AccessToken  string  `json:"accessToken"`
 	RefreshToken string  `json:"refreshToken"`
 	Error        *string `json:"error,omitempty"`
+}
+
+type Inventory struct {
+	ID                string  `json:"id"`
+	ItemName          string  `json:"itemName"`
+	Quantity          int32   `json:"quantity"`
+	Unit              string  `json:"unit"`
+	LowStockThreshold int32   `json:"lowStockThreshold"`
+	ExpiryDate        *string `json:"expiryDate,omitempty"`
+	LastUpdated       string  `json:"lastUpdated"`
 }
 
 type MenuItem struct {
@@ -30,6 +46,14 @@ type NewMenuItem struct {
 	Category           *string `json:"category,omitempty"`
 	AvailabilityStatus bool    `json:"availability_status"`
 	ImageURL           *string `json:"image_url,omitempty"`
+}
+
+type OrderQueue struct {
+	ID          string      `json:"id"`
+	OrderID     string      `json:"orderId"`
+	Status      OrderStatus `json:"status"`
+	Priority    int32       `json:"priority"`
+	LastUpdated string      `json:"lastUpdated"`
 }
 
 type Query struct {
@@ -84,4 +108,47 @@ type User struct {
 	IsActive  string  `json:"isActive"`
 	CreatedAt string  `json:"createdAt"`
 	UpdatedAt *string `json:"updatedAt,omitempty"`
+}
+
+type OrderStatus string
+
+const (
+	OrderStatusCooking   OrderStatus = "cooking"
+	OrderStatusPreparing OrderStatus = "preparing"
+	OrderStatusReady     OrderStatus = "ready"
+)
+
+var AllOrderStatus = []OrderStatus{
+	OrderStatusCooking,
+	OrderStatusPreparing,
+	OrderStatusReady,
+}
+
+func (e OrderStatus) IsValid() bool {
+	switch e {
+	case OrderStatusCooking, OrderStatusPreparing, OrderStatusReady:
+		return true
+	}
+	return false
+}
+
+func (e OrderStatus) String() string {
+	return string(e)
+}
+
+func (e *OrderStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OrderStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OrderStatus", str)
+	}
+	return nil
+}
+
+func (e OrderStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

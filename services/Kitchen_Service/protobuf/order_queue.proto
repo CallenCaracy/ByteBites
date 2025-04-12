@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package order_queue;
+
+option go_package = "./pb";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// The Order message corresponds to one row in order_queue.
+message Order {
+  string id = 1;                      // UUID
+  string order_id = 2;                // UUID of the actual order
+  Status status = 3;                  // cooking, preparing, ready
+  int32 priority = 4;                 // integer priority
+  google.protobuf.Timestamp last_updated = 5; // timestamptz
+}
+
+// Allowed status values
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  COOKING = 1;
+  PREPARING = 2;
+  READY = 3;
+}
+
+// For Create: client sends an OrderCreateRequest without id & last_updated.
+message OrderCreateRequest {
+  string order_id = 1;
+  Status status = 2;    // optional: defaults to PREPARING if omitted
+  int32 priority = 3;   // optional: defaults to 1 if omitted
+}
+
+// Response returns the full Order with generated fields populated.
+message OrderCreateResponse {
+  Order order = 1;
+}
+
+// For Read: client requests by id.
+message OrderGetRequest {
+  string id = 1;
+}
+
+// Response returns the Order.
+message OrderGetResponse {
+  Order order = 1;
+}
+
+// For Update: client sends the full Order; id must be set.
+message OrderUpdateRequest {
+  Order order = 1;
+}
+
+// Response returns the updated Order.
+message OrderUpdateResponse {
+  Order order = 1;
+}
+
+// For Delete: client requests by id.
+message OrderDeleteRequest {
+  string id = 1;
+}
+
+// Response is empty.
+message OrderDeleteResponse {
+  google.protobuf.Empty empty = 1;
+}
+
+// List all or filter by status (optional)
+message OrderListRequest {
+  // If set, only return orders with this status
+  Status status = 1;
+  // Pagination (optional)
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message OrderListResponse {
+  repeated Order orders = 1;
+  string next_page_token = 2;
+}
+
+// The CRUD service definition.
+service OrderQueueService {
+  // Create a new order_queue entry
+  rpc CreateOrder (OrderCreateRequest) returns (OrderCreateResponse);
+
+  // Get an existing order_queue entry by id
+  rpc GetOrder (OrderGetRequest) returns (OrderGetResponse);
+
+  // Update an existing order_queue entry
+  rpc UpdateOrder (OrderUpdateRequest) returns (OrderUpdateResponse);
+
+  // Delete an order_queue entry
+  rpc DeleteOrder (OrderDeleteRequest) returns (OrderDeleteResponse);
+
+  // List orders, optionally filtered by status
+  rpc ListOrders (OrderListRequest) returns (OrderListResponse);
+}
