@@ -1,0 +1,72 @@
+type CartItem {
+  id: ID!
+  foodItem: String!
+  quantity: Int!
+  price: Float!
+}
+
+type Cart {
+  userID: ID!
+  items: [CartItem!]!
+  totalAmount: Float!
+}
+
+type Payment {
+  orderID: ID!
+  paymentMethod: String!
+  paymentInfo: String
+  amountPaid: Float!
+  transactionID: ID!
+  transactionStatus: String!
+  timestamp: String!
+}
+
+type Receipt {
+  transactionID: ID!
+  userID: ID!
+  orderID: ID!
+  amountPaid: Float!
+  paymentMethod: String!
+  timestamp: String!
+  transactionStatus: String!
+}
+
+type Query {
+  getCart(userID: ID!): Cart!
+  getPayment(orderID: ID!): Payment!
+  getReceipt(transactionID: ID!): Receipt!
+}
+
+type Mutation {
+  # Core Feature 1: Cart & Checkout System
+  
+  # Add items to a user's cart
+  addToCart(userID: ID!, items: [CartItemInput!]!): Cart!
+  
+  # Checkout the cart, creating an order and calculating the total amount
+  checkout(userID: ID!): Cart!
+
+  # Core Feature 2: Cash and Online Payment Options
+  
+  # Process a payment for an order and update payment details
+  processPayment(orderID: ID!, paymentMethod: String!, paymentInfo: String): Payment!
+
+  # Core Feature 3: Receipt Generation
+  
+  # Generate a receipt after a payment is processed
+  generateReceipt(
+    amountPaid: Float!
+    paymentMethod: String!
+    timestamp: String!
+    transactionStatus: String!
+    transactionID: ID!
+    userID: ID!
+    orderID: ID!
+  ): Receipt!
+}
+
+input CartItemInput {
+  foodItem: String!
+  quantity: Int!
+  price: Float!
+}
