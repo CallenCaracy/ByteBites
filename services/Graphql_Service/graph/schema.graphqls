@@ -11,6 +11,8 @@ type User {
 
 type Query {
   getUser(id: ID!): User
+   getTransactionRecordsByUserID(id: String!): [Transaction!]!
+  getTransactionByID(id: String!): Transaction
 }
 
 type AuthPayload {
@@ -20,5 +22,7 @@ type AuthPayload {
 }
 
 type Mutation {
-  signInOnlyEmployee(email: String!, password: String!): AuthPayload!
+  createTransactionRecords(amountPaid: Float!, paymentMethod: String!, transactionStatus: String!, userID: String!, orderID: String!): Transaction
+  updateTransactionStatus(transactionID: String!, newStatus: String!): Transaction
+  deleteTransactionByID(transactionID: String!): Boolean!
 }
