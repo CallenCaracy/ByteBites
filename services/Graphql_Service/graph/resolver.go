@@ -1,12 +1,11 @@
 package graph
 
 import (
+	"Graphql_Service/db"
 	"Graphql_Service/pb"
 	"context"
 	"fmt"
 	"time"
-
-	"Graphql_Service/db"
 	// "github.com/jackc/pgx/v5"
 )
 
