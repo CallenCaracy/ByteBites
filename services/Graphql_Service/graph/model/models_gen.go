@@ -2,6 +2,12 @@
 
 package model
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
 type AuthResponse struct {
 	AccessToken  string  `json:"accessToken"`
 	RefreshToken string  `json:"refreshToken"`
@@ -32,7 +38,30 @@ type NewMenuItem struct {
 	ImageURL           *string `json:"image_url,omitempty"`
 }
 
+type NewReceiptInput struct {
+	TransactionID uuid.UUID `json:"transactionID"`
+	UserID        uuid.UUID `json:"userID"`
+	Amount        float64   `json:"amount"`
+	PaymentMethod string    `json:"paymentMethod"`
+}
+
+type NewTransactionInput struct {
+	OrderID       uuid.UUID `json:"orderID"`
+	UserID        uuid.UUID `json:"userID"`
+	AmountPaid    float64   `json:"amountPaid"`
+	PaymentMethod string    `json:"paymentMethod"`
+}
+
 type Query struct {
+}
+
+type Receipt struct {
+	ID            uuid.UUID    `json:"id"`
+	Transaction   *Transaction `json:"transaction"`
+	UserID        uuid.UUID    `json:"userID"`
+	Amount        float64      `json:"amount"`
+	PaymentMethod string       `json:"paymentMethod"`
+	Timestamp     time.Time    `json:"timestamp"`
 }
 
 type SignInEmployeeInput struct {
@@ -53,6 +82,16 @@ type SignUpInput struct {
 	Role      string  `json:"role"`
 	Address   *string `json:"address,omitempty"`
 	Phone     *string `json:"phone,omitempty"`
+}
+
+type Transaction struct {
+	ID                   uuid.UUID `json:"id"`
+	OrderID              uuid.UUID `json:"orderID"`
+	UserID               uuid.UUID `json:"userID"`
+	AmountPaid           float64   `json:"amountPaid"`
+	PaymentMethod        string    `json:"paymentMethod"`
+	TransactionStatus    string    `json:"transactionStatus"`
+	TransactionTimestamp time.Time `json:"transactionTimestamp"`
 }
 
 type UpdateMenuItem struct {
