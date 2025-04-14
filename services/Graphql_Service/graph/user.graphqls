@@ -7,6 +7,10 @@ type User {
   address: String
   phone: String
   isActive: String!
+  age: Int!
+  userType: String!
+  pfp: String
+  gender: String
   createdAt: String!
   updatedAt: String
 }
@@ -14,7 +18,6 @@ type User {
 type AuthResponse {
   accessToken: String!
   refreshToken: String!
-  error: String
 }
 
 input SignUpInput {
@@ -25,6 +28,9 @@ input SignUpInput {
   role: String!
   address: String
   phone: String
+  age: Int!
+  userType: String!
+  gender: String
 }
 
 input SignInInput {
@@ -32,30 +38,45 @@ input SignInInput {
   password: String!
 }
 
-input SignInEmployeeInput {
-  email: String!
-  password: String!
-}
-
 input UpdateUserInput {
   firstName: String
   lastName: String
-  role: String
   address: String
   phone: String
-  isActive: Boolean
+  age: Int
+  userType: String
+  gender: String
+  pfp: String
+  isActive: String
+}
+
+type TokenCheckResponse {
+  id: ID!
+  email: String!
+}
+
+input ForgotPasswordInput {
+  email: String!
+}
+
+type ForgotPasswordResponse {
+  success: Boolean!
+  message: String
 }
 
 # Queries
 extend type Query {
   getUserById(id: ID!): User
+  getAuthenticatedUser: User!
+  checkToken(token: String!): TokenCheckResponse!
 }
 
 # Mutation
 extend type Mutation {
   signUp(input: SignUpInput!): User!
   signIn(input: SignInInput!): AuthResponse!
-  signInOnlyEmployee(input: SignInEmployeeInput!): AuthResponse!
+  signInOnlyEmployee(input: SignInInput!): AuthResponse!
   signOut: Boolean!
   updateUser(id: ID!, input: UpdateUserInput!): User!
+  forgotPassword(input: ForgotPasswordInput!): ForgotPasswordResponse!
 }
