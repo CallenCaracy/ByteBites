@@ -32,6 +32,7 @@ func main() {
 	// Get database URLs from .env
 	db1URL := os.Getenv("SUPABASE_DB_USERS_URL")
 	db2URL := os.Getenv("SUPABASE_DB_MENU_URL")
+	db5URL := os.Getenv("SUPABASE_DB_ORDER_URL")
 
 	// Connect to Supabase DB USERS
 	db1, err := sql.Open("pgx", db1URL)
@@ -47,10 +48,18 @@ func main() {
 	}
 	defer db2.Close()
 
+	// Connect to Supabase DB ORDER
+	db5, err := sql.Open("pgx", db5URL)
+	if err != nil {
+		log.Fatal("Failed to connect to Supabase DB3:", err)
+	}
+	defer db5.Close()
+
 	// Initialize GraphQL resolver with database connections
 	resolver := &graph.Resolver{
 		DB1: db1,
 		DB2: db2,
+		DB5: db5,
 	}
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))

@@ -2,10 +2,33 @@
 
 package model
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
 type AuthResponse struct {
 	AccessToken  string  `json:"accessToken"`
 	RefreshToken string  `json:"refreshToken"`
 	Error        *string `json:"error,omitempty"`
+}
+
+type CreateOrderInput struct {
+	UserID          uuid.UUID               `json:"userId"`
+	TotalPrice      float64                 `json:"totalPrice"`
+	OrderStatus     *string                 `json:"orderStatus,omitempty"`
+	OrderType       *string                 `json:"orderType,omitempty"`
+	DeliveryAddress *string                 `json:"deliveryAddress,omitempty"`
+	SpecialRequests *string                 `json:"specialRequests,omitempty"`
+	Items           []*CreateOrderItemInput `json:"items"`
+}
+
+type CreateOrderItemInput struct {
+	MenuItemID     uuid.UUID `json:"menuItemId"`
+	Quantity       int32     `json:"quantity"`
+	Price          float64   `json:"price"`
+	Customizations *string   `json:"customizations,omitempty"`
 }
 
 type MenuItem struct {
@@ -30,6 +53,29 @@ type NewMenuItem struct {
 	Category           *string `json:"category,omitempty"`
 	AvailabilityStatus bool    `json:"availability_status"`
 	ImageURL           *string `json:"image_url,omitempty"`
+}
+
+type Order struct {
+	ID              uuid.UUID    `json:"id"`
+	UserID          uuid.UUID    `json:"userId"`
+	TotalPrice      float64      `json:"totalPrice"`
+	OrderStatus     string       `json:"orderStatus"`
+	OrderType       *string      `json:"orderType,omitempty"`
+	DeliveryAddress *string      `json:"deliveryAddress,omitempty"`
+	SpecialRequests *string      `json:"specialRequests,omitempty"`
+	CreatedAt       *time.Time   `json:"createdAt,omitempty"`
+	UpdatedAt       *time.Time   `json:"updatedAt,omitempty"`
+	Items           []*OrderItem `json:"items"`
+}
+
+type OrderItem struct {
+	ID             uuid.UUID  `json:"id"`
+	OrderID        uuid.UUID  `json:"orderId"`
+	MenuItemID     uuid.UUID  `json:"menuItemId"`
+	Quantity       int32      `json:"quantity"`
+	Price          float64    `json:"price"`
+	Customizations *string    `json:"customizations,omitempty"`
+	CreatedAt      *time.Time `json:"createdAt,omitempty"`
 }
 
 type Query struct {
@@ -62,6 +108,16 @@ type UpdateMenuItem struct {
 	Category           *string  `json:"category,omitempty"`
 	AvailabilityStatus *bool    `json:"availability_status,omitempty"`
 	ImageURL           *string  `json:"image_url,omitempty"`
+}
+
+type UpdateOrderInput struct {
+	ID              uuid.UUID  `json:"id"`
+	TotalPrice      *float64   `json:"totalPrice,omitempty"`
+	OrderStatus     *string    `json:"orderStatus,omitempty"`
+	OrderType       *string    `json:"orderType,omitempty"`
+	DeliveryAddress *string    `json:"deliveryAddress,omitempty"`
+	SpecialRequests *string    `json:"specialRequests,omitempty"`
+	UpdatedAt       *time.Time `json:"updatedAt,omitempty"`
 }
 
 type UpdateUserInput struct {

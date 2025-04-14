@@ -25,6 +25,7 @@ message CreateOrderResponse {
 
 message GetOrdersRequest {
   string guest_session_id = 1;
+  
 }
 
 message GetOrdersResponse {
