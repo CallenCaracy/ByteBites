@@ -1,27 +1,42 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FORGOT_PASSWORD } from "../graphql/Userqueries";
 import "../styles/login.css";
 import logo from "../assets/ByteBitesLogo/logo.png";
 import bg from "../assets/forgotpasswordbg.jpg";
+import { useMutation } from "@apollo/client";
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<{ message: string } | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const navigate = useNavigate();
+    const [forgotPassword] = useMutation(FORGOT_PASSWORD);
 
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         setLoading(true);
+        setError(null);
+        setSuccessMessage(null);
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setError({ message: "Please enter a valid email address." });
+            return;
+        }
+
         try {
-            // Add logic for sending the reset password email here
-            // For example: await sendResetPasswordEmail(email);
-            setLoading(false);
-            // Optionally navigate back to the login page or show a success message
-            navigate("/login");
-        } catch (err) {
-            setLoading(false);
-            setError(err as { message: string });
+            const { data } = await forgotPassword({ variables: { email } });
+            if (data?.forgotPassword?.success) {
+                setSuccessMessage(data?.forgotPassword?.message || "If your email exists, check for the reset link.");
+                setTimeout(() => navigate("/login"), 5000); 
+            } else {
+                setError(data.forgotPassword.message);
+            }
+        } catch (err: any) {
+            console.error("GraphQL mutation error:", err);
+            setError({ message: err?.message ?? "Request failed. Please try again." });
         }
     };
 
@@ -57,6 +72,7 @@ const ForgotPassword = () => {
                         >
                             {loading ? "Sending..." : "Send Reset Link"}
                         </button>
+                        {successMessage && <p className="text-green-500 bg-green-100 text-sm mt-2 p-2 rounded">{successMessage}</p>}
                     </div>
                     {error && (
                         <p className="text-red-500 text-sm mt-2">

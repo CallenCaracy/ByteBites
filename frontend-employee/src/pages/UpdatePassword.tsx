@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from "../utils/supabaseClient";
 import bg from "../assets/forgotpasswordbg.jpg";
 import logo from "../assets/ByteBitesLogo/logo.png";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 const UpdatePassword = () => {
   const [newPassword, setNewPassword] = useState("");
@@ -11,6 +12,7 @@ const UpdatePassword = () => {
   const [error, setError] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [parsedToken, setParsedToken] = useState<{ access_token: string; refresh_token: string } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -23,7 +25,7 @@ const UpdatePassword = () => {
         setAccessToken(parsed.access_token);
       }
     } else {
-      setError("Missing access token in localStorage.");
+      setError("Your are not authorized to input in this page.");
     }
   }, []);  
 
@@ -31,6 +33,11 @@ const UpdatePassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
   
     if (!accessToken || !parsedToken) {
       setError("Access token or parsed token is not available.");
@@ -91,19 +98,33 @@ const UpdatePassword = () => {
             <p className="text-red-600 mb-4 text-center">{error}</p>
           )}
   
-          <div className="mt-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">New Password</label>
+          <div className="mt-4 relative">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              New Password
+            </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Enter your new password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+              className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none pr-10" 
               disabled={!accessToken || loading}
               autoComplete="new-password"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-7 transform translate-y-1 flex items-center justify-center w-15 h-8 text-gray-500"
+
+            >
+              {showPassword ? (
+                <EyeOffIcon size={20} className="text-gray-700" />
+              ) : (
+                <EyeIcon size={20} className="text-gray-700" />
+              )}
+            </button>
           </div>
-  
+
           <div className="mt-8">
             <button
               type="submit"

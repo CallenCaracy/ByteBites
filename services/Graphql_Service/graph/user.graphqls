@@ -68,7 +68,7 @@ type ForgotPasswordResponse {
 extend type Query {
   getUserById(id: ID!): User
   getAuthenticatedUser: User!
-  checkToken(token: String!): TokenCheckResponse!
+  checkToken: TokenCheckResponse!
 }
 
 # Mutation
