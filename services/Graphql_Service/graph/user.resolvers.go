@@ -17,7 +17,7 @@ import (
 	"strings"
 
 	"github.com/CallenCaracy/ByteBites/services/User_Service/pb"
-	"github.com/nedpals/supabase-go"
+	supabase "github.com/nedpals/supabase-go"
 	"github.com/supabase-community/auth-go/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -391,8 +391,20 @@ func (r *queryResolver) GetAuthenticatedUser(ctx context.Context) (*model.User, 
 }
 
 // CheckToken is the resolver for the checkToken field.
-func (r *queryResolver) CheckToken(ctx context.Context, token string) (*model.TokenCheckResponse, error) {
+func (r *queryResolver) CheckToken(ctx context.Context) (*model.TokenCheckResponse, error) {
 	r.Logger.Info("Checking token...")
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("missing metadata in context")
+	}
+	log.Printf("Received metadata: %+v\n", md)
+
+	tokenList := md.Get("authorization")
+	if len(tokenList) == 0 {
+		return nil, fmt.Errorf("missing token in metadata")
+	}
+
+	token := strings.TrimPrefix(tokenList[0], "Bearer ")
 
 	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
 	if err != nil {

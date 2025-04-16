@@ -1,10 +1,12 @@
 import React from "react";
 import { useQuery } from "@apollo/client";
+import { useNavigate } from "react-router-dom";
 import { GET_MENU_ITEMS } from "../graphql/Menuqueries";
 import { GET_AUTHENTICATED_USER } from "../graphql/Userqueries";
 import Navbar from "../components/NavBar";
 
 const Dashboard: React.FC = () => {
+    const navigate = useNavigate();
     const { data: menuData, loading: menuLoading, error: menuError } = useQuery(GET_MENU_ITEMS);
     const { data: userData, loading: userLoading, error: userError } = useQuery(GET_AUTHENTICATED_USER);
     
@@ -16,15 +18,20 @@ const Dashboard: React.FC = () => {
 
     return (
         <div>
-            <Navbar userId={userData?.getAuthenticatedUser?.id} />
+            <Navbar />
             <div className="container mx-auto p-8">
                 <h1 className="text-3xl font-semibold text-gray-800 mb-6">Menu</h1>
                 <h2 className="text-3xl font-semibold text-gray-800 mb-6">
                     Welcome { userData?.getAuthenticatedUser?.userType?.charAt(0).toUpperCase() + userData?.getAuthenticatedUser?.userType?.slice(1) || "Employee"} {userData?.getAuthenticatedUser?.firstName || "Unknown"}!
                 </h2>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {menuData?.getAllMenuItems?.map((item: any) => (
-                        <div key={item.id} className="bg-white p-4 rounded-lg shadow-md">
+                        <div 
+                            key={item.id} 
+                            className="bg-white p-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-50 transition"
+                            onClick={() => navigate(`/menu-item/${item.id}`)}
+                        >
                             <h2 className="text-xl font-semibold text-gray-700">{item.name}</h2>
                             <p className="text-gray-600">{item.description}</p>
                             <p className="text-gray-900 font-bold">${item.price.toFixed(2)}</p>

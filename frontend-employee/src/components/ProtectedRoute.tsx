@@ -1,14 +1,19 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useQuery } from "@apollo/client";
-import { Check_Token } from "../graphql/Userqueries";
+import { CHECK_TOKEN } from "../graphql/Userqueries";
 
 const ProtectedRoute: React.FC = () => {
-  const token = localStorage.getItem("accessToken");
+  const [token, setToken] = useState(localStorage.getItem("accessToken"));
   console.log("Check", token)
   
-  const { data, loading, error } = useQuery(Check_Token, {
-    variables: { token },
+  useEffect(() => {
+    const checkToken = () => setToken(localStorage.getItem("accessToken"));
+    window.addEventListener("storage", checkToken);
+    return () => window.removeEventListener("storage", checkToken);
+  }, []);
+
+  const { data, loading, error } = useQuery(CHECK_TOKEN, {
     skip: !token,
     fetchPolicy: 'network-only',
   });
@@ -23,6 +28,8 @@ const ProtectedRoute: React.FC = () => {
 
   if (error) {
     console.error("Token verification error:", error);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     return <Navigate to="/login" replace />;
   }
 

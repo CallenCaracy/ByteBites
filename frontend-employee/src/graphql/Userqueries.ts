@@ -99,12 +99,19 @@ export const UPDATE_USER = gql`
   }
 `
 
-export const Check_Token = gql`
-  query CheckToken($token: String!) {
-    checkToken(token: $token) {
+export const CHECK_TOKEN = gql`
+  query CheckToken {
+    checkToken {
       id
       email
     }
   }
 `
-
+export const FORGOT_PASSWORD = gql `
+  mutation ForgotPassword($email: String!) {
+    forgotPassword(input: { email: $email }) {
+      success
+      message
+    }
+  }
+`

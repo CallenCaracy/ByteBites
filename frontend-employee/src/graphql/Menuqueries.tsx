@@ -15,6 +15,21 @@ export const GET_MENU_ITEMS = gql`
   }
 `;
 
+export const GET_MENU_ITEM_BY_ID = gql`
+  query GetMenuItemById($id: ID!) {
+    getMenuItemById(id: $id) {
+      id
+      name
+      description
+      price
+      category
+      availability_status
+      image_url
+      created_at
+    }
+  }
+`;
+
 export const ADD_MENU_ITEM = gql`
   mutation AddMenuItem($input: NewMenuItem!) {
     addMenuItem(input: $input) {

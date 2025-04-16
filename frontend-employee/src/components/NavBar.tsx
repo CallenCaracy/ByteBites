@@ -1,14 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/ByteBitesLogo/logo-transparent.png";
 import { useApolloClient, useMutation } from "@apollo/client";
 import { SIGN_OUT_USER } from "../graphql/Userqueries";
 
-interface NavbarProps {
-    userId: string | undefined;
-}
-
-const Navbar: React.FC<NavbarProps> = ({ userId }) => {
+const Navbar: React.FC = () => {
     const navigate = useNavigate();
     const isAuthenticated = Boolean(localStorage.getItem("accessToken"));
 
@@ -16,7 +12,32 @@ const Navbar: React.FC<NavbarProps> = ({ userId }) => {
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
+    const [userId, setUserId] = useState<string | null>(null);
+
     const client = useApolloClient();
+
+    useEffect(() => {
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+            const payloadRaw = token.split('.')[1];
+            const decoded = atob(payloadRaw);
+            console.log("Decoded JWT payload string:", decoded);
+    
+            try {
+                const payload = JSON.parse(decoded);
+                console.log("Parsed payload object:", payload);
+    
+                if (payload.sub) {
+                    setUserId(payload.sub);
+                } else {
+                    console.warn("No userId in payload! Check the token structure.");
+                }
+            } catch (e) {
+                console.error("Failed to parse JWT payload:", e);
+            }
+        }
+    }, []);
+    
 
     const handleLogout = async () => {
         try {

@@ -82,7 +82,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		CheckToken           func(childComplexity int, token string) int
+		CheckToken           func(childComplexity int) int
 		GetAllMenuItems      func(childComplexity int) int
 		GetAuthenticatedUser func(childComplexity int) int
 		GetMenuItemByID      func(childComplexity int, id string) int
@@ -128,7 +128,7 @@ type QueryResolver interface {
 	GetMenuItemByID(ctx context.Context, id string) (*model.MenuItem, error)
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
 	GetAuthenticatedUser(ctx context.Context) (*model.User, error)
-	CheckToken(ctx context.Context, token string) (*model.TokenCheckResponse, error)
+	CheckToken(ctx context.Context) (*model.TokenCheckResponse, error)
 }
 
 type executableSchema struct {
@@ -349,12 +349,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_checkToken_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.CheckToken(childComplexity, args["token"].(string)), true
+		return e.complexity.Query.CheckToken(childComplexity), true
 
 	case "Query.getAllMenuItems":
 		if e.complexity.Query.GetAllMenuItems == nil {
@@ -874,29 +869,6 @@ func (ec *executionContext) field_Query___type_argsName(
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 	if tmp, ok := rawArgs["name"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_checkToken_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Query_checkToken_argsToken(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["token"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Query_checkToken_argsToken(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("token"))
-	if tmp, ok := rawArgs["token"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -2515,7 +2487,7 @@ func (ec *executionContext) _Query_checkToken(ctx context.Context, field graphql
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CheckToken(rctx, fc.Args["token"].(string))
+		return ec.resolvers.Query().CheckToken(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2532,7 +2504,7 @@ func (ec *executionContext) _Query_checkToken(ctx context.Context, field graphql
 	return ec.marshalNTokenCheckResponse2ᚖGraphql_ServiceᚋgraphᚋmodelᚐTokenCheckResponse(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_checkToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_checkToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -2547,17 +2519,6 @@ func (ec *executionContext) fieldContext_Query_checkToken(ctx context.Context, f
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TokenCheckResponse", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_checkToken_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
 	}
 	return fc, nil
 }
