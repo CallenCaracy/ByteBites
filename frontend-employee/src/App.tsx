@@ -6,6 +6,7 @@ import RegisterPage from './pages/Register';
 import Account from './pages/Account';
 import ForgotPassword from './pages/ForgotPassword'
 import UpdatePassword from './pages/UpdatePassword';
+import MenuItem from './pages/MenuItems';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard/>} />
             <Route path="/account/:userId" element={<Account/>} />
+            <Route path="/menu-item/:menuId" element={<MenuItem/>} />
           </Route>
       </Routes>
     </Router>
