@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useMutation } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import { SIGN_UP_MUTATION } from "../graphql/Userqueries";
-import "../styles/login.css";
+import "../styles/main.css";
 import logo from "../assets/ByteBitesLogo/logo.png";
 import bg from "../assets/loginwallpaper.jpg";
 
@@ -16,7 +16,7 @@ const RegisterPage: React.FC = () => {
         phone: "",
         password: "",
         confirmPassword: "",
-        age: "",
+        birthDate: "",
         userType: "",
         pfp: "https://hzjjmfwrtvqjwxunfcue.supabase.co/storage/v1/object/public/pictures/pfp/defualtpic.jpg",
         gender: "",
@@ -37,13 +37,7 @@ const RegisterPage: React.FC = () => {
             if (value.length > 11) return;
         }
     
-        if (name === "role") return;
-
-        if (name === "age") {
-            if (!/^\d*$/.test(value) || +value < 1 || +value > 100) return;
-            setFormData({ ...formData, [name]: value });
-            return;
-        }        
+        if (name === "role") return;       
     
         setFormData({ ...formData, [name]: value });
     };
@@ -89,8 +83,9 @@ const RegisterPage: React.FC = () => {
                         role: formData.role,
                         address: formData.address,
                         phone: formData.phone,
-                        age: parseInt(formData.age),
+                        birthDate: formData.birthDate,
                         userType: formData.userType,
+                        pfp: formData.pfp,
                         gender: formData.gender,
                     },
                 },
@@ -192,6 +187,7 @@ const RegisterPage: React.FC = () => {
                             maxLength={11}
                             placeholder="Enter your phone number"
                             className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
+                            autoComplete="tel"
                         />
                     </div>
 
@@ -199,12 +195,12 @@ const RegisterPage: React.FC = () => {
                     <div className="mt-4">
                         <label className="block text-gray-700 text-sm font-bold mb-2">Age</label>
                         <input
-                            type="number"
-                            name="age"
-                            value={formData.age}
+                            type="date"
+                            name="birthDate"
+                            value={formData.birthDate}
                             onChange={handleChange}
                             required
-                            placeholder="Enter your age"
+                            placeholder="Enter your birth date"
                             className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
                         />
                     </div>
@@ -220,6 +216,7 @@ const RegisterPage: React.FC = () => {
                             title="Select User Type"
                             className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
                         >
+                            <option value="">Select user type</option>
                             <option value="staff">Staff</option>
                             <option value="manager">Manager</option>
                             <option value="chef">Chef</option>
@@ -237,6 +234,7 @@ const RegisterPage: React.FC = () => {
                             title="Select Gender"
                             className="bg-gray-200 text-gray-700 border border-gray-300 rounded py-2 px-4 w-full"
                         >
+                            <option value="">Select Gender</option>
                             <option value="male">Male</option>
                             <option value="female">Female</option>
                             <option value="other">Other</option>

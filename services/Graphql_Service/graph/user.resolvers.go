@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/CallenCaracy/ByteBites/services/User_Service/pb"
 	supabase "github.com/nedpals/supabase-go"
@@ -50,11 +51,22 @@ func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) 
 	if input.Gender != nil {
 		gender = input.Gender
 	}
+	r.Logger.Info("Parsing birthDate: %s", input.Pfp)
+
+	var parsedBirthDate time.Time
+	var birthDate string
+	if input.BirthDate != "" {
+		parsedBirthDate, err = time.Parse("2006-01-02", input.BirthDate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid birthDate format: %v", err)
+		}
+		birthDate = parsedBirthDate.Format("2006-01-02")
+	}
 
 	_, err = r.DB1.Exec(`
-		INSERT INTO public.users (id, email, first_name, last_name, role, address, phone, age, user_type, gender)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-		res.ID, input.Email, input.FirstName, input.LastName, input.Role, address, phone, input.Age, input.UserType, gender,
+		INSERT INTO public.users (id, email, first_name, last_name, role, address, phone, user_type, pfp, gender, birth_date)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+		res.ID, input.Email, input.FirstName, input.LastName, input.Role, address, phone, input.UserType, input.Pfp, gender, parsedBirthDate,
 	)
 	if err != nil {
 		r.Logger.Error("Failed to insert user into database: %v", err)
@@ -71,8 +83,9 @@ func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) 
 		Role:      input.Role,
 		Address:   address,
 		Phone:     phone,
-		Age:       input.Age,
+		BirthDate: birthDate,
 		UserType:  input.UserType,
+		Pfp:       &input.Pfp,
 		Gender:    gender,
 	}, nil
 }
@@ -215,13 +228,13 @@ func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
 func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error) {
 	var user model.User
 	err := r.DB1.QueryRowContext(ctx,
-		`SELECT id, email, first_name, last_name, role, address, phone, is_active, age, user_type, pfp, gender, created_at, updated_at
+		`SELECT id, email, first_name, last_name, role, address, phone, is_active, user_type, pfp, gender, created_at, updated_at, birth_date
 		FROM users
 		WHERE id = $1`,
 		id).Scan(
 		&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.Role, &user.Address,
-		&user.Phone, &user.IsActive, &user.Age, &user.UserType, &user.Pfp, &user.Gender,
-		&user.CreatedAt, &user.UpdatedAt,
+		&user.Phone, &user.IsActive, &user.UserType, &user.Pfp, &user.Gender,
+		&user.CreatedAt, &user.UpdatedAt, &user.BirthDate,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
@@ -240,9 +253,6 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input mode
 	if input.Phone != nil {
 		user.Phone = input.Phone
 	}
-	if input.Age != nil {
-		user.Age = *input.Age
-	}
 	if input.UserType != nil {
 		user.UserType = *input.UserType
 	}
@@ -255,17 +265,26 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input mode
 	if input.IsActive != nil {
 		user.IsActive = *input.IsActive
 	}
+	var parsedBirthDate time.Time
+	var birthDate string
+	if input.BirthDate != nil {
+		parsedBirthDate, err = time.Parse("2006-01-02", *input.BirthDate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid birthDate format: %v", err)
+		}
+		birthDate = parsedBirthDate.Format("2006-01-02")
+	}
 
 	updateQuery := `
     UPDATE users
-    SET first_name = $1, last_name = $2, address = $3, phone = $4, age = $5, user_type = $6,
+    SET first_name = $1, last_name = $2, address = $3, phone = $4, birth_date = $5, user_type = $6,
         gender = $7, pfp = $8, is_active = $9, updated_at = NOW()
     WHERE id = $10
-    RETURNING id, first_name, last_name, address, phone, is_active, age, user_type, gender, pfp, updated_at;
+    RETURNING id, first_name, last_name, address, phone, birth_date, is_active, user_type, gender, pfp, updated_at;
   `
 	err = r.DB1.QueryRowContext(ctx, updateQuery, user.FirstName, user.LastName, user.Address, user.Phone,
-		user.Age, user.UserType, user.Gender, user.Pfp, user.IsActive, user.ID).Scan(
-		&user.ID, &user.FirstName, &user.LastName, &user.Address, &user.Phone, &user.IsActive, &user.Age,
+		user.BirthDate, user.UserType, user.Gender, user.Pfp, user.IsActive, user.ID).Scan(
+		&user.ID, &user.FirstName, &user.LastName, &user.Address, &user.Phone, &user.BirthDate, &user.IsActive,
 		&user.UserType, &user.Gender, &user.Pfp, &user.UpdatedAt,
 	)
 	if err != nil {
@@ -281,12 +300,12 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input mode
 		Address:   user.Address,
 		Phone:     user.Phone,
 		IsActive:  user.IsActive,
-		Age:       user.Age,
 		UserType:  user.UserType,
 		Pfp:       user.Pfp,
 		Gender:    user.Gender,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
+		BirthDate: birthDate,
 	}, nil
 }
 
@@ -323,12 +342,12 @@ func (r *mutationResolver) ForgotPassword(ctx context.Context, input model.Forgo
 func (r *queryResolver) GetUserByID(ctx context.Context, id string) (*model.User, error) {
 	var user model.User
 
-	query := `SELECT id, email, first_name, last_name, role, address, phone, is_active, created_at, updated_at, age, user_type, pfp, gender FROM public.users WHERE id = $1`
+	query := `SELECT id, email, first_name, last_name, role, address, phone, is_active, created_at, updated_at, user_type, pfp, gender, birth_date FROM public.users WHERE id = $1`
 	err := r.Resolver.DB1.QueryRow(query, id).Scan(
 		&user.ID, &user.Email, &user.FirstName, &user.LastName,
 		&user.Role, &user.Address, &user.Phone, &user.IsActive,
-		&user.CreatedAt, &user.UpdatedAt, &user.Age, &user.UserType,
-		&user.Pfp, &user.Gender,
+		&user.CreatedAt, &user.UpdatedAt, &user.UserType,
+		&user.Pfp, &user.Gender, &user.BirthDate,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -383,10 +402,10 @@ func (r *queryResolver) GetAuthenticatedUser(ctx context.Context) (*model.User, 
 		IsActive:  user.IsActive,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-		Age:       user.Age,
 		UserType:  user.UserType,
 		Pfp:       user.Pfp,
 		Gender:    user.Gender,
+		BirthDate: user.BirthDate,
 	}, nil
 }
 
@@ -397,7 +416,6 @@ func (r *queryResolver) CheckToken(ctx context.Context) (*model.TokenCheckRespon
 	if !ok {
 		return nil, fmt.Errorf("missing metadata in context")
 	}
-	log.Printf("Received metadata: %+v\n", md)
 
 	tokenList := md.Get("authorization")
 	if len(tokenList) == 0 {

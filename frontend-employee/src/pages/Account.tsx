@@ -19,10 +19,10 @@ const Account: React.FC = () => {
         address: "",
         phone: "",
         isActive: "active",
-        age: "",
         gender: "",
         userType: "",
         pfp: "",
+        birthDate: "",
     });
     const [formErrors, setFormErrors] = useState({
         age: "",
@@ -41,14 +41,6 @@ const Account: React.FC = () => {
         }));
 
         let errors = { ...formErrors };
-
-        if (name === "age") {
-            if (!/^\d*$/.test(value) || +value < 1 || +value > 100) {
-                errors.age = "Age must be between 1 and 100.";
-            } else {
-                errors.age = "";
-            }
-        }
 
         if (name === "phone") {
             if (!/^\d*$/.test(value)) {
@@ -77,11 +69,10 @@ const Account: React.FC = () => {
                         lastName: formData.lastName,
                         address: formData.address,
                         phone: formData.phone,
-                        age: parseInt(formData.age),
                         userType: formData.userType,
                         gender: formData.gender,
-                        // pfp: formData.pfp,
-                        isActive: formData.isActive
+                        isActive: formData.isActive,
+                        birthDate: formData.birthDate,
                     },
                 },
             });
@@ -197,16 +188,16 @@ const Account: React.FC = () => {
             address: data.getUserById.address || "",
             phone: data.getUserById.phone || "",
             isActive: data.getUserById.isActive === "active" ? "active" : "inactive",
-            age: data.getUserById.age || "0",
             gender: data.getUserById.gender || "",
             userType: data.getUserById.userType || "",
             pfp: data.getUserById.pfp || "",
+            birthDate: data.getUserById.birthDate || "",
         });
     };
 
     return (
         <div>
-            <Navbar userId={data?.getUserById?.id} />
+            <Navbar />
             {/* <h1 className="text-3xl font-semibold text-gray-800 mb-6">Account Profile</h1> */}
             <div className="bg-white p-6 rounded-lg shadow-md flex flex-col md:flex-row gap-8">
                 <div className="flex flex-col items-center md:w-1/4">
@@ -281,16 +272,15 @@ const Account: React.FC = () => {
                                     {formErrors.phone && <p className="text-red-500 text-sm">{formErrors.phone}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Age</label>
+                                    <label className="block text-sm font-medium text-gray-700">Birth Date</label>
                                     <input
-                                        title="Age"
-                                        type="number"
-                                        name="age"
-                                        value={formData.age}
+                                        title="Birth Date"
+                                        type="date"
+                                        name="birthDate"
+                                        value={formData.birthDate}
                                         onChange={handleInputChange}
                                         className="text-black mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                                     />
-                                    {formErrors.age && <p className="text-red-500 text-sm">{formErrors.age}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Gender</label>
@@ -332,7 +322,7 @@ const Account: React.FC = () => {
                             <p className="text-black"><strong>Account Is:</strong> {data?.getUserById?.isActive || "No status info available"}</p>
                             <p className="text-black"><strong>Name:</strong> {data?.getUserById?.firstName || "No name available"} {data?.getUserById?.lastName || "No last name available"}</p>
                             <p className="text-black"><strong>Email:</strong> {data?.getUserById?.email || "No email available"}</p>
-                            <p className="text-black"><strong>Age:</strong> {data?.getUserById?.age || "No age available"}</p>
+                            <p className="text-black"><strong>Birth Date:</strong> {data?.getUserById?.birthDate || "No birthDate available"}</p>
                             <p className="text-black"><strong>Gender:</strong> {data?.getUserById?.gender || "No gender available"}</p>
                             <p className="text-black"><strong>User Type:</strong> {data?.getUserById?.userType || "No user type available"}</p>
                             <p className="text-black"><strong>Role:</strong> {data?.getUserById?.role || "No role available"}</p>

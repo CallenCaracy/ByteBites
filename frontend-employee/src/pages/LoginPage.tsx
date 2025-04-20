@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useMutation } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import { SIGN_IN_MUTATION } from "../graphql/Userqueries";
-import "../styles/login.css";
+import "../styles/main.css";
 import logo from "../assets/ByteBitesLogo/logo.png";
 import bg from "../assets/loginwallpaper.jpg";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
