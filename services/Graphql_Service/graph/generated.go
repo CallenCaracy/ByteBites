@@ -52,21 +52,21 @@ type ComplexityRoot struct {
 		RefreshToken func(childComplexity int) int
 	}
 
-
-Inventory struct {
-    ExpiryDate       func(childComplexity int) int
-    ID               func(childComplexity int) int
-    ItemName         func(childComplexity int) int
-    LastUpdated      func(childComplexity int) int
-    LowStockThreshold func(childComplexity int) int
-    Quantity         func(childComplexity int) int
-    Unit             func(childComplexity int) int
-}
-
-ForgotPasswordResponse struct {
-    Message func(childComplexity int) int
-    Success func(childComplexity int) int
-}
+<<<<<<< HEAD
+	Inventory struct {
+		ExpiryDate        func(childComplexity int) int
+		ID                func(childComplexity int) int
+		ItemName          func(childComplexity int) int
+		LastUpdated       func(childComplexity int) int
+		LowStockThreshold func(childComplexity int) int
+		Quantity          func(childComplexity int) int
+		Unit              func(childComplexity int) int
+=======
+	ForgotPasswordResponse struct {
+		Message func(childComplexity int) int
+		Success func(childComplexity int) int
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
+	}
 
 	MenuItem struct {
 		AvailabilityStatus func(childComplexity int) int
@@ -86,10 +86,11 @@ ForgotPasswordResponse struct {
 		CreateOrderQueue   func(childComplexity int, orderID string, status *model.OrderStatus, priority *int32) int
 		DeleteInventory    func(childComplexity int, id string) int
 		DeleteMenuItem     func(childComplexity int, id string) int
-
+<<<<<<< HEAD
 		DeleteOrderQueue   func(childComplexity int, id string) int
+=======
 		ForgotPassword     func(childComplexity int, input model.ForgotPasswordInput) int
-
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 		SignIn             func(childComplexity int, input model.SignInInput) int
 		SignInOnlyEmployee func(childComplexity int, input model.SignInInput) int
 		SignOut            func(childComplexity int) int
@@ -109,6 +110,7 @@ ForgotPasswordResponse struct {
 	}
 
 	Query struct {
+<<<<<<< HEAD
 		GetAllMenuItems func(childComplexity int) int
 		GetMenuItemByID func(childComplexity int, id string) int
 		GetUserByID     func(childComplexity int, id string) int
@@ -116,6 +118,7 @@ ForgotPasswordResponse struct {
 		Inventory       func(childComplexity int, id string) int
 		OrderQueue      func(childComplexity int, id string) int
 		OrderQueues     func(childComplexity int) int
+=======
 		CheckToken           func(childComplexity int) int
 		GetAllMenuItems      func(childComplexity int) int
 		GetAuthenticatedUser func(childComplexity int) int
@@ -126,6 +129,7 @@ ForgotPasswordResponse struct {
 	TokenCheckResponse struct {
 		Email func(childComplexity int) int
 		ID    func(childComplexity int) int
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 	}
 
 	User struct {
@@ -208,65 +212,56 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AuthResponse.RefreshToken(childComplexity), true
 
+<<<<<<< HEAD
+	case "Inventory.expiryDate":
+		if e.complexity.Inventory.ExpiryDate == nil {
+			break
+		}
 
-case "Inventory.expiryDate":
-	if e.complexity.Inventory.ExpiryDate == nil {
-		break
-	}
-	return e.complexity.Inventory.ExpiryDate(childComplexity), true
+		return e.complexity.Inventory.ExpiryDate(childComplexity), true
 
-case "Inventory.id":
-	if e.complexity.Inventory.ID == nil {
-		break
-	}
-	return e.complexity.Inventory.ID(childComplexity), true
+	case "Inventory.id":
+		if e.complexity.Inventory.ID == nil {
+			break
+		}
 
-case "Inventory.itemName":
-	if e.complexity.Inventory.ItemName == nil {
-		break
-	}
-	return e.complexity.Inventory.ItemName(childComplexity), true
+		return e.complexity.Inventory.ID(childComplexity), true
 
-case "Inventory.lastUpdated":
-	if e.complexity.Inventory.LastUpdated == nil {
-		break
-	}
-	return e.complexity.Inventory.LastUpdated(childComplexity), true
+	case "Inventory.itemName":
+		if e.complexity.Inventory.ItemName == nil {
+			break
+		}
 
-case "Inventory.lowStockThreshold":
-	if e.complexity.Inventory.LowStockThreshold == nil {
-		break
-	}
-	return e.complexity.Inventory.LowStockThreshold(childComplexity), true
+		return e.complexity.Inventory.ItemName(childComplexity), true
 
-case "Inventory.quantity":
-	if e.complexity.Inventory.Quantity == nil {
-		break
-	}
-	return e.complexity.Inventory.Quantity(childComplexity), true
+	case "Inventory.lastUpdated":
+		if e.complexity.Inventory.LastUpdated == nil {
+			break
+		}
 
-case "Inventory.unit":
-	if e.complexity.Inventory.Unit == nil {
-		break
-	}
-	return e.complexity.Inventory.Unit(childComplexity), true
+		return e.complexity.Inventory.LastUpdated(childComplexity), true
 
-case "ForgotPasswordResponse.message":
-	if e.complexity.ForgotPasswordResponse.Message == nil {
-		break
-	}
-	return e.complexity.ForgotPasswordResponse.Message(childComplexity), true
+	case "Inventory.lowStockThreshold":
+		if e.complexity.Inventory.LowStockThreshold == nil {
+			break
+		}
 
-case "ForgotPasswordResponse.success":
-	if e.complexity.ForgotPasswordResponse.Success == nil {
-		break
-	}
-	return e.complexity.ForgotPasswordResponse.Success(childComplexity), true
+		return e.complexity.Inventory.LowStockThreshold(childComplexity), true
 
-case "MenuItem.availability_status":
-	if e.complexity.MenuItem.AvailabilityStatus == nil {
-		break
-	}
+	case "Inventory.quantity":
+		if e.complexity.Inventory.Quantity == nil {
+			break
+		}
+
+		return e.complexity.Inventory.Quantity(childComplexity), true
+
+	case "Inventory.unit":
+		if e.complexity.Inventory.Unit == nil {
+			break
+		}
+
+		return e.complexity.Inventory.Unit(childComplexity), true
+=======
 	case "ForgotPasswordResponse.message":
 		if e.complexity.ForgotPasswordResponse.Message == nil {
 			break
@@ -280,7 +275,7 @@ case "MenuItem.availability_status":
 		}
 
 		return e.complexity.ForgotPasswordResponse.Success(childComplexity), true
-
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 
 	case "MenuItem.availability_status":
 		if e.complexity.MenuItem.AvailabilityStatus == nil {
@@ -405,44 +400,30 @@ case "MenuItem.availability_status":
 
 		return e.complexity.Mutation.DeleteMenuItem(childComplexity, args["id"].(string)), true
 
+<<<<<<< HEAD
+	case "Mutation.deleteOrderQueue":
+		if e.complexity.Mutation.DeleteOrderQueue == nil {
+			break
+		}
 
-case "Mutation.deleteOrderQueue":
-	if e.complexity.Mutation.DeleteOrderQueue == nil {
-		break
-	}
+		args, err := ec.field_Mutation_deleteOrderQueue_args(context.TODO(), rawArgs)
+=======
+	case "Mutation.forgotPassword":
+		if e.complexity.Mutation.ForgotPassword == nil {
+			break
+		}
 
-	args, err := ec.field_Mutation_deleteOrderQueue_args(context.TODO(), rawArgs)
-
-case "Mutation.forgotPassword":
-	if e.complexity.Mutation.ForgotPassword == nil {
-		break
-	}
-
-	args, err := ec.field_Mutation_forgotPassword_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_forgotPassword_args(context.TODO(), rawArgs)
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 		if err != nil {
 			return 0, false
 		}
 
-
-case "Mutation.deleteOrderQueue":
-	if e.complexity.Mutation.DeleteOrderQueue == nil {
-		break
-	}
-	args, err := ec.field_Mutation_deleteOrderQueue_args(context.TODO(), rawArgs)
-	if err != nil {
-		break
-	}
-	return e.complexity.Mutation.DeleteOrderQueue(childComplexity, args["id"].(string)), true
-
-case "Mutation.forgotPassword":
-	if e.complexity.Mutation.ForgotPassword == nil {
-		break
-	}
-	args, err := ec.field_Mutation_forgotPassword_args(context.TODO(), rawArgs)
-	if err != nil {
-		break
-	}
-	return e.complexity.Mutation.ForgotPassword(childComplexity, args["input"].(model.ForgotPasswordInput)), true
+<<<<<<< HEAD
+		return e.complexity.Mutation.DeleteOrderQueue(childComplexity, args["id"].(string)), true
+=======
+		return e.complexity.Mutation.ForgotPassword(childComplexity, args["input"].(model.ForgotPasswordInput)), true
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 
 	case "Mutation.signIn":
 		if e.complexity.Mutation.SignIn == nil {
@@ -535,6 +516,7 @@ case "Mutation.forgotPassword":
 
 		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(string), args["input"].(model.UpdateUserInput)), true
 
+<<<<<<< HEAD
 	case "OrderQueue.id":
 		if e.complexity.OrderQueue.ID == nil {
 			break
@@ -569,12 +551,14 @@ case "Mutation.forgotPassword":
 		}
 
 		return e.complexity.OrderQueue.Status(childComplexity), true
+=======
 	case "Query.checkToken":
 		if e.complexity.Query.CheckToken == nil {
 			break
 		}
 
 		return e.complexity.Query.CheckToken(childComplexity), true
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 
 	case "Query.getAllMenuItems":
 		if e.complexity.Query.GetAllMenuItems == nil {
@@ -614,6 +598,7 @@ case "Mutation.forgotPassword":
 
 		return e.complexity.Query.GetUserByID(childComplexity, args["id"].(string)), true
 
+<<<<<<< HEAD
 	case "Query.inventories":
 		if e.complexity.Query.Inventories == nil {
 			break
@@ -651,6 +636,7 @@ case "Mutation.forgotPassword":
 		}
 
 		return e.complexity.Query.OrderQueues(childComplexity), true
+=======
 	case "TokenCheckResponse.email":
 		if e.complexity.TokenCheckResponse.Email == nil {
 			break
@@ -664,6 +650,7 @@ case "Mutation.forgotPassword":
 		}
 
 		return e.complexity.TokenCheckResponse.ID(childComplexity), true
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 
 	case "User.address":
 		if e.complexity.User.Address == nil {
@@ -1119,6 +1106,7 @@ func (ec *executionContext) field_Mutation_deleteMenuItem_argsID(
 	return zeroVal, nil
 }
 
+<<<<<<< HEAD
 func (ec *executionContext) field_Mutation_deleteOrderQueue_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1139,6 +1127,7 @@ func (ec *executionContext) field_Mutation_deleteOrderQueue_argsID(
 	}
 
 	var zeroVal string
+=======
 func (ec *executionContext) field_Mutation_forgotPassword_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1159,6 +1148,7 @@ func (ec *executionContext) field_Mutation_forgotPassword_argsInput(
 	}
 
 	var zeroVal model.ForgotPasswordInput
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 	return zeroVal, nil
 }
 
@@ -3489,10 +3479,13 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 	return fc, nil
 }
 
+<<<<<<< HEAD
 func (ec *executionContext) _OrderQueue_id(ctx context.Context, field graphql.CollectedField, obj *model.OrderQueue) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrderQueue_id(ctx, field)
+=======
 func (ec *executionContext) _Mutation_forgotPassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_forgotPassword(ctx, field)
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 	if err != nil {
 		return graphql.Null
 	}
@@ -3505,8 +3498,11 @@ func (ec *executionContext) _Mutation_forgotPassword(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
+<<<<<<< HEAD
 		return obj.ID, nil
+=======
 		return ec.resolvers.Mutation().ForgotPassword(rctx, fc.Args["input"].(model.ForgotPasswordInput))
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3518,6 +3514,7 @@ func (ec *executionContext) _Mutation_forgotPassword(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
+<<<<<<< HEAD
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNID2string(ctx, field.Selections, res)
@@ -3746,6 +3743,7 @@ func (ec *executionContext) _Query_inventories(ctx context.Context, field graphq
 func (ec *executionContext) fieldContext_Query_inventories(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
+=======
 	res := resTmp.(*model.ForgotPasswordResponse)
 	fc.Result = res
 	return ec.marshalNForgotPasswordResponse2ᚖGraphql_ServiceᚋgraphᚋmodelᚐForgotPasswordResponse(ctx, field.Selections, res)
@@ -3754,11 +3752,13 @@ func (ec *executionContext) fieldContext_Query_inventories(_ context.Context, fi
 func (ec *executionContext) fieldContext_Mutation_forgotPassword(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+<<<<<<< HEAD
 			case "id":
 				return ec.fieldContext_Inventory_id(ctx, field)
 			case "itemName":
@@ -3832,12 +3832,14 @@ func (ec *executionContext) fieldContext_Query_inventory(ctx context.Context, fi
 				return ec.fieldContext_Inventory_lastUpdated(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Inventory", field.Name)
+=======
 			case "success":
 				return ec.fieldContext_ForgotPasswordResponse_success(ctx, field)
 			case "message":
 				return ec.fieldContext_ForgotPasswordResponse_message(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ForgotPasswordResponse", field.Name)
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 		},
 	}
 	defer func() {
@@ -3847,6 +3849,7 @@ func (ec *executionContext) fieldContext_Query_inventory(ctx context.Context, fi
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
+<<<<<<< HEAD
 	if fc.Args, err = ec.field_Query_inventory_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
@@ -3968,7 +3971,9 @@ func (ec *executionContext) fieldContext_Query_orderQueue(ctx context.Context, f
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_orderQueue_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+=======
 	if fc.Args, err = ec.field_Mutation_forgotPassword_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -8818,6 +8823,7 @@ func (ec *executionContext) unmarshalNNewMenuItem2Graphql_Serviceᚋgraphᚋmode
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+<<<<<<< HEAD
 func (ec *executionContext) marshalNOrderQueue2Graphql_ServiceᚋgraphᚋmodelᚐOrderQueue(ctx context.Context, sel ast.SelectionSet, v model.OrderQueue) graphql.Marshaler {
 	return ec._OrderQueue(ctx, sel, &v)
 }
@@ -8891,6 +8897,8 @@ func (ec *executionContext) unmarshalNSignInEmployeeInput2Graphql_Serviceᚋgrap
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+=======
+>>>>>>> eab6cebaca97a9c53bf52b39a2dc20f963f5d138
 func (ec *executionContext) unmarshalNSignInInput2Graphql_ServiceᚋgraphᚋmodelᚐSignInInput(ctx context.Context, v any) (model.SignInInput, error) {
 	res, err := ec.unmarshalInputSignInInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
