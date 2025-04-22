@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FORGOT_PASSWORD } from "../graphql/Userqueries";
-import "../styles/login.css";
+import "../styles/main.css";
 import logo from "../assets/ByteBitesLogo/logo.png";
 import bg from "../assets/forgotpasswordbg.jpg";
 import { useMutation } from "@apollo/client";

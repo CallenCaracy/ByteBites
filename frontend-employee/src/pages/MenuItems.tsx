@@ -1,10 +1,11 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@apollo/client";
 import { GET_MENU_ITEM_BY_ID } from "../graphql/Menuqueries";
 import Navbar from "../components/NavBar";
 
 const MenuItem: React.FC = () => {
     const { menuId } = useParams();
+    const navigate = useNavigate();
 
     const { data, loading, error } = useQuery(GET_MENU_ITEM_BY_ID, {
         variables: { id: menuId },
@@ -19,7 +20,8 @@ const MenuItem: React.FC = () => {
 
     return (
         <><Navbar /><div className="p-6 max-w-md mx-auto bg-white rounded-xl shadow-md space-y-4">
-            <button>
+            <button
+            onClick={() => navigate("/dashboard")}>
                 Back
             </button>
             <img src={item.image_url} alt={item.name} className="w-full rounded" />

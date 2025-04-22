@@ -56,8 +56,9 @@ type SignUpInput struct {
 	Role      string  `json:"role"`
 	Address   *string `json:"address,omitempty"`
 	Phone     *string `json:"phone,omitempty"`
-	Age       int32   `json:"age"`
+	BirthDate string  `json:"birthDate"`
 	UserType  string  `json:"userType"`
+	Pfp       string  `json:"pfp"`
 	Gender    *string `json:"gender,omitempty"`
 }
 
@@ -80,7 +81,7 @@ type UpdateUserInput struct {
 	LastName  *string `json:"lastName,omitempty"`
 	Address   *string `json:"address,omitempty"`
 	Phone     *string `json:"phone,omitempty"`
-	Age       *int32  `json:"age,omitempty"`
+	BirthDate *string `json:"birthDate,omitempty"`
 	UserType  *string `json:"userType,omitempty"`
 	Gender    *string `json:"gender,omitempty"`
 	Pfp       *string `json:"pfp,omitempty"`
@@ -96,10 +97,10 @@ type User struct {
 	Address   *string `json:"address,omitempty"`
 	Phone     *string `json:"phone,omitempty"`
 	IsActive  string  `json:"isActive"`
-	Age       int32   `json:"age"`
 	UserType  string  `json:"userType"`
 	Pfp       *string `json:"pfp,omitempty"`
 	Gender    *string `json:"gender,omitempty"`
 	CreatedAt string  `json:"createdAt"`
 	UpdatedAt *string `json:"updatedAt,omitempty"`
+	BirthDate string  `json:"birthDate"`
 }

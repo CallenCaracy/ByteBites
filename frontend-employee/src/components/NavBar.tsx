@@ -21,11 +21,9 @@ const Navbar: React.FC = () => {
         if (token) {
             const payloadRaw = token.split('.')[1];
             const decoded = atob(payloadRaw);
-            console.log("Decoded JWT payload string:", decoded);
     
             try {
                 const payload = JSON.parse(decoded);
-                console.log("Parsed payload object:", payload);
     
                 if (payload.sub) {
                     setUserId(payload.sub);
