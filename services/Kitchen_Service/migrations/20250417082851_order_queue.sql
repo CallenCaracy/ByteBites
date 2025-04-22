@@ -7,7 +7,6 @@ CREATE TABLE order_queue (
     priority INT NOT NULL DEFAULT 1,
     last_updated TIMESTAMPTZ DEFAULT NOW()
 );
-
 -- +goose StatementEnd
 
 -- +goose Down
