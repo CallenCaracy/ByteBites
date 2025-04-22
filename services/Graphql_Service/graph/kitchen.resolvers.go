@@ -1,0 +1,174 @@
+package graph
+
+import (
+	"Graphql_Service/graph/model"
+	"context"
+)
+
+// CreateInventory - Adds a new inventory record to the database.
+func (r *mutationResolver) CreateInventory(ctx context.Context, itemName string, quantity int32, unit string, lowStockThreshold *int32, expiryDate *string) (*model.Inventory, error) {
+	// SQL Query to insert inventory
+	query := `INSERT INTO public.inventory (item_name, quantity, unit, low_stock_threshold, expiry_date, last_updated)
+	          VALUES ($1, $2, $3, COALESCE($4, 5), COALESCE($5::timestamptz, NULL), NOW())
+	          RETURNING id, item_name, quantity, unit, low_stock_threshold, expiry_date, last_updated`
+
+	var inv model.Inventory
+	err := r.Resolver.DB7.QueryRow(query, itemName, quantity, unit, lowStockThreshold, expiryDate).
+		Scan(&inv.ID, &inv.ItemName, &inv.Quantity, &inv.Unit, &inv.LowStockThreshold, &inv.ExpiryDate, &inv.LastUpdated)
+	if err != nil {
+		return nil, err
+	}
+	return &inv, nil
+}
+
+// UpdateInventory - Updates an existing inventory record.
+func (r *mutationResolver) UpdateInventory(ctx context.Context, id string, itemName *string, quantity *int32, unit *string, lowStockThreshold *int32, expiryDate *string) (*model.Inventory, error) {
+	// SQL Query to update inventory
+	query := `UPDATE public.inventory SET 
+	          item_name = COALESCE($1, item_name), 
+	          quantity = COALESCE($2, quantity),
+	          unit = COALESCE($3, unit),
+	          low_stock_threshold = COALESCE($4, low_stock_threshold),
+	          expiry_date = COALESCE($5::timestamptz, expiry_date),
+	          last_updated = NOW()
+	          WHERE id = $6
+	          RETURNING id, item_name, quantity, unit, low_stock_threshold, expiry_date, last_updated`
+
+	var inv model.Inventory
+	err := r.Resolver.DB7.QueryRow(query, itemName, quantity, unit, lowStockThreshold, expiryDate, id).
+		Scan(&inv.ID, &inv.ItemName, &inv.Quantity, &inv.Unit, &inv.LowStockThreshold, &inv.ExpiryDate, &inv.LastUpdated)
+	if err != nil {
+		return nil, err
+	}
+	return &inv, nil
+}
+
+// DeleteInventory - Deletes an inventory record by ID.
+func (r *mutationResolver) DeleteInventory(ctx context.Context, id string) (bool, error) {
+	// SQL Query to delete inventory
+	query := `DELETE FROM public.inventory WHERE id = $1`
+	_, err := r.Resolver.DB7.Exec(query, id)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// Inventories - Retrieves all inventory records.
+func (r *queryResolver) Inventories(ctx context.Context) ([]*model.Inventory, error) {
+	// SQL Query to fetch all inventories
+	query := `SELECT id, item_name, quantity, unit, low_stock_threshold, expiry_date, last_updated FROM public.inventory`
+	rows, err := r.Resolver.DB7.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []*model.Inventory
+	for rows.Next() {
+		var inv model.Inventory
+		err := rows.Scan(&inv.ID, &inv.ItemName, &inv.Quantity, &inv.Unit, &inv.LowStockThreshold, &inv.ExpiryDate, &inv.LastUpdated)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, &inv)
+	}
+	return result, nil
+}
+
+// Inventory - Retrieves an inventory record by ID.
+func (r *queryResolver) Inventory(ctx context.Context, id string) (*model.Inventory, error) {
+	// SQL Query to fetch inventory by ID
+	query := `SELECT id, item_name, quantity, unit, low_stock_threshold, expiry_date, last_updated FROM public.inventory WHERE id = $1`
+	var inv model.Inventory
+	err := r.Resolver.DB7.QueryRow(query, id).
+		Scan(&inv.ID, &inv.ItemName, &inv.Quantity, &inv.Unit, &inv.LowStockThreshold, &inv.ExpiryDate, &inv.LastUpdated)
+	if err != nil {
+		return nil, err
+	}
+	return &inv, nil
+}
+
+// CreateOrderQueue - Adds a new order queue.
+func (r *mutationResolver) CreateOrderQueue(ctx context.Context, orderID string, status *model.OrderStatus, priority *int32) (*model.OrderQueue, error) {
+	// SQL Query to insert into order_queue
+	query := `INSERT INTO public.order_queue (order_id, status, priority, last_updated)
+	          VALUES ($1, COALESCE($2, 'preparing'), COALESCE($3, 1), NOW())
+	          RETURNING order_id, status, priority, last_updated`
+
+	var order model.OrderQueue
+	err := r.Resolver.DB7.QueryRow(query, orderID, status, priority).
+		Scan(&order.OrderID, &order.Status, &order.Priority, &order.LastUpdated)
+	if err != nil {
+		return nil, err
+	}
+	return &order, nil
+}
+
+// UpdateOrderQueue - Updates an existing order queue.
+func (r *mutationResolver) UpdateOrderQueue(ctx context.Context, id string, status *model.OrderStatus, priority *int32) (*model.OrderQueue, error) {
+	// SQL Query to update order_queue
+	query := `UPDATE public.order_queue SET 
+	          status = COALESCE($1, status),
+	          priority = COALESCE($2, priority),
+	          last_updated = NOW()
+	          WHERE order_id = $3
+	          RETURNING order_id, status, priority, last_updated`
+
+	var order model.OrderQueue
+	err := r.Resolver.DB7.QueryRow(query, status, priority, id).
+		Scan(&order.OrderID, &order.Status, &order.Priority, &order.LastUpdated)
+	if err != nil {
+		return nil, err
+	}
+	return &order, nil
+}
+
+// DeleteOrderQueue - Deletes an order queue record.
+func (r *mutationResolver) DeleteOrderQueue(ctx context.Context, id string) (bool, error) {
+	// SQL Query to delete from order_queue
+	query := `DELETE FROM public.order_queue WHERE order_id = $1`
+	_, err := r.Resolver.DB7.Exec(query, id)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// OrderQueues - Retrieves all order queue records.
+func (r *queryResolver) OrderQueues(ctx context.Context) ([]*model.OrderQueue, error) {
+	// SQL Query to fetch all order queues
+	query := `SELECT order_id, status, priority, last_updated FROM public.order_queue`
+	rows, err := r.Resolver.DB7.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []*model.OrderQueue
+	for rows.Next() {
+		var o model.OrderQueue
+		err := rows.Scan(&o.OrderID, &o.Status, &o.Priority, &o.LastUpdated)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, &o)
+	}
+	return result, nil
+}
+
+// OrderQueue - Retrieves an order queue by ID.
+func (r *queryResolver) OrderQueue(ctx context.Context, id string) (*model.OrderQueue, error) {
+	// SQL Query to fetch order queue by ID
+	query := `SELECT order_id, status, priority, last_updated FROM public.order_queue WHERE order_id = $1`
+	var o model.OrderQueue
+	err := r.Resolver.DB7.QueryRow(query, id).
+		Scan(&o.OrderID, &o.Status, &o.Priority, &o.LastUpdated)
+	if err != nil {
+		return nil, err
+	}
+	return &o, nil
+}
+
+type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }
