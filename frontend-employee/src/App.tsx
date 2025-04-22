@@ -7,12 +7,14 @@ import Account from './pages/Account';
 import ForgotPassword from './pages/ForgotPassword'
 import UpdatePassword from './pages/UpdatePassword';
 import MenuItem from './pages/MenuItems';
+import PaymentService from './pages/Payment';
 
 function App() {
   return (
     <Router>
       <Routes>
         {/* Public Routes */}
+        
         <Route path="/" element={<Navigate to="/login"/>} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage/>} />
@@ -24,6 +26,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard/>} />
             <Route path="/account/:userId" element={<Account/>} />
             <Route path="/menu-item/:menuId" element={<MenuItem/>} />
+            <Route path="/payment/order-id" element={<PaymentService/>} />
           </Route>
       </Routes>
     </Router>

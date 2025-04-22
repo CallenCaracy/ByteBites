@@ -1,0 +1,50 @@
+scalar Time
+scalar UUID
+
+type Receipt {
+  id: UUID!
+  transaction: Transaction!
+  userID: UUID!
+  amount: Float!
+  paymentMethod: String!
+  timestamp: Time!
+}
+
+type Transaction {
+  id: UUID!
+  orderID: UUID!
+  userID: UUID!
+  amountPaid: Float!
+  paymentMethod: String!
+  transactionStatus: String!
+  transactionTimestamp: Time!
+}
+
+input NewTransactionInput {
+  orderID: UUID!
+  userID: UUID!
+  amountPaid: Float!
+  paymentMethod: String!
+}
+
+input NewReceiptInput {
+  transactionID: UUID!
+  userID: UUID!
+  amount: Float!
+  paymentMethod: String!
+}
+
+type Query {
+  getTransaction(id: UUID!): Transaction
+  listTransactions: [Transaction!]!
+
+  getReceipt(id: UUID!): Receipt
+  listReceipts: [Receipt!]!
+}
+
+type Mutation {
+  createTransaction(input: NewTransactionInput!): Transaction!
+  updateTransactionStatus(id: UUID!, status: String!): Transaction!
+
+  createReceipt(input: NewReceiptInput!): Receipt!
+}

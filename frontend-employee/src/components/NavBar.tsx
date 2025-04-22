@@ -87,6 +87,13 @@ const Navbar: React.FC = () => {
                             >Home
                         </button>
                     </li>
+                    <li>
+                        <button
+                            onClick={() => navigate('/payment')}
+                            className="block px-4 py-2 text-white hover:bg-gray-600 w-full text-left"
+                            >Proceed to Payment
+                        </button>
+                    </li>
                     {isAuthenticated ? (
                         <li className="relative">
                             <button
