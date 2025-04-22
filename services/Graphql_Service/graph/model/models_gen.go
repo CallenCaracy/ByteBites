@@ -9,9 +9,17 @@ import (
 )
 
 type AuthResponse struct {
-	AccessToken  string  `json:"accessToken"`
-	RefreshToken string  `json:"refreshToken"`
-	Error        *string `json:"error,omitempty"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
+type ForgotPasswordInput struct {
+	Email string `json:"email"`
+}
+
+type ForgotPasswordResponse struct {
+	Success bool    `json:"success"`
+	Message *string `json:"message,omitempty"`
 }
 
 type Inventory struct {
@@ -59,11 +67,6 @@ type OrderQueue struct {
 type Query struct {
 }
 
-type SignInEmployeeInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 type SignInInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -77,6 +80,15 @@ type SignUpInput struct {
 	Role      string  `json:"role"`
 	Address   *string `json:"address,omitempty"`
 	Phone     *string `json:"phone,omitempty"`
+	BirthDate string  `json:"birthDate"`
+	UserType  string  `json:"userType"`
+	Pfp       string  `json:"pfp"`
+	Gender    *string `json:"gender,omitempty"`
+}
+
+type TokenCheckResponse struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
 }
 
 type UpdateMenuItem struct {
@@ -91,10 +103,13 @@ type UpdateMenuItem struct {
 type UpdateUserInput struct {
 	FirstName *string `json:"firstName,omitempty"`
 	LastName  *string `json:"lastName,omitempty"`
-	Role      *string `json:"role,omitempty"`
 	Address   *string `json:"address,omitempty"`
 	Phone     *string `json:"phone,omitempty"`
-	IsActive  *bool   `json:"isActive,omitempty"`
+	BirthDate *string `json:"birthDate,omitempty"`
+	UserType  *string `json:"userType,omitempty"`
+	Gender    *string `json:"gender,omitempty"`
+	Pfp       *string `json:"pfp,omitempty"`
+	IsActive  *string `json:"isActive,omitempty"`
 }
 
 type User struct {
@@ -106,8 +121,12 @@ type User struct {
 	Address   *string `json:"address,omitempty"`
 	Phone     *string `json:"phone,omitempty"`
 	IsActive  string  `json:"isActive"`
+	UserType  string  `json:"userType"`
+	Pfp       *string `json:"pfp,omitempty"`
+	Gender    *string `json:"gender,omitempty"`
 	CreatedAt string  `json:"createdAt"`
 	UpdatedAt *string `json:"updatedAt,omitempty"`
+	BirthDate string  `json:"birthDate"`
 }
 
 type OrderStatus string

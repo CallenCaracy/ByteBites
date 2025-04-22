@@ -8,82 +8,113 @@ import (
 	"Graphql_Service/graph/model"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/CallenCaracy/ByteBites/services/User_Service/pb"
+	supabase "github.com/nedpals/supabase-go"
+	"github.com/supabase-community/auth-go/types"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 // SignUp is the resolver for the signUp field.
 func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) (*model.User, error) {
-	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
-	}
-	defer conn.Close()
+	r.Logger.Info("Received signup request for email: %s", input.Email)
 
-	client := pb.NewAuthServiceClient(conn)
-
-	req := &pb.SignUpRequest{
-		Email:     input.Email,
-		Password:  input.Password,
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
-		Role:      input.Role,
+	req := types.SignupRequest{
+		Email:    input.Email,
+		Password: input.Password,
 	}
 
-	if input.Address != nil {
-		req.Address = input.Address
-	}
-	if input.Phone != nil {
-		req.Phone = input.Phone
-	}
-
-	res, err := client.SignUp(ctx, req)
+	res, err := r.AuthClient.Signup(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign up user: %v", err)
 	}
 
+	r.Logger.Info("Successfully signed up user: %s", res.ID.String())
+
+	var address, phone, gender *string
+	if input.Address != nil {
+		address = input.Address
+	}
+	if input.Phone != nil {
+		phone = input.Phone
+	}
+
+	if input.Gender != nil {
+		gender = input.Gender
+	}
+	r.Logger.Info("Parsing birthDate: %s", input.Pfp)
+
+	var parsedBirthDate time.Time
+	var birthDate string
+	if input.BirthDate != "" {
+		parsedBirthDate, err = time.Parse("2006-01-02", input.BirthDate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid birthDate format: %v", err)
+		}
+		birthDate = parsedBirthDate.Format("2006-01-02")
+	}
+
+	_, err = r.DB1.Exec(`
+		INSERT INTO public.users (id, email, first_name, last_name, role, address, phone, user_type, pfp, gender, birth_date)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+		res.ID, input.Email, input.FirstName, input.LastName, input.Role, address, phone, input.UserType, input.Pfp, gender, parsedBirthDate,
+	)
+	if err != nil {
+		r.Logger.Error("Failed to insert user into database: %v", err)
+		return nil, fmt.Errorf("failed to insert user into database: %v", err)
+	}
+
+	r.Logger.Info("User %s successfully inserted into the database", res.ID.String())
+
 	return &model.User{
-		ID:        res.UserId,
+		ID:        res.ID.String(),
 		Email:     input.Email,
-		FirstName: res.FirstName,
-		LastName:  res.LastName,
-		Role:      res.Role,
-		Address:   input.Address,
-		Phone:     input.Phone,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		Role:      input.Role,
+		Address:   address,
+		Phone:     phone,
+		BirthDate: birthDate,
+		UserType:  input.UserType,
+		Pfp:       &input.Pfp,
+		Gender:    gender,
 	}, nil
 }
 
 // SignIn is the resolver for the signIn field.
 func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) (*model.AuthResponse, error) {
-	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
-	}
-	defer conn.Close()
+	r.Logger.Info("Signing in %s", input.Email)
 
-	client := pb.NewAuthServiceClient(conn)
-
-	req := &pb.SignInRequest{
+	signInData := model.SignInInput{
 		Email:    input.Email,
 		Password: input.Password,
 	}
 
-	res, err := client.SignIn(ctx, req)
+	authResponse, err := r.AuthClient.SignInWithEmailPassword(signInData.Email, signInData.Password)
 	if err != nil {
-		return nil, fmt.Errorf("failed to login user: %v", err)
+		r.Logger.Error("Failed to sign in user: %v", err)
+		return nil, fmt.Errorf("failed to sign in user: %v", err)
 	}
 
+	r.Logger.Info("User %s signed in successfully", authResponse.User.ID.String())
+
 	return &model.AuthResponse{
-		AccessToken:  res.AccessToken,
-		RefreshToken: res.RefreshToken,
-		Error:        &res.Error,
+		AccessToken:  authResponse.AccessToken,
+		RefreshToken: authResponse.RefreshToken,
 	}, nil
 }
 
 // SignInOnlyEmployee is the resolver for the signInOnlyEmployee field.
-func (r *mutationResolver) SignInOnlyEmployee(ctx context.Context, input model.SignInEmployeeInput) (*model.AuthResponse, error) {
+func (r *mutationResolver) SignInOnlyEmployee(ctx context.Context, input model.SignInInput) (*model.AuthResponse, error) {
 	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
@@ -92,97 +123,323 @@ func (r *mutationResolver) SignInOnlyEmployee(ctx context.Context, input model.S
 
 	client := pb.NewAuthServiceClient(conn)
 
-	req := &pb.SignInOnlyEmployeeRequest{
-		Email:    input.Email,
-		Password: input.Password,
+	req := model.SignInInput(input)
+
+	// Get user role via gRPC
+	getRole, err := client.GetUserRole(ctx, &pb.GetUserRoleRequest{Email: req.Email})
+	if err != nil {
+		r.Logger.Error("Error retrieving role for %s: %v", req.Email, err)
+		return nil, fmt.Errorf("failed to retrieve user role: %v", err)
 	}
 
-	res, err := client.SignInOnlyEmployee(ctx, req)
+	if getRole.Role != "employee" {
+		r.Logger.Error("Email %s has role %s; not allowed to sign in as employee", req.Email, getRole.Role)
+		return nil, fmt.Errorf("user does not have permission to sign in as an employee")
+	}
+
+	authResponse, err := r.SignIn(ctx, model.SignInInput{
+		Email:    input.Email,
+		Password: input.Password,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to login user: %v", err)
 	}
 
 	return &model.AuthResponse{
-		AccessToken:  res.AccessToken,
-		RefreshToken: res.RefreshToken,
-		Error:        &res.Error,
+		AccessToken:  authResponse.AccessToken,
+		RefreshToken: authResponse.RefreshToken,
 	}, nil
 }
 
 // SignOut is the resolver for the signOut field.
 func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
-	// Extract HTTP headers from the request
-	// requestCtx := graphql.GetOperationContext(ctx)
-	// if requestCtx == nil {
-	//     return false, fmt.Errorf("missing HTTP request context")
-	// }
+	r.Logger.Info("Attempting to sign out user")
 
-	// httpRequest, ok := requestCtx.RawRequest.(*http.Request)
-	// if !ok {
-	//     return false, fmt.Errorf("failed to extract HTTP request")
-	// }
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		r.Logger.Error("Failed to retrieve metadata")
+		return false, fmt.Errorf("failed to retrieve metadata")
+	}
 
-	// authToken := httpRequest.Header.Get("Authorization")
-	// refreshToken := httpRequest.Header.Get("refresh_token")
+	r.Logger.Info("Received Metadata: %+v\n", md)
 
-	// if authToken == "" || refreshToken == "" {
-	//     return false, fmt.Errorf("missing Authorization or refresh_token headers")
-	// }
+	authHeader := md.Get("authorization")
+	if len(authHeader) == 0 {
+		r.Logger.Error("Missing authorization token")
+		return false, fmt.Errorf("missing authorization token")
+	}
+	accessToken := strings.TrimSpace(strings.TrimPrefix(authHeader[0], "Bearer "))
 
-	// // Debugging logs
-	// fmt.Println("Extracted Authorization:", authToken)
-	// fmt.Println("Extracted Refresh Token:", refreshToken)
+	refreshTokens := md.Get("refresh_token")
+	refreshToken := ""
+	if len(refreshTokens) > 0 {
+		refreshToken = refreshTokens[0]
+	}
 
-	// // Attach headers as metadata to gRPC request
-	// md := metadata.New(map[string]string{
-	//     "authorization": authToken,
-	//     "refresh_token": refreshToken,
-	// })
-	// ctx = metadata.NewOutgoingContext(ctx, md)
+	supabaseURL := os.Getenv("SUPABASE_URL_FULL")
+	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-	// // Establish gRPC connection
-	// conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
-	// if err != nil {
-	//     return false, fmt.Errorf("failed to connect to gRPC server: %v", err)
-	// }
-	// defer conn.Close()
+	r.Logger.Info("Using Supabase URL: %s", supabaseURL)
+	r.Logger.Info("Using API Key: %s", serviceKey)
 
-	// client := pb.NewAuthServiceClient(conn)
+	if supabaseURL == "" || serviceKey == "" {
+		r.Logger.Error("Missing Supabase environment variables")
+		return false, fmt.Errorf("missing Supabase URL or API Key")
+	}
 
-	// // Make the gRPC call
-	// res, err := client.SignOut(ctx, &pb.SignOutRequest{})
-	// if err != nil {
-	//     return false, fmt.Errorf("sign out failed: %v", err)
-	// }
+	requestBody, err := json.Marshal(map[string]string{
+		"refresh_token": refreshToken,
+	})
+	if err != nil {
+		r.Logger.Error("Error marshaling JSON: %v", err)
+		return false, fmt.Errorf("failed to create logout request body: %v", err)
+	}
 
-	// if res.Error != "" {
-	//     return false, fmt.Errorf("sign out error: %s", res.Error)
-	// }
+	logoutURL := fmt.Sprintf("%s/auth/v1/logout", supabaseURL)
+	httpReq, err := http.NewRequest("POST", logoutURL, strings.NewReader(string(requestBody)))
+	if err != nil {
+		r.Logger.Error("Error creating logout request: %v", err)
+		return false, fmt.Errorf("failed to create logout request: %v", err)
+	}
 
-	// return true, nil
-	panic(fmt.Errorf("not implemented: UpdateUser - updateUser"))
+	httpReq.Header.Set("Authorization", "Bearer "+accessToken)
+	httpReq.Header.Set("apikey", serviceKey)
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		r.Logger.Error("Error sending logout request: %v", err)
+		return false, fmt.Errorf("failed to sign out user: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNoContent {
+		r.Logger.Info("User successfully signed out.")
+		return true, nil
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+	r.Logger.Error("Failed to sign out user: Status %d, Response: %s", resp.StatusCode, string(body))
+	return false, fmt.Errorf("failed to sign out user: received status %d, response: %s", resp.StatusCode, string(body))
 }
 
 // UpdateUser is the resolver for the updateUser field.
 func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: UpdateUser - updateUser"))
+	var user model.User
+	err := r.DB1.QueryRowContext(ctx,
+		`SELECT id, email, first_name, last_name, role, address, phone, is_active, user_type, pfp, gender, created_at, updated_at, birth_date
+		FROM users
+		WHERE id = $1`,
+		id).Scan(
+		&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.Role, &user.Address,
+		&user.Phone, &user.IsActive, &user.UserType, &user.Pfp, &user.Gender,
+		&user.CreatedAt, &user.UpdatedAt, &user.BirthDate,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+
+	// Update the fields that were provided in the input
+	if input.FirstName != nil {
+		user.FirstName = *input.FirstName
+	}
+	if input.LastName != nil {
+		user.LastName = *input.LastName
+	}
+	if input.Address != nil {
+		user.Address = input.Address
+	}
+	if input.Phone != nil {
+		user.Phone = input.Phone
+	}
+	if input.UserType != nil {
+		user.UserType = *input.UserType
+	}
+	if input.Gender != nil {
+		user.Gender = input.Gender
+	}
+	if input.Pfp != nil {
+		user.Pfp = input.Pfp
+	}
+	if input.IsActive != nil {
+		user.IsActive = *input.IsActive
+	}
+	var parsedBirthDate time.Time
+	var birthDate string
+	if input.BirthDate != nil {
+		parsedBirthDate, err = time.Parse("2006-01-02", *input.BirthDate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid birthDate format: %v", err)
+		}
+		birthDate = parsedBirthDate.Format("2006-01-02")
+		user.BirthDate = parsedBirthDate.Format("2006-01-02")
+	}
+
+	updateQuery := `
+    UPDATE users
+    SET first_name = $1, last_name = $2, address = $3, phone = $4, birth_date = $5, user_type = $6,
+        gender = $7, pfp = $8, is_active = $9, updated_at = NOW()
+    WHERE id = $10
+    RETURNING id, first_name, last_name, address, phone, birth_date, is_active, user_type, gender, pfp, updated_at;
+  `
+	err = r.DB1.QueryRowContext(ctx, updateQuery, user.FirstName, user.LastName, user.Address, user.Phone,
+		user.BirthDate, user.UserType, user.Gender, user.Pfp, user.IsActive, user.ID).Scan(
+		&user.ID, &user.FirstName, &user.LastName, &user.Address, &user.Phone, &user.BirthDate, &user.IsActive,
+		&user.UserType, &user.Gender, &user.Pfp, &user.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error updating user: %w", err)
+	}
+
+	return &model.User{
+		ID:        user.ID,
+		Email:     user.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Role:      user.Role,
+		Address:   user.Address,
+		Phone:     user.Phone,
+		IsActive:  user.IsActive,
+		UserType:  user.UserType,
+		Pfp:       user.Pfp,
+		Gender:    user.Gender,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		BirthDate: birthDate,
+	}, nil
+}
+
+// ForgotPassword is the resolver for the forgotPassword field.
+func (r *mutationResolver) ForgotPassword(ctx context.Context, input model.ForgotPasswordInput) (*model.ForgotPasswordResponse, error) {
+	ptr := func(s string) *string { return &s }
+	var err error
+	supabaseURL := os.Getenv("SUPABASE_URL_FULL")
+	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
+	supabaseClient := supabase.CreateClient(supabaseURL, serviceKey)
+	redirectURL := os.Getenv("REDIRECT_URL")
+	if redirectURL == "" {
+		return &model.ForgotPasswordResponse{
+			Success: false,
+			Message: ptr("Missing redirect URL environment variable"),
+		}, nil
+	}
+
+	err = supabaseClient.Auth.ResetPasswordForEmail(ctx, input.Email, redirectURL)
+	if err != nil {
+		return &model.ForgotPasswordResponse{
+			Success: false,
+			Message: ptr(fmt.Sprintf("Error sending reset link: %v", err)),
+		}, nil
+	}
+
+	return &model.ForgotPasswordResponse{
+		Success: true,
+		Message: ptr("If the email exists, a reset link has been sent to the provided email address."),
+	}, nil
 }
 
 // GetUserByID - Fetch a user by ID
 func (r *queryResolver) GetUserByID(ctx context.Context, id string) (*model.User, error) {
 	var user model.User
 
-	query := `SELECT id, email, first_name, last_name, role, address, phone, is_active, created_at, updated_at FROM public.users WHERE id = $1`
+	query := `SELECT id, email, first_name, last_name, role, address, phone, is_active, created_at, updated_at, user_type, pfp, gender, birth_date FROM public.users WHERE id = $1`
 	err := r.Resolver.DB1.QueryRow(query, id).Scan(
 		&user.ID, &user.Email, &user.FirstName, &user.LastName,
 		&user.Role, &user.Address, &user.Phone, &user.IsActive,
-		&user.CreatedAt, &user.UpdatedAt,
+		&user.CreatedAt, &user.UpdatedAt, &user.UserType,
+		&user.Pfp, &user.Gender, &user.BirthDate,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // Return nil if user not found
+			return nil, nil
 		}
 		return nil, err
 	}
 	return &user, nil
+}
+
+// GetAuthenticatedUser is the resolver for the getAuthenticatedUser field.
+func (r *queryResolver) GetAuthenticatedUser(ctx context.Context) (*model.User, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("missing metadata in context")
+	}
+	log.Printf("Received metadata: %+v\n", md)
+
+	tokenList := md.Get("authorization")
+	if len(tokenList) == 0 {
+		return nil, fmt.Errorf("missing token in metadata")
+	}
+
+	token := strings.TrimPrefix(tokenList[0], "Bearer ")
+
+	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewAuthServiceClient(conn)
+
+	resp, err := client.VerifyToken(ctx, &pb.TokenRequest{Token: token})
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify token: %v", err)
+	}
+
+	user, err := r.GetUserByID(ctx, resp.Id)
+	if err != nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	return &model.User{
+		ID:        user.ID,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		Role:      user.Role,
+		Address:   user.Address,
+		Phone:     user.Phone,
+		IsActive:  user.IsActive,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		UserType:  user.UserType,
+		Pfp:       user.Pfp,
+		Gender:    user.Gender,
+		BirthDate: user.BirthDate,
+	}, nil
+}
+
+// CheckToken is the resolver for the checkToken field.
+func (r *queryResolver) CheckToken(ctx context.Context) (*model.TokenCheckResponse, error) {
+	r.Logger.Info("Checking token...")
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("missing metadata in context")
+	}
+
+	tokenList := md.Get("authorization")
+	if len(tokenList) == 0 {
+		return nil, fmt.Errorf("missing token in metadata")
+	}
+
+	token := strings.TrimPrefix(tokenList[0], "Bearer ")
+
+	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewAuthServiceClient(conn)
+
+	resp, err := client.VerifyToken(ctx, &pb.TokenRequest{Token: token})
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify token: %v", err)
+	}
+
+	return &model.TokenCheckResponse{
+		ID:    resp.Id,
+		Email: resp.Email,
+	}, nil
 }
