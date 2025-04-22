@@ -220,7 +220,6 @@ const RegisterPage: React.FC = () => {
                             <option value="staff">Staff</option>
                             <option value="manager">Manager</option>
                             <option value="chef">Chef</option>
-                            <option value="admin">Admin</option>
                         </select>
                     </div>
 

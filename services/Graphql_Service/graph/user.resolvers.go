@@ -273,6 +273,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input mode
 			return nil, fmt.Errorf("invalid birthDate format: %v", err)
 		}
 		birthDate = parsedBirthDate.Format("2006-01-02")
+		user.BirthDate = parsedBirthDate.Format("2006-01-02")
 	}
 
 	updateQuery := `

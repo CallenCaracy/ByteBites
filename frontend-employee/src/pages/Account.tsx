@@ -69,10 +69,10 @@ const Account: React.FC = () => {
                         lastName: formData.lastName,
                         address: formData.address,
                         phone: formData.phone,
+                        birthDate: formData.birthDate,
                         userType: formData.userType,
                         gender: formData.gender,
                         isActive: formData.isActive,
-                        birthDate: formData.birthDate,
                     },
                 },
             });
