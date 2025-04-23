@@ -2,7 +2,6 @@ package graph
 
 import (
 	"database/sql"
-
 	"github.com/CallenCaracy/ByteBites/services/User_Service/utils"
 	"github.com/supabase-community/auth-go"
 )
@@ -13,6 +12,18 @@ import (
 type Resolver struct {
 	DB1        *sql.DB // Supabase Database USER
 	DB2        *sql.DB // Supabase Database MENU
+	DB7        *sql.DB // Supabase Database KITCHEN
 	AuthClient auth.Client
 	Logger     *utils.Logger
 }
+
+// Mutation method that returns a mutation resolver.
+func (r *Resolver) Mutation() MutationResolver {
+	return &mutationResolver{r} // Return the mutation resolver
+}
+
+// Query method that returns a query resolver.
+func (r *Resolver) Query() QueryResolver {
+	return &queryResolver{r} // Return the query resolver
+}
+
