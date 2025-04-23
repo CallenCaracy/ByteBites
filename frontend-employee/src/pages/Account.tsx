@@ -25,7 +25,6 @@ const Account: React.FC = () => {
         birthDate: "",
     });
     const [formErrors, setFormErrors] = useState({
-        age: "",
         phone: "",
     });
 
@@ -60,6 +59,10 @@ const Account: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        const formattedBirthDate = formData.birthDate
+        ? new Date(formData.birthDate).toISOString().split("T")[0]
+        : "";
+
         try {
             await updateUser({
                 variables: {
@@ -69,7 +72,7 @@ const Account: React.FC = () => {
                         lastName: formData.lastName,
                         address: formData.address,
                         phone: formData.phone,
-                        birthDate: formData.birthDate,
+                        birthDate: formattedBirthDate,
                         userType: formData.userType,
                         gender: formData.gender,
                         isActive: formData.isActive,
@@ -82,104 +85,138 @@ const Account: React.FC = () => {
         }
     };
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        if (file) {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${userId}-${Date.now()}.${fileExt}`;
-            const filePath = `pfp/${fileName}`;
-    
-            const { error: uploadError } = await supabase.storage
-                .from('pictures')
-                .upload(filePath, file);
-    
-            if (uploadError) {
-                console.error('Error uploading file:', uploadError.message);
-                return;
-            }
-    
-            const { data: publicUrlData } = supabase
-                .storage
-                .from('pictures')
-                .getPublicUrl(filePath);
-
-            const publicUrl = publicUrlData.publicUrl;
-    
-            setFormData((prev) => ({
-                ...prev,
-                pfp: publicUrlData.publicUrl,
-            }));
-
-            try {
-                await updateUser({
-                    variables: {
-                        id: userId,
-                        input: {
-                            pfp: publicUrl,
-                        },
-                    },
-                });
-            } catch (error) {
-                console.error("Error updating profile picture:", error);
-            }
-        }
-    };
-
     // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     //     const file = e.target.files?.[0];
     //     if (!file) return;
+
+    //     if (file) {
+    //         const fileExt = file.name.split('.').pop();
+    //         const fileName = `${userId}-${Date.now()}.${fileExt}`;
+    //         const filePath = `pfp/${fileName}`;
     
-    //     const oldPfpUrl = formData.pfp;
-    //     let oldPfpPath: string | null = null;
+    //         const { error: uploadError } = await supabase.storage
+    //             .from('pictures')
+    //             .upload(filePath, file);
     
-    //     if (oldPfpUrl) {
-    //         const urlParts = oldPfpUrl.split('/');
-    //         const index = urlParts.indexOf('pictures');
-    //         if (index !== -1) {
-    //             oldPfpPath = urlParts.slice(index + 1).join('/');
+    //         if (uploadError) {
+    //             console.error('Error uploading file:', uploadError.message);
+    //             return;
     //         }
-    //     }
     
-    //     const fileExt = file.name.split('.').pop();
-    //     const fileName = `${userId}-${Date.now()}.${fileExt}`;
-    //     const filePath = `pfp/${fileName}`;
-    
-    //     if (oldPfpPath) {
-    //         const { error: deleteError } = await supabase
+    //         const { data: publicUrlData } = supabase
     //             .storage
     //             .from('pictures')
-    //             .remove([oldPfpPath]);
+    //             .getPublicUrl(filePath);
+
+    //         const publicUrl = publicUrlData.publicUrl;
     
-    //         if (deleteError) {
-    //             console.error('Error deleting old file:', deleteError.message);
+    //         setFormData((prev) => ({
+    //             ...prev,
+    //             pfp: publicUrlData.publicUrl,
+    //         }));
+
+    //         try {
+    //             await updateUser({
+    //                 variables: {
+    //                     id: userId,
+    //                     input: {
+    //                         pfp: publicUrl,
+    //                     },
+    //                 },
+    //             });
+    //         } catch (error) {
+    //             console.error("Error updating profile picture:", error);
     //         }
     //     }
-    
-    //     const { error: uploadError } = await supabase
-    //         .storage
-    //         .from('pictures')
-    //         .upload(filePath, file);
-    
-    //     if (uploadError) {
-    //         console.error('Error uploading file:', uploadError.message);
-    //         return;
-    //     }
-    
-    //     const { data: publicUrlData } = supabase
-    //         .storage
-    //         .from('pictures')
-    //         .getPublicUrl(filePath);
-    
-    //     setFormData((prev) => ({
-    //         ...prev,
-    //         pfp: publicUrlData.publicUrl,
-    //     }));
     // };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+    
+        const oldPfpUrl = formData.pfp;
+        let oldPfpPath: string | null = null;
+    
+        if (oldPfpUrl) {
+            try {
+                const url = new URL(oldPfpUrl);
+                const pathname = url.pathname;
+                const match = pathname.match(/\/storage\/v1\/object\/public\/pictures\/(.+)/);
+
+                if (match) {
+                    oldPfpPath = match[1];
+                }
+            } catch (err) {
+                console.warn('Failed to parse oldPfpUrl:', err);
+            }
+        }
+    
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${userId}-${Date.now()}.${fileExt}`;
+        const filePath = `pfp/${fileName}`;
+    
+        if (oldPfpPath) {
+            const { error: deleteError } = await supabase
+                .storage
+                .from('pictures')
+                .remove([oldPfpPath]);
+                const { data: items, error: listError } = await supabase
+                .storage
+                .from('pictures')
+                .list('pfp', { limit: 100 });
+                console.log("🗂 Remaining in pfp/:", items, listError);
+    
+            if
+            (deleteError) {
+                console.error('Error deleting old file:', deleteError.message);
+            } else {
+                console.log('Old file deleted successfully');
+            }
+        }
+    
+        const { error: uploadError } = await supabase
+            .storage
+            .from('pictures')
+            .upload(filePath, file);
+    
+        if (uploadError) {
+            console.error('Error uploading file:', uploadError.message);
+            return;
+        }
+    
+        const { data: publicUrlData } = supabase
+            .storage
+            .from('pictures')
+            .getPublicUrl(filePath);
+    
+        const publicUrl = publicUrlData.publicUrl;
+    
+        setFormData((prev) => ({
+            ...prev,
+            pfp: publicUrl,
+        }));
+    
+        try {
+            await updateUser({
+                variables: {
+                    id: userId,
+                    input: {
+                        pfp: publicUrl,
+                    },
+                },
+            });
+        } catch (error) {
+            console.error("Error updating profile picture:", error);
+        }
+    };    
 
     const handleEditClick = () => {
         setIsEditing(true);
+
+        const formattedBirthDate = data.getUserById.birthDate
+        ? new Date(data.getUserById.birthDate).toISOString().split("T")[0]
+        : "";
+
         setFormData({
             ...formData,
             firstName: data.getUserById.firstName,
@@ -191,7 +228,7 @@ const Account: React.FC = () => {
             gender: data.getUserById.gender || "",
             userType: data.getUserById.userType || "",
             pfp: data.getUserById.pfp || "",
-            birthDate: data.getUserById.birthDate || "",
+            birthDate: formattedBirthDate || "",
         });
     };
 
@@ -322,7 +359,11 @@ const Account: React.FC = () => {
                             <p className="text-black"><strong>Account Is:</strong> {data?.getUserById?.isActive || "No status info available"}</p>
                             <p className="text-black"><strong>Name:</strong> {data?.getUserById?.firstName || "No name available"} {data?.getUserById?.lastName || "No last name available"}</p>
                             <p className="text-black"><strong>Email:</strong> {data?.getUserById?.email || "No email available"}</p>
-                            <p className="text-black"><strong>Birth Date:</strong> {data?.getUserById?.birthDate || "No birthDate available"}</p>
+                            <p className="text-black">
+                            <strong>Birth Date:</strong> {data?.getUserById?.birthDate 
+                                ? new Date(data.getUserById.birthDate).toISOString().split("T")[0]
+                                : "No birthDate available"}
+                            </p>
                             <p className="text-black"><strong>Gender:</strong> {data?.getUserById?.gender || "No gender available"}</p>
                             <p className="text-black"><strong>User Type:</strong> {data?.getUserById?.userType || "No user type available"}</p>
                             <p className="text-black"><strong>Role:</strong> {data?.getUserById?.role || "No role available"}</p>
