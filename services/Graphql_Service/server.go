@@ -2,6 +2,7 @@ package main
 
 import (
 	"Graphql_Service/graph"
+	"Graphql_Service/middleware"
 	"database/sql"
 	"log"
 	"net/http"
@@ -12,21 +13,40 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/CallenCaracy/ByteBites/services/User_Service/utils"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
+	"github.com/supabase-community/auth-go"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
 const defaultPort = "8080"
 
 func main() {
+	logger, err := utils.NewLogger()
+	if err != nil {
+		logger.Fatal("Failed to create logger: %v", err)
+	}
+
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using system environment variables")
+		logger.Fatal("No .env file found, using system environment variables")
 	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
+	}
+
+	supabaseURL := os.Getenv("SUPABASE_URL")
+	supabaseKey := os.Getenv("SUPABASE_ANON_KEY")
+	if supabaseURL == "" || supabaseKey == "" {
+		log.Fatal("Supabase URL or Anon Key environment variable not set")
+	}
+
+	client := auth.New(supabaseURL, supabaseKey)
+	if client == nil {
+		log.Fatal("Failed to create auth client")
 	}
 
 	// Get database URLs from .env
@@ -37,17 +57,18 @@ func main() {
 	// Connect to Supabase DB USERS
 	db1, err := sql.Open("pgx", db1URL)
 	if err != nil {
-		log.Fatal("Failed to connect to Supabase DB1:", err)
+		logger.Fatal("Failed to connect to Supabase DB1: %v", err)
 	}
 	defer db1.Close()
 
 	// Connect to Supabase DB MENU
 	db2, err := sql.Open("pgx", db2URL)
 	if err != nil {
-		log.Fatal("Failed to connect to Supabase DB2:", err)
+		logger.Fatal("Failed to connect to Supabase DB2: %v", err)
 	}
 	defer db2.Close()
 
+<<<<<<< HEAD
 	// Connect to Supabase DB ORDER
 	db5, err := sql.Open("pgx", db5URL)
 	if err != nil {
@@ -60,6 +81,13 @@ func main() {
 		DB1: db1,
 		DB2: db2,
 		DB5: db5,
+=======
+	resolver := &graph.Resolver{
+		DB1:        db1,
+		DB2:        db2,
+		AuthClient: client,
+		Logger:     logger,
+>>>>>>> a45327588feb3cf73ade068eafcc07b4b38a9954
 	}
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
@@ -68,16 +96,25 @@ func main() {
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
 
-	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
-
 	srv.Use(extension.Introspection{})
+	srv.SetQueryCache(lru.New[*ast.QueryDocument](100))
+
 	srv.Use(extension.AutomaticPersistedQuery{
 		Cache: lru.New[string](100),
 	})
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	mux := http.NewServeMux()
+	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	mux.Handle("/query", middleware.AuthMiddleware(srv))
+
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}).Handler(mux)
+
+	logger.Info("🚀 GraphQL server running at http://localhost:%s/", port)
+	log.Fatal(http.ListenAndServe(":"+port, corsHandler))
 }
