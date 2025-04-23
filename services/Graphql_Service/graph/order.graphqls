@@ -12,9 +12,9 @@ enum OrderStatus {
 }
 
 enum OrderType {
-  DINE_IN
-  TAKEAWAY
-  DELIVERY
+  "dine-in"    # Changed to match database constraint
+  takeout
+  delivery
 }
 
 type Order {

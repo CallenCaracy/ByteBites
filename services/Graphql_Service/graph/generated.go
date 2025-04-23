@@ -161,7 +161,7 @@ func (e *executableSchema) Schema() *ast.Schema {
 	return parsedSchema
 }
 
-func (e *executableSchema) Complexity(typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
+func (e *executableSchema) Complexity(ctx context.Context, typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
@@ -255,7 +255,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_createMenuItem_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createMenuItem_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -267,7 +267,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_createOrder_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createOrder_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -279,7 +279,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteMenuItem_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_deleteMenuItem_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -291,7 +291,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteOrder_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_deleteOrder_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -303,7 +303,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_signIn_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_signIn_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -315,7 +315,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_signInOnlyEmployee_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_signInOnlyEmployee_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -334,7 +334,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_signUp_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_signUp_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -346,7 +346,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_updateMenuItem_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateMenuItem_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -358,7 +358,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_updateOrder_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateOrder_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -370,7 +370,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_updateUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -508,7 +508,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_getMenuItemById_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_getMenuItemById_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -520,7 +520,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_getUserById_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_getUserById_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -532,7 +532,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_order_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_order_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -544,7 +544,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_ordersByUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_ordersByUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -734,7 +734,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "menu.graphqls" "order.graphqls" "user.graphqls"
+//go:embed "menu.graphqls" "order.graphqls" "schema.graphqls" "user.graphqls"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -748,6 +748,7 @@ func sourceData(filename string) string {
 var sources = []*ast.Source{
 	{Name: "menu.graphqls", Input: sourceData("menu.graphqls"), BuiltIn: false},
 	{Name: "order.graphqls", Input: sourceData("order.graphqls"), BuiltIn: false},
+	{Name: "schema.graphqls", Input: sourceData("schema.graphqls"), BuiltIn: false},
 	{Name: "user.graphqls", Input: sourceData("user.graphqls"), BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -2646,9 +2647,9 @@ func (ec *executionContext) _Order_orderStatus(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(model.OrderStatus)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNOrderStatus2Graphql_ServiceᚋgraphᚋmodelᚐOrderStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Order_orderStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2658,7 +2659,7 @@ func (ec *executionContext) fieldContext_Order_orderStatus(_ context.Context, fi
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type OrderStatus does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2687,9 +2688,9 @@ func (ec *executionContext) _Order_orderType(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*model.OrderType)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOOrderType2ᚖGraphql_ServiceᚋgraphᚋmodelᚐOrderType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Order_orderType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2699,7 +2700,7 @@ func (ec *executionContext) fieldContext_Order_orderType(_ context.Context, fiel
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type OrderType does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6135,14 +6136,14 @@ func (ec *executionContext) unmarshalInputCreateOrderInput(ctx context.Context, 
 			it.TotalPrice = data
 		case "orderStatus":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderStatus"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalOOrderStatus2ᚖGraphql_ServiceᚋgraphᚋmodelᚐOrderStatus(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.OrderStatus = data
 		case "orderType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderType"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalOOrderType2ᚖGraphql_ServiceᚋgraphᚋmodelᚐOrderType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6513,14 +6514,14 @@ func (ec *executionContext) unmarshalInputUpdateOrderInput(ctx context.Context, 
 			it.TotalPrice = data
 		case "orderStatus":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderStatus"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalOOrderStatus2ᚖGraphql_ServiceᚋgraphᚋmodelᚐOrderStatus(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.OrderStatus = data
 		case "orderType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderType"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalOOrderType2ᚖGraphql_ServiceᚋgraphᚋmodelᚐOrderType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7821,6 +7822,16 @@ func (ec *executionContext) marshalNOrderItem2ᚖGraphql_Serviceᚋgraphᚋmodel
 	return ec._OrderItem(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNOrderStatus2Graphql_ServiceᚋgraphᚋmodelᚐOrderStatus(ctx context.Context, v any) (model.OrderStatus, error) {
+	var res model.OrderStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOrderStatus2Graphql_ServiceᚋgraphᚋmodelᚐOrderStatus(ctx context.Context, sel ast.SelectionSet, v model.OrderStatus) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNSignInEmployeeInput2Graphql_ServiceᚋgraphᚋmodelᚐSignInEmployeeInput(ctx context.Context, v any) (model.SignInEmployeeInput, error) {
 	res, err := ec.unmarshalInputSignInEmployeeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -8216,6 +8227,38 @@ func (ec *executionContext) marshalOOrder2ᚖGraphql_ServiceᚋgraphᚋmodelᚐO
 		return graphql.Null
 	}
 	return ec._Order(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOOrderStatus2ᚖGraphql_ServiceᚋgraphᚋmodelᚐOrderStatus(ctx context.Context, v any) (*model.OrderStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.OrderStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOOrderStatus2ᚖGraphql_ServiceᚋgraphᚋmodelᚐOrderStatus(ctx context.Context, sel ast.SelectionSet, v *model.OrderStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOOrderType2ᚖGraphql_ServiceᚋgraphᚋmodelᚐOrderType(ctx context.Context, v any) (*model.OrderType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.OrderType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOOrderType2ᚖGraphql_ServiceᚋgraphᚋmodelᚐOrderType(ctx context.Context, sel ast.SelectionSet, v *model.OrderType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

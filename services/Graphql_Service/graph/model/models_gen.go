@@ -3,6 +3,10 @@
 package model
 
 import (
+	"bytes"
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,8 +21,8 @@ type AuthResponse struct {
 type CreateOrderInput struct {
 	UserID          uuid.UUID               `json:"userId"`
 	TotalPrice      float64                 `json:"totalPrice"`
-	OrderStatus     *string                 `json:"orderStatus,omitempty"`
-	OrderType       *string                 `json:"orderType,omitempty"`
+	OrderStatus     *OrderStatus            `json:"orderStatus,omitempty"`
+	OrderType       *OrderType              `json:"orderType,omitempty"`
 	DeliveryAddress *string                 `json:"deliveryAddress,omitempty"`
 	SpecialRequests *string                 `json:"specialRequests,omitempty"`
 	Items           []*CreateOrderItemInput `json:"items"`
@@ -59,8 +63,8 @@ type Order struct {
 	ID              uuid.UUID    `json:"id"`
 	UserID          uuid.UUID    `json:"userId"`
 	TotalPrice      float64      `json:"totalPrice"`
-	OrderStatus     string       `json:"orderStatus"`
-	OrderType       *string      `json:"orderType,omitempty"`
+	OrderStatus     OrderStatus  `json:"orderStatus"`
+	OrderType       *OrderType   `json:"orderType,omitempty"`
 	DeliveryAddress *string      `json:"deliveryAddress,omitempty"`
 	SpecialRequests *string      `json:"specialRequests,omitempty"`
 	CreatedAt       *time.Time   `json:"createdAt,omitempty"`
@@ -111,13 +115,13 @@ type UpdateMenuItem struct {
 }
 
 type UpdateOrderInput struct {
-	ID              uuid.UUID  `json:"id"`
-	TotalPrice      *float64   `json:"totalPrice,omitempty"`
-	OrderStatus     *string    `json:"orderStatus,omitempty"`
-	OrderType       *string    `json:"orderType,omitempty"`
-	DeliveryAddress *string    `json:"deliveryAddress,omitempty"`
-	SpecialRequests *string    `json:"specialRequests,omitempty"`
-	UpdatedAt       *time.Time `json:"updatedAt,omitempty"`
+	ID              uuid.UUID    `json:"id"`
+	TotalPrice      *float64     `json:"totalPrice,omitempty"`
+	OrderStatus     *OrderStatus `json:"orderStatus,omitempty"`
+	OrderType       *OrderType   `json:"orderType,omitempty"`
+	DeliveryAddress *string      `json:"deliveryAddress,omitempty"`
+	SpecialRequests *string      `json:"specialRequests,omitempty"`
+	UpdatedAt       *time.Time   `json:"updatedAt,omitempty"`
 }
 
 type UpdateUserInput struct {
@@ -140,4 +144,121 @@ type User struct {
 	IsActive  string  `json:"isActive"`
 	CreatedAt string  `json:"createdAt"`
 	UpdatedAt *string `json:"updatedAt,omitempty"`
+}
+
+type OrderStatus string
+
+const (
+	OrderStatusPending   OrderStatus = "PENDING"
+	OrderStatusPreparing OrderStatus = "PREPARING"
+	OrderStatusReady     OrderStatus = "READY"
+	OrderStatusDelivered OrderStatus = "DELIVERED"
+	OrderStatusCancelled OrderStatus = "CANCELLED"
+)
+
+var AllOrderStatus = []OrderStatus{
+	OrderStatusPending,
+	OrderStatusPreparing,
+	OrderStatusReady,
+	OrderStatusDelivered,
+	OrderStatusCancelled,
+}
+
+func (e OrderStatus) IsValid() bool {
+	switch e {
+	case OrderStatusPending, OrderStatusPreparing, OrderStatusReady, OrderStatusDelivered, OrderStatusCancelled:
+		return true
+	}
+	return false
+}
+
+func (e OrderStatus) String() string {
+	return string(e)
+}
+
+func (e *OrderStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OrderStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OrderStatus", str)
+	}
+	return nil
+}
+
+func (e OrderStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *OrderStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e OrderStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type OrderType string
+
+const (
+	// dine-in
+	OrderTypeTakeout  OrderType = "takeout"
+	OrderTypeDelivery OrderType = "delivery"
+)
+
+var AllOrderType = []OrderType{
+	OrderTypeTakeout,
+	OrderTypeDelivery,
+}
+
+func (e OrderType) IsValid() bool {
+	switch e {
+	case OrderTypeTakeout, OrderTypeDelivery:
+		return true
+	}
+	return false
+}
+
+func (e OrderType) String() string {
+	return string(e)
+}
+
+func (e *OrderType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OrderType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OrderType", str)
+	}
+	return nil
+}
+
+func (e OrderType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *OrderType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e OrderType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }

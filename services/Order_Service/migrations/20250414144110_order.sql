@@ -3,8 +3,8 @@ CREATE TABLE orders (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL, 
     total_price DECIMAL(10,2) NOT NULL,
-    order_status TEXT NOT NULL DEFAULT 'pending',
-    order_type TEXT CHECK (order_type IN ('DINE_IN', 'TAKEAWAY', 'DELIVERY')),
+    order_status TEXT NOT NULL DEFAULT 'PENDING',
+    order_type TEXT CHECK (order_type IN ('DINE_IN', 'TAKEOUT', 'DELIVERY')),
     delivery_address TEXT DEFAULT NULL,
     special_requests TEXT DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -22,6 +22,6 @@ CREATE TABLE order_items (
 );
 
 -- +goose Down
-DROP TABLE orders;
-DROP TABLE order_items;
+DROP TABLE order_items;  -- Drop the dependent table first
+DROP TABLE orders;      -- Then drop the main table
 
