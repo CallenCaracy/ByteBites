@@ -59,7 +59,7 @@ func (r *mutationResolver) DeleteInventory(ctx context.Context, id string) (bool
 }
 
 // CreateOrderQueue - Adds a new order queue.
-func (r *mutationResolver) CreateOrderQueue(ctx context.Context, orderID string, status *model.OrderStatus, priority *int32) (*model.OrderQueue, error) {
+func (r *mutationResolver) CreateOrderQueue(ctx context.Context, orderID string, status *model.KitchenStatus, priority *int32) (*model.OrderQueue, error) {
 	// SQL Query to insert into order_queue
 	query := `INSERT INTO public.order_queue (order_id, status, priority, last_updated)
 	          VALUES ($1, COALESCE($2, 'preparing'), COALESCE($3, 1), NOW())
@@ -75,7 +75,7 @@ func (r *mutationResolver) CreateOrderQueue(ctx context.Context, orderID string,
 }
 
 // UpdateOrderQueue - Updates an existing order queue.
-func (r *mutationResolver) UpdateOrderQueue(ctx context.Context, id string, status *model.OrderStatus, priority *int32) (*model.OrderQueue, error) {
+func (r *mutationResolver) UpdateOrderQueue(ctx context.Context, id string, status *model.KitchenStatus, priority *int32) (*model.OrderQueue, error) {
 	// SQL Query to update order_queue
 	query := `UPDATE public.order_queue SET 
 	          status = COALESCE($1, status),
