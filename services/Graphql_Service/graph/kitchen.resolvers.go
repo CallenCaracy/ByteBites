@@ -173,3 +173,6 @@ func (r *queryResolver) OrderQueue(ctx context.Context, id string) (*model.Order
 	}
 	return &o, nil
 }
+
+type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }

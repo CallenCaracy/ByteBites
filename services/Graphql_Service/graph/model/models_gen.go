@@ -134,6 +134,16 @@ type TokenCheckResponse struct {
 	Email string `json:"email"`
 }
 
+type Transaction struct {
+	TransactionID     string  `json:"transaction_id"`
+	AmountPaid        float64 `json:"amount_paid"`
+	PaymentMethod     string  `json:"payment_method"`
+	Timestamp         string  `json:"timestamp"`
+	TransactionStatus string  `json:"transaction_status"`
+	UserID            string  `json:"user_id"`
+	OrderID           string  `json:"order_id"`
+}
+
 type UpdateMenuItem struct {
 	Name               *string  `json:"name,omitempty"`
 	Description        *string  `json:"description,omitempty"`
