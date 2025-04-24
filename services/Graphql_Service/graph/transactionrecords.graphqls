@@ -1,0 +1,25 @@
+type Transaction {
+   transaction_id: ID!
+   amount_paid: Float!
+   payment_method: String!
+   timestamp: String!
+   transaction_status: String!
+   user_id: ID!
+   order_id: ID!
+ }
+ 
+ # Queries
+ extend type Query {
+   getTransactionRecordsByUserID(id: ID!): [Transaction]
+ }
+ 
+ # Mutations
+ extend type Mutation {
+   createTransactionRecords(
+     amount_paid: Float!,
+     payment_method: String!,
+     transaction_status: String!,
+     user_id: ID!,  
+     order_id: ID!
+   ): Transaction
+ }
