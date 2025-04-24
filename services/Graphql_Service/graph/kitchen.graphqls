@@ -4,7 +4,7 @@
 scalar DateTime
 
 # Enum for the allowed order statuses
-enum OrderStatus {
+enum KitchenStatus {
   cooking
   preparing
   ready 
@@ -26,7 +26,7 @@ type Inventory {
 type OrderQueue {
   id: ID!                   # Maps to the id column (UUID primary key)
   orderId: ID!              # Maps to the order_id column
-  status: OrderStatus!      # Maps to the status column with allowed values
+  status: KitchenStatus!      # Changed from OrderStatus to KitchenStatus
   priority: Int!            # Maps to the priority column
   lastUpdated: DateTime!     # Maps to the last_updated column
 }
@@ -65,12 +65,12 @@ extend type Mutation {
   # OrderQueue mutations
   createOrderQueue(
     orderId: ID!
-    status: OrderStatus
+    status: KitchenStatus    # Changed from OrderStatus
     priority: Int
   ): OrderQueue!
   updateOrderQueue(
     id: ID!
-    status: OrderStatus
+    status: KitchenStatus    # Changed from OrderStatus
     priority: Int
   ): OrderQueue!
   deleteOrderQueue(id: ID!): Boolean!

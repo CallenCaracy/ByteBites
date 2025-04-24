@@ -1,0 +1,81 @@
+scalar UUID
+scalar Time
+scalar JSON
+
+# Define order status and type as enums for better type safety
+enum OrderStatus {
+  PENDING
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum OrderType {
+  "dine-in"    # Changed to match database constraint
+  takeout
+  delivery
+}
+
+type Order {
+  id: UUID!
+  userId: UUID!
+  totalPrice: Float!
+  orderStatus: OrderStatus!  # Changed to enum
+  orderType: OrderType      # Changed to enum
+  deliveryAddress: String
+  specialRequests: String
+  createdAt: Time
+  updatedAt: Time
+  items: [OrderItem!]!
+}
+
+# Rest of the types remain the same
+type OrderItem {
+  id: UUID!
+  orderId: UUID!
+  menuItemId: UUID!
+  quantity: Int!
+  price: Float!
+  customizations: JSON
+  createdAt: Time
+}
+
+input CreateOrderInput {
+  userId: UUID!
+  totalPrice: Float!
+  orderStatus: OrderStatus  # Changed to enum
+  orderType: OrderType     # Changed to enum
+  deliveryAddress: String
+  specialRequests: String
+  items: [CreateOrderItemInput!]!
+}
+
+input CreateOrderItemInput {
+  menuItemId: UUID!
+  quantity: Int!
+  price: Float!
+  customizations: JSON
+}
+
+input UpdateOrderInput {
+  id: UUID!
+  totalPrice: Float
+  orderStatus: OrderStatus  # Changed to enum
+  orderType: OrderType     # Changed to enum
+  deliveryAddress: String
+  specialRequests: String
+  updatedAt: Time
+}
+
+# Queries and Mutations remain the same
+type Mutation {
+  createOrder(input: CreateOrderInput!): Order!
+  updateOrder(input: UpdateOrderInput!): Order!
+  deleteOrder(id: UUID!): Boolean!
+}
+
+type Query {
+  order(id: UUID!): Order
+  ordersByUser(userId: UUID!): [Order!]!
+}

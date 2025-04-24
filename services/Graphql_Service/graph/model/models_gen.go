@@ -6,11 +6,31 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type AuthResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
+}
+
+type CreateOrderInput struct {
+	UserID          uuid.UUID               `json:"userId"`
+	TotalPrice      float64                 `json:"totalPrice"`
+	OrderStatus     *OrderStatus            `json:"orderStatus,omitempty"`
+	OrderType       *OrderType              `json:"orderType,omitempty"`
+	DeliveryAddress *string                 `json:"deliveryAddress,omitempty"`
+	SpecialRequests *string                 `json:"specialRequests,omitempty"`
+	Items           []*CreateOrderItemInput `json:"items"`
+}
+
+type CreateOrderItemInput struct {
+	MenuItemID     uuid.UUID `json:"menuItemId"`
+	Quantity       int32     `json:"quantity"`
+	Price          float64   `json:"price"`
+	Customizations *string   `json:"customizations,omitempty"`
 }
 
 type ForgotPasswordInput struct {
@@ -56,12 +76,35 @@ type NewMenuItem struct {
 	ImageURL           *string `json:"image_url,omitempty"`
 }
 
+type Order struct {
+	ID              uuid.UUID    `json:"id"`
+	UserID          uuid.UUID    `json:"userId"`
+	TotalPrice      float64      `json:"totalPrice"`
+	OrderStatus     OrderStatus  `json:"orderStatus"`
+	OrderType       *OrderType   `json:"orderType,omitempty"`
+	DeliveryAddress *string      `json:"deliveryAddress,omitempty"`
+	SpecialRequests *string      `json:"specialRequests,omitempty"`
+	CreatedAt       *time.Time   `json:"createdAt,omitempty"`
+	UpdatedAt       *time.Time   `json:"updatedAt,omitempty"`
+	Items           []*OrderItem `json:"items"`
+}
+
+type OrderItem struct {
+	ID             uuid.UUID  `json:"id"`
+	OrderID        uuid.UUID  `json:"orderId"`
+	MenuItemID     uuid.UUID  `json:"menuItemId"`
+	Quantity       int32      `json:"quantity"`
+	Price          float64    `json:"price"`
+	Customizations *string    `json:"customizations,omitempty"`
+	CreatedAt      *time.Time `json:"createdAt,omitempty"`
+}
+
 type OrderQueue struct {
-	ID          string      `json:"id"`
-	OrderID     string      `json:"orderId"`
-	Status      OrderStatus `json:"status"`
-	Priority    int32       `json:"priority"`
-	LastUpdated string      `json:"lastUpdated"`
+	ID          string        `json:"id"`
+	OrderID     string        `json:"orderId"`
+	Status      KitchenStatus `json:"status"`
+	Priority    int32         `json:"priority"`
+	LastUpdated string        `json:"lastUpdated"`
 }
 
 type Query struct {
@@ -110,6 +153,16 @@ type UpdateMenuItem struct {
 	ImageURL           *string  `json:"image_url,omitempty"`
 }
 
+type UpdateOrderInput struct {
+	ID              uuid.UUID    `json:"id"`
+	TotalPrice      *float64     `json:"totalPrice,omitempty"`
+	OrderStatus     *OrderStatus `json:"orderStatus,omitempty"`
+	OrderType       *OrderType   `json:"orderType,omitempty"`
+	DeliveryAddress *string      `json:"deliveryAddress,omitempty"`
+	SpecialRequests *string      `json:"specialRequests,omitempty"`
+	UpdatedAt       *time.Time   `json:"updatedAt,omitempty"`
+}
+
 type UpdateUserInput struct {
 	FirstName *string `json:"firstName,omitempty"`
 	LastName  *string `json:"lastName,omitempty"`
@@ -139,23 +192,70 @@ type User struct {
 	BirthDate string  `json:"birthDate"`
 }
 
+type KitchenStatus string
+
+const (
+	KitchenStatusCooking   KitchenStatus = "cooking"
+	KitchenStatusPreparing KitchenStatus = "preparing"
+	KitchenStatusReady     KitchenStatus = "ready"
+)
+
+var AllKitchenStatus = []KitchenStatus{
+	KitchenStatusCooking,
+	KitchenStatusPreparing,
+	KitchenStatusReady,
+}
+
+func (e KitchenStatus) IsValid() bool {
+	switch e {
+	case KitchenStatusCooking, KitchenStatusPreparing, KitchenStatusReady:
+		return true
+	}
+	return false
+}
+
+func (e KitchenStatus) String() string {
+	return string(e)
+}
+
+func (e *KitchenStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = KitchenStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid KitchenStatus", str)
+	}
+	return nil
+}
+
+func (e KitchenStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type OrderStatus string
 
 const (
-	OrderStatusCooking   OrderStatus = "cooking"
-	OrderStatusPreparing OrderStatus = "preparing"
-	OrderStatusReady     OrderStatus = "ready"
+	OrderStatusPending   OrderStatus = "PENDING"
+	OrderStatusPreparing OrderStatus = "PREPARING"
+	OrderStatusReady     OrderStatus = "READY"
+	OrderStatusDelivered OrderStatus = "DELIVERED"
+	OrderStatusCancelled OrderStatus = "CANCELLED"
 )
 
 var AllOrderStatus = []OrderStatus{
-	OrderStatusCooking,
+	OrderStatusPending,
 	OrderStatusPreparing,
 	OrderStatusReady,
+	OrderStatusDelivered,
+	OrderStatusCancelled,
 }
 
 func (e OrderStatus) IsValid() bool {
 	switch e {
-	case OrderStatusCooking, OrderStatusPreparing, OrderStatusReady:
+	case OrderStatusPending, OrderStatusPreparing, OrderStatusReady, OrderStatusDelivered, OrderStatusCancelled:
 		return true
 	}
 	return false
@@ -179,5 +279,47 @@ func (e *OrderStatus) UnmarshalGQL(v any) error {
 }
 
 func (e OrderStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type OrderType string
+
+const (
+	// dine-in
+	OrderTypeTakeout  OrderType = "takeout"
+	OrderTypeDelivery OrderType = "delivery"
+)
+
+var AllOrderType = []OrderType{
+	OrderTypeTakeout,
+	OrderTypeDelivery,
+}
+
+func (e OrderType) IsValid() bool {
+	switch e {
+	case OrderTypeTakeout, OrderTypeDelivery:
+		return true
+	}
+	return false
+}
+
+func (e OrderType) String() string {
+	return string(e)
+}
+
+func (e *OrderType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OrderType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OrderType", str)
+	}
+	return nil
+}
+
+func (e OrderType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
