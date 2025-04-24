@@ -85,51 +85,6 @@ const Account: React.FC = () => {
         }
     };
 
-    // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    //     const file = e.target.files?.[0];
-    //     if (!file) return;
-
-    //     if (file) {
-    //         const fileExt = file.name.split('.').pop();
-    //         const fileName = `${userId}-${Date.now()}.${fileExt}`;
-    //         const filePath = `pfp/${fileName}`;
-    
-    //         const { error: uploadError } = await supabase.storage
-    //             .from('pictures')
-    //             .upload(filePath, file);
-    
-    //         if (uploadError) {
-    //             console.error('Error uploading file:', uploadError.message);
-    //             return;
-    //         }
-    
-    //         const { data: publicUrlData } = supabase
-    //             .storage
-    //             .from('pictures')
-    //             .getPublicUrl(filePath);
-
-    //         const publicUrl = publicUrlData.publicUrl;
-    
-    //         setFormData((prev) => ({
-    //             ...prev,
-    //             pfp: publicUrlData.publicUrl,
-    //         }));
-
-    //         try {
-    //             await updateUser({
-    //                 variables: {
-    //                     id: userId,
-    //                     input: {
-    //                         pfp: publicUrl,
-    //                     },
-    //                 },
-    //             });
-    //         } catch (error) {
-    //             console.error("Error updating profile picture:", error);
-    //         }
-    //     }
-    // };
-
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;

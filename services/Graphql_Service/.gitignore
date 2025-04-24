@@ -1,0 +1,31 @@
+# Ignore gqlgen auto-generated files
+graph/generated.go
+graph/model/models_gen.go
+
+# Node-style env and module tracking
+.env
+*.log
+
+# Ignore Go build artifacts
+/bin/
+/build/
+/dist/
+*.exe
+*.test
+*.out
+
+# Go vendor and module cache
+vendor/
+go.sum
+
+# IDE/editor config files
+.vscode/
+*.swp
+*.swo
+*.swn
+.idea/
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak
