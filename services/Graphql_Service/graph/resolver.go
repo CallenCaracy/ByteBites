@@ -13,6 +13,7 @@ import (
 type Resolver struct {
 	DB1        *sql.DB // Supabase Database USER
 	DB2        *sql.DB // Supabase Database MENU
+	DB3        *sql.DB // Supabase Database PAYMENT
 	DB5        *sql.DB
 	DB7        *sql.DB // Supabase Database KITCHEN
 	AuthClient auth.Client

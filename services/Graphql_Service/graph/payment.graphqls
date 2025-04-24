@@ -1,0 +1,67 @@
+# Enums
+enum PaymentMethod {
+  cash
+  credit_card
+  gcash
+  paymaya
+  paypal
+}
+
+enum TransactionStatus {
+  pending
+  completed
+  failed
+  refunded
+}
+
+# Types
+type PaymentTransaction {
+  id: UUID!
+  orderId: UUID!
+  userId: UUID!
+  amountPaid: Float!
+  paymentMethod: PaymentMethod
+  transactionStatus: TransactionStatus!
+  transactionTimestamp: DateTime
+  receipt: PaymentReceipt
+}
+
+type PaymentReceipt {
+  id: UUID!
+  transactionId: UUID!
+  userId: UUID!
+  amount: Float!
+  paymentMethod: String!
+  timestamp: DateTime!
+  transaction: PaymentTransaction
+}
+
+# Queries
+extend type Query {
+  getTransaction(id: UUID!): PaymentTransaction
+  getAllTransactions: [PaymentTransaction!]!
+  getReceipt(id: UUID!): PaymentReceipt
+  getAllReceipts: [PaymentReceipt!]!
+}
+
+# Mutations
+extend type Mutation {
+  createTransaction(
+    orderId: UUID!
+    userId: UUID!
+    amountPaid: Float!
+    paymentMethod: PaymentMethod
+  ): PaymentTransaction!
+
+  updateTransactionStatus(
+    id: UUID!
+    status: TransactionStatus!
+  ): PaymentTransaction!
+
+  createReceipt(
+    transactionId: UUID!
+    userId: UUID!
+    amount: Float!
+    paymentMethod: String!
+  ): PaymentReceipt!
+}

@@ -52,6 +52,7 @@ func main() {
 	// Get database URLs from .env
 	db1URL := os.Getenv("SUPABASE_DB_USERS_URL")
 	db2URL := os.Getenv("SUPABASE_DB_MENU_URL")
+	db3URL := os.Getenv("SUPABASE_DB_PAYMENT_URL")
 	db5URL := os.Getenv("SUPABASE_DB_ORDER_URL")
 	db7URL := os.Getenv("SUPABASE_DB_KITCHEN_URL")
 
@@ -68,7 +69,12 @@ func main() {
 		logger.Fatal("Failed to connect to Supabase DB2: %v", err)
 	}
 	defer db2.Close()
-
+	// Connect to Supabase DB PAYMENT
+	db3, err := sql.Open("pgx", db3URL)
+	if err != nil {
+		logger.Fatal("Failed to connect to Supabase DB3: %v", err)
+	}
+	defer db3.Close()
 	// Connect to Supabase DB ORDER
 	db5, err := sql.Open("pgx", db5URL)
 	if err != nil {
@@ -86,6 +92,7 @@ func main() {
 	resolver := &graph.Resolver{
 		DB1:        db1,
 		DB2:        db2,
+		DB3:        db3,
 		DB5:        db5,
 		DB7:        db7,
 		AuthClient: client,

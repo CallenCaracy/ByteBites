@@ -1,4 +1,4 @@
-type Transaction {
+type Transaction{
    transaction_id: ID!
    amount_paid: Float!
    payment_method: String!
