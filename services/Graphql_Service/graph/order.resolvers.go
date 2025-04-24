@@ -225,6 +225,3 @@ func (r *queryResolver) OrdersByUser(ctx context.Context, userID uuid.UUID) ([]*
 
 	return orders, nil
 }
-
-type mutationResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
