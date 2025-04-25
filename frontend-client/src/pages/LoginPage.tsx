@@ -22,7 +22,7 @@ const LoginPage: React.FC = () => {
         const { data } = await signIn({
             variables: { email, password },
         });
-        const { accessToken, refreshToken } = data.signInOnlyEmployee;
+        const { accessToken, refreshToken } = data.signIn;
 
         const { error: supaErr } = await supabase.auth.setSession({
             access_token:  accessToken,
@@ -115,8 +115,6 @@ const LoginPage: React.FC = () => {
                                 "Email not confirmed. Please check your inbox for a confirmation link."
                             ) : error.message.includes("no rows in result set") || error.message.includes("Error retrieving role for") ? (
                                 "This email is unknown or unregistered. Please sign up first."
-                            ) : error.message.includes("user does not have permission to sign in as an employee") ? (
-                                "This email is classified as costumer and has no permission to sign in as an employee."
                             ) : (
                                 "Login failed. Please try again."
                             )}

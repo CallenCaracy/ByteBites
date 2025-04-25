@@ -142,7 +142,7 @@ func (r *queryResolver) Inventory(ctx context.Context, id string) (*model.Invent
 // OrderQueues - Retrieves all order queue records.
 func (r *queryResolver) OrderQueues(ctx context.Context) ([]*model.OrderQueue, error) {
 	// SQL Query to fetch all order queues
-	query := `SELECT order_id, status, priority, last_updated FROM public.order_queue`
+	query := `SELECT id, order_id, status, priority, last_updated FROM public.order_queue`
 	rows, err := r.Resolver.DB7.Query(query)
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func (r *queryResolver) OrderQueues(ctx context.Context) ([]*model.OrderQueue, e
 	var result []*model.OrderQueue
 	for rows.Next() {
 		var o model.OrderQueue
-		err := rows.Scan(&o.OrderID, &o.Status, &o.Priority, &o.LastUpdated)
+		err := rows.Scan(&o.ID, &o.OrderID, &o.Status, &o.Priority, &o.LastUpdated)
 		if err != nil {
 			return nil, err
 		}
@@ -164,10 +164,10 @@ func (r *queryResolver) OrderQueues(ctx context.Context) ([]*model.OrderQueue, e
 // OrderQueue - Retrieves an order queue by ID.
 func (r *queryResolver) OrderQueue(ctx context.Context, id string) (*model.OrderQueue, error) {
 	// SQL Query to fetch order queue by ID
-	query := `SELECT order_id, status, priority, last_updated FROM public.order_queue WHERE order_id = $1`
+	query := `SELECT id, order_id, status, priority, last_updated FROM public.order_queue WHERE order_id = $1`
 	var o model.OrderQueue
 	err := r.Resolver.DB7.QueryRow(query, id).
-		Scan(&o.OrderID, &o.Status, &o.Priority, &o.LastUpdated)
+		Scan(&o.ID, &o.OrderID, &o.Status, &o.Priority, &o.LastUpdated)
 	if err != nil {
 		return nil, err
 	}
