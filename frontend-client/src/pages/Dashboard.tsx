@@ -31,7 +31,7 @@ const Dashboard: React.FC = () => {
                         <div 
                             key={item.id} 
                             className="bg-white p-4 rounded-lg shadow-[0_4px_10px_0_rgba(0,0,0,0.4)] cursor-pointer hover:bg-gray-50 transition"
-                            onClick={() => navigate(`/menu-item/${item.id}`)}
+                            onClick={() => navigate(`/menu-item/${userData?.getAuthenticatedUser?.id}/${item.id}`)}
                         >
                             <h2 className="text-xl font-semibold text-gray-700 mb-2">{item.name}</h2>
                             <img

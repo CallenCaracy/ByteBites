@@ -3,12 +3,41 @@ import { useQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import { GET_MENU_ITEMS } from "../graphql/Menuqueries";
 import { GET_AUTHENTICATED_USER } from "../graphql/Userqueries";
+import { useSubscription } from "@apollo/client";
+import { MENU_ITEM_CREATED } from "../graphql/Menuqueries";
 import Navbar from "../components/NavBar";
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const { data: menuData, loading: menuLoading, error: menuError } = useQuery(GET_MENU_ITEMS);
     const { data: userData, loading: userLoading, error: userError } = useQuery(GET_AUTHENTICATED_USER);
+
+    useSubscription(MENU_ITEM_CREATED, {
+        onData: ({ client, data }) => {
+          const newItem = data?.data?.menuItemCreated;
+          if (!newItem) return;
+    
+          console.log("Received new menu item:", newItem);
+    
+          const existing = client.readQuery({ query: GET_MENU_ITEMS });
+          if (existing) {
+            console.log("Existing menu items:", existing.getAllMenuItems);
+          }
+    
+          if (existing && !existing.getAllMenuItems?.some((item: any) => item.id === newItem.id)) {
+            console.log("New item detected, updating cache...");
+            client.writeQuery({
+              query: GET_MENU_ITEMS,
+              data: {
+                getAllMenuItems: [newItem, ...existing.getAllMenuItems],
+              },
+            });
+          }
+        },
+        onError: (error) => {
+          console.error("Subscription error:", error);
+        },
+      });
     
 
     if (menuLoading || userLoading) return <p className="text-center text-gray-600">Loading...</p>;

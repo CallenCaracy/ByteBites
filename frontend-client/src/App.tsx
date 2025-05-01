@@ -89,7 +89,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard/>} />
             <Route path="/account/:userId" element={<Account/>} />
-            <Route path="/menu-item/:menuId" element={<MenuItem/>} />
+            <Route path="/menu-item/:userId/:menuId" element={<MenuItem/>} />
           </Route>
       </Routes>
     </Router>

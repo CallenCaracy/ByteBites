@@ -12,14 +12,7 @@ import (
 
 // CreateTransactionRecords is the resolver for the createTransactionRecords field.
 // CreateTransactionRecord - Insert a new transaction record
-func (r *mutationResolver) CreateTransactionRecords(
-	ctx context.Context,
-	amountPaid float64,
-	paymentMethod string,
-	transactionStatus string,
-	userID string,
-	orderID string,
-) (*model.Transaction, error) {
+func (r *mutationResolver) CreateTransactionRecords(ctx context.Context, amountPaid float64, paymentMethod string, transactionStatus string, userID string, orderID string) (*model.Transaction, error) {
 	query := `
 		INSERT INTO public.transactions 
 		(amount_paid, payment_method, transaction_status, user_id, order_id, transaction_timestamp)
@@ -92,5 +85,3 @@ func (r *queryResolver) GetTransactionRecordsByUserID(ctx context.Context, id st
 
 	return transactions, nil
 }
-
-// ARI HIMO SA CRUD

@@ -10,10 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@apollo/client": "^3.13.5",
+    "@apollo/client": "^3.13.8",
     "@supabase/supabase-js": "^2.49.4",
     "@tailwindcss/vite": "^4.0.15",
     "graphql": "^16.10.0",
+    "graphql-ws": "^6.0.4",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.486.0",
     "next": "^15.2.5",

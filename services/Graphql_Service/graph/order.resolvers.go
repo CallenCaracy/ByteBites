@@ -8,220 +8,447 @@ import (
 	"Graphql_Service/graph/model"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"log"
 	"time"
-
-	"github.com/google/uuid"
 )
 
-// CreateOrder is the resolver for the createOrder field.
-func (r *mutationResolver) CreateOrder(ctx context.Context, input model.CreateOrderInput) (*model.Order, error) {
-	if r.DB5 == nil {
-		return nil, fmt.Errorf("database connection not initialized")
-	}
-
-	if err := r.DB5.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("database connection error: %v", err)
-	}
-
-	tx, err := r.DB5.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to begin transaction: %v", err)
-	}
-	defer tx.Rollback()
-
-	orderID := uuid.New()
-	createdAt := time.Now()
-
-	// Insert order
-	orderQuery := `
-        INSERT INTO orders (id, user_id, total_price, order_status, order_type, delivery_address, special_requests, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `
-	_, err = tx.ExecContext(ctx, orderQuery,
-		orderID, input.UserID, input.TotalPrice, input.OrderStatus, input.OrderType,
-		input.DeliveryAddress, input.SpecialRequests, createdAt)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create order: %v", err)
-	}
-
-	// Insert order items
-	for _, item := range input.Items {
-		itemID := uuid.New()
-		_, err := tx.ExecContext(ctx, `
-            INSERT INTO order_items (id, order_id, menu_item_id, quantity, price, customizations, created_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-        `, itemID, orderID, item.MenuItemID, item.Quantity, item.Price, item.Customizations, createdAt)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create order item: %v", err)
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("failed to commit transaction: %v", err)
-	}
-
-	return &model.Order{
-		ID:              orderID,
-		UserID:          input.UserID,
-		TotalPrice:      input.TotalPrice,
-		OrderStatus:     *input.OrderStatus,
-		OrderType:       input.OrderType,
-		DeliveryAddress: input.DeliveryAddress,
-		SpecialRequests: input.SpecialRequests,
-		CreatedAt:       &createdAt,
-	}, nil
-}
-
-// UpdateOrder is the resolver for the updateOrder field.
-func (r *mutationResolver) UpdateOrder(ctx context.Context, input model.UpdateOrderInput) (*model.Order, error) {
-	if r.DB5 == nil {
-		return nil, fmt.Errorf("database connection not initialized")
-	}
-
-	if err := r.DB5.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("database connection error: %v", err)
-	}
-
-	tx, err := r.DB5.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to begin transaction: %v", err)
-	}
-	defer tx.Rollback()
-
-	updatedAt := time.Now()
+// CreateCart is the resolver for the createCart field.
+func (r *mutationResolver) CreateCart(ctx context.Context, userID string) (*model.Cart, error) {
+	var cartID string
 
 	query := `
-        UPDATE orders
-        SET total_price = $1, order_status = $2, order_type = $3,
-            delivery_address = $4, special_requests = $5, updated_at = $6
-        WHERE id = $7
-        RETURNING id, user_id, total_price, order_status, order_type, delivery_address, special_requests, created_at
+        INSERT INTO carts (user_id, created_at, updated_at)
+        VALUES ($1, NOW(), NOW())
+        RETURNING id
     `
 
-	row := tx.QueryRowContext(ctx, query, input.TotalPrice, input.OrderStatus, input.OrderType,
-		input.DeliveryAddress, input.SpecialRequests, updatedAt, input.ID)
-
-	var o model.Order
-	err = row.Scan(&o.ID, &o.UserID, &o.TotalPrice, &o.OrderStatus, &o.OrderType,
-		&o.DeliveryAddress, &o.SpecialRequests, &o.CreatedAt)
-	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("order not found")
-	}
+	err := r.DB5.QueryRow(query, userID).Scan(&cartID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create cart: %v", err)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return nil, err
+	cart := &model.Cart{
+		ID:        cartID,
+		UserID:    userID,
+		CreatedAt: time.Now().Format(time.RFC3339),
+		UpdatedAt: func() *string { t := time.Now().Format(time.RFC3339); return &t }(),
 	}
 
-	o.UpdatedAt = &updatedAt
-	return &o, nil
+	return cart, nil
 }
 
-// DeleteOrder is the resolver for the deleteOrder field.
-func (r *mutationResolver) DeleteOrder(ctx context.Context, id uuid.UUID) (bool, error) {
-	if r.DB5 == nil {
-		return false, fmt.Errorf("database connection not initialized")
-	}
+// ClearCart is the resolver for the clearCart field.
+func (r *mutationResolver) ClearCart(ctx context.Context, cartID string) (bool, error) {
+	query := `DELETE FROM cart_items WHERE cart_id = $1`
 
-	if err := r.DB5.PingContext(ctx); err != nil {
-		return false, fmt.Errorf("database connection error: %v", err)
-	}
-
-	tx, err := r.DB5.BeginTx(ctx, nil)
+	cmdTag, err := r.DB5.Exec(query, cartID)
 	if err != nil {
-		return false, fmt.Errorf("failed to begin transaction: %v", err)
-	}
-	defer tx.Rollback()
-
-	// First delete order items
-	_, err = tx.ExecContext(ctx, `DELETE FROM order_items WHERE order_id = $1`, id)
-	if err != nil {
-		return false, fmt.Errorf("failed to delete order items: %v", err)
+		return false, fmt.Errorf("failed to clear cart: %v", err)
 	}
 
-	// Then delete the order
-	res, err := tx.ExecContext(ctx, `DELETE FROM orders WHERE id = $1`, id)
-	if err != nil {
-		return false, fmt.Errorf("failed to delete order: %v", err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		return false, fmt.Errorf("failed to commit transaction: %v", err)
-	}
-
-	rowsAffected, err := res.RowsAffected()
+	rowsAffected, err := cmdTag.RowsAffected()
 	if err != nil {
 		return false, fmt.Errorf("failed to get rows affected: %v", err)
 	}
+	if rowsAffected == 0 {
+		log.Printf("No items to clear in cart %s\n", cartID)
+	}
 
-	return rowsAffected > 0, nil
+	return true, nil
 }
 
-// Order is the resolver for the order field.
-func (r *queryResolver) Order(ctx context.Context, id uuid.UUID) (*model.Order, error) {
-	if r.DB5 == nil {
-		return nil, fmt.Errorf("database connection not initialized")
-	}
-
-	if err := r.DB5.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("database connection error: %v", err)
-	}
-
-	query := `
-		SELECT id, user_id, total_price, order_status, order_type, delivery_address, special_requests, created_at, updated_at
-		FROM orders
-		WHERE id = $1
-	`
-
-	row := r.DB5.QueryRowContext(ctx, query, id)
-	var o model.Order
-	err := row.Scan(&o.ID, &o.UserID, &o.TotalPrice, &o.OrderStatus, &o.OrderType,
-		&o.DeliveryAddress, &o.SpecialRequests, &o.CreatedAt, &o.UpdatedAt)
+// AddCartItem is the resolver for the addCartItem field.
+func (r *mutationResolver) AddCartItem(ctx context.Context, input model.AddCartItemInput) (*model.CartItem, error) {
+	tx, err := r.DB5.Begin()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to begin transaction: %v", err)
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		} else {
+			_ = tx.Commit()
+		}
+	}()
+
+	var cartID string
+	queryCheck := `SELECT id FROM carts WHERE user_id = $1 LIMIT 1`
+
+	err = tx.QueryRow(queryCheck, input.UserID).Scan(&cartID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			queryCreate := `
+				INSERT INTO carts (user_id, created_at, updated_at)
+				VALUES ($1, NOW(), NOW())
+				RETURNING id
+			`
+			err = tx.QueryRow(queryCreate, input.UserID).Scan(&cartID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create cart in tx: %v", err)
+			}
+		} else {
+			return nil, fmt.Errorf("failed to find existing cart: %v", err)
+		}
 	}
 
-	return &o, nil
+	var cartItemID string
+	queryInsertItem := `
+        INSERT INTO cart_items (cart_id, menu_item_id, quantity, price, customizations, created_at)
+        VALUES ($1, $2, $3, $4, $5, NOW())
+        RETURNING id
+    `
+	err = tx.QueryRow(queryInsertItem,
+		cartID,
+		input.MenuItemID,
+		input.Quantity,
+		input.Price,
+		input.Customizations,
+	).Scan(&cartItemID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add cart item: %v", err)
+	}
+
+	cartItem := &model.CartItem{
+		ID:             cartItemID,
+		CartID:         cartID,
+		MenuItemID:     input.MenuItemID,
+		Quantity:       input.Quantity,
+		Price:          input.Price,
+		Customizations: input.Customizations,
+		CreatedAt:      time.Now().Format(time.RFC3339),
+	}
+
+	return cartItem, nil
 }
 
-// OrdersByUser is the resolver for the ordersByUser field.
-func (r *queryResolver) OrdersByUser(ctx context.Context, userID uuid.UUID) ([]*model.Order, error) {
-	if r.DB5 == nil {
-		return nil, fmt.Errorf("database connection not initialized")
+// UpdateCartItem is the resolver for the updateCartItem field.
+func (r *mutationResolver) UpdateCartItem(ctx context.Context, input model.UpdateCartItemInput) (*model.CartItem, error) {
+	var cartItem model.CartItem
+
+	// Retrieve the current cart item details
+	err := r.DB5.QueryRowContext(ctx,
+		`SELECT id, cart_id, menu_item_id, quantity, price, customizations, created_at, updated_at
+		FROM cart_items
+		WHERE id = $1`,
+		input.ID).Scan(
+		&cartItem.ID, &cartItem.CartID, &cartItem.MenuItemID, &cartItem.Quantity, &cartItem.Price,
+		&cartItem.Customizations, &cartItem.CreatedAt, &cartItem.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("cart item not found: %w", err)
 	}
 
-	if err := r.DB5.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("database connection error: %v", err)
+	// Update the fields that were provided in the input
+	if input.Quantity != nil {
+		cartItem.Quantity = *input.Quantity
+	}
+	if input.Customizations != nil {
+		cartItem.Customizations = input.Customizations
 	}
 
+	// Prepare the query to update the cart item in the database
+	updateQuery := `
+    UPDATE cart_items
+    SET quantity = $1, customizations = $2, updated_at = NOW()
+    WHERE id = $3
+    RETURNING id, cart_id, menu_item_id, quantity, price, customizations, created_at, updated_at;
+  `
+
+	// Execute the update query and scan the result into the cartItem struct
+	err = r.DB5.QueryRowContext(ctx, updateQuery, cartItem.Quantity, cartItem.Customizations, cartItem.ID).Scan(
+		&cartItem.ID, &cartItem.CartID, &cartItem.MenuItemID, &cartItem.Quantity, &cartItem.Price,
+		&cartItem.Customizations, &cartItem.CreatedAt, &cartItem.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error updating cart item: %w", err)
+	}
+
+	return &cartItem, nil
+}
+
+// RemoveCartItem is the resolver for the removeCartItem field.
+func (r *mutationResolver) RemoveCartItem(ctx context.Context, id string) (bool, error) {
+	query := `DELETE FROM cart_items WHERE id = $1`
+	cmdTag, err := r.DB5.Exec(query, id)
+	if err != nil {
+		return false, fmt.Errorf("failed to remove cart item: %v", err)
+	}
+
+	rowsAffected, err := cmdTag.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("failed to get rows affected: %v", err)
+	}
+	if rowsAffected == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// CreateOrderFromCart is the resolver for the createOrderFromCart field.
+func (r *mutationResolver) CreateOrderFromCart(ctx context.Context, cartID string, userID string, orderType string, deliveryAddress *string, specialRequests *string) (*model.Order, error) {
+	tx, err := r.DB5.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Step 1: Get cart items
+	rows, err := tx.QueryContext(ctx, `SELECT menu_item_id, quantity, price, customizations FROM cart_items WHERE cart_id = $1`, cartID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch cart items: %w", err)
+	}
+	defer rows.Close()
+
+	var items []struct {
+		MenuItemID     string
+		Quantity       int
+		Price          float64
+		Customizations *string
+	}
+	var totalPrice float64
+	for rows.Next() {
+		var item struct {
+			MenuItemID     string
+			Quantity       int
+			Price          float64
+			Customizations *string
+		}
+		if err := rows.Scan(&item.MenuItemID, &item.Quantity, &item.Price, &item.Customizations); err != nil {
+			return nil, fmt.Errorf("failed to scan cart item: %w", err)
+		}
+		items = append(items, item)
+		totalPrice += item.Price * float64(item.Quantity)
+	}
+	if len(items) == 0 {
+		return nil, fmt.Errorf("cart is empty")
+	}
+
+	// Step 2: Create the order
+	var orderID string
+	err = tx.QueryRowContext(ctx, `
+		INSERT INTO orders (user_id, total_price, order_status, order_type, delivery_address, special_requests)
+		VALUES ($1, $2, 'pending', $3, $4, $5)
+		RETURNING id
+	`, userID, totalPrice, orderType, deliveryAddress, specialRequests).Scan(&orderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create order: %w", err)
+	}
+
+	// Step 3: Insert order items
+	for _, item := range items {
+		_, err := tx.ExecContext(ctx, `
+			INSERT INTO order_items (order_id, menu_item_id, quantity, price, customizations)
+			VALUES ($1, $2, $3, $4, $5)
+		`, orderID, item.MenuItemID, item.Quantity, item.Price, item.Customizations)
+		if err != nil {
+			return nil, fmt.Errorf("failed to insert order item: %w", err)
+		}
+	}
+
+	// Step 4: Clear the cart
+	_, err = tx.ExecContext(ctx, `DELETE FROM cart_items WHERE cart_id = $1`, cartID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to clear cart: %w", err)
+	}
+
+	// Step 5: Commit
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// Return the order (can fetch full order data if you want)
+	return &model.Order{
+		ID:              orderID,
+		UserID:          userID,
+		TotalPrice:      totalPrice,
+		OrderStatus:     "pending",
+		OrderType:       &orderType,
+		DeliveryAddress: deliveryAddress,
+		SpecialRequests: specialRequests,
+		// CreatedAt and UpdatedAt would be added if you fetch them here
+	}, nil
+}
+
+// UpdateOrderStatus is the resolver for the updateOrderStatus field.
+func (r *mutationResolver) UpdateOrderStatus(ctx context.Context, orderID string, orderStatus string) (*model.Order, error) {
+	// Ensure the status is valid
+	validStatuses := []string{"pending", "in-progress", "completed", "cancelled"}
+	isValid := false
+	for _, status := range validStatuses {
+		if orderStatus == status {
+			isValid = true
+			break
+		}
+	}
+
+	if !isValid {
+		return nil, fmt.Errorf("invalid order status: %s", orderStatus)
+	}
+
+	// Update the order status in the database
+	var updatedOrder model.Order
+	err := r.DB5.QueryRowContext(ctx, `
+		UPDATE orders
+		SET order_status = $1, updated_at = NOW()
+		WHERE id = $2
+		RETURNING id, user_id, total_price, order_status, order_type, delivery_address, special_requests, created_at, updated_at
+	`, orderStatus, orderID).Scan(
+		&updatedOrder.ID,
+		&updatedOrder.UserID,
+		&updatedOrder.TotalPrice,
+		&updatedOrder.OrderStatus,
+		&updatedOrder.OrderType,
+		&updatedOrder.DeliveryAddress,
+		&updatedOrder.SpecialRequests,
+		&updatedOrder.CreatedAt,
+		&updatedOrder.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to update order status: %w", err)
+	}
+
+	// Return the updated order
+	return &updatedOrder, nil
+}
+
+// GetCart is the resolver for the getCart field.
+func (r *queryResolver) GetCart(ctx context.Context, userID string) (*model.Cart, error) {
+	query := `SELECT id, user_id, created_at, updated_at FROM carts WHERE user_id = $1 LIMIT 1`
+	row := r.DB5.QueryRow(query, userID)
+
+	var cart model.Cart
+	err := row.Scan(
+		&cart.ID,
+		&cart.UserID,
+		&cart.CreatedAt,
+		&cart.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil // No cart exists for user
+		}
+		return nil, fmt.Errorf("failed to get cart: %v", err)
+	}
+
+	return &cart, nil
+}
+
+// GetCartItemsByCartID is the resolver for the getCartItemsByCartId field.
+func (r *queryResolver) GetCartItemsByCartID(ctx context.Context, cartID string) ([]*model.CartItem, error) {
 	query := `
+		SELECT id, cart_id, menu_item_id, quantity, price, customizations, created_at, updated_at
+		FROM cart_items
+		WHERE cart_id = $1
+	`
+	rows, err := r.DB5.Query(query, cartID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cart items: %v", err)
+	}
+	defer rows.Close()
+
+	var items []*model.CartItem
+	for rows.Next() {
+		var item model.CartItem
+		err := rows.Scan(
+			&item.ID,
+			&item.CartID,
+			&item.MenuItemID,
+			&item.Quantity,
+			&item.Price,
+			&item.Customizations,
+			&item.CreatedAt,
+			&item.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan cart item: %v", err)
+		}
+		items = append(items, &item)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating cart items: %v", err)
+	}
+
+	return items, nil
+}
+
+// GetUserOrders is the resolver for the getUserOrders field.
+func (r *queryResolver) GetUserOrders(ctx context.Context, userID string) ([]*model.Order, error) {
+	// Step 1: Get orders for the user
+	rows, err := r.DB5.QueryContext(ctx, `
 		SELECT id, user_id, total_price, order_status, order_type, delivery_address, special_requests, created_at, updated_at
 		FROM orders
 		WHERE user_id = $1
 		ORDER BY created_at DESC
-	`
-
-	rows, err := r.DB5.QueryContext(ctx, query, userID)
+	`, userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch orders: %w", err)
 	}
 	defer rows.Close()
 
-	// Pre-allocate the slice with initial capacity
 	var orders []*model.Order
 
+	// Step 2: Iterate over orders and fetch corresponding items for each order
 	for rows.Next() {
-		var o model.Order
-		err := rows.Scan(&o.ID, &o.UserID, &o.TotalPrice, &o.OrderStatus, &o.OrderType,
-			&o.DeliveryAddress, &o.SpecialRequests, &o.CreatedAt, &o.UpdatedAt)
+		var order model.Order
+		err := rows.Scan(&order.ID, &order.UserID, &order.TotalPrice, &order.OrderStatus, &order.OrderType, &order.DeliveryAddress, &order.SpecialRequests, &order.CreatedAt, &order.UpdatedAt)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan order: %w", err)
 		}
-		orders = append(orders, &o)
+
+		// Step 3: Get order items for the current order
+		items, err := r.getOrderItems(ctx, order.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch order items: %w", err)
+		}
+		order.Items = items
+
+		orders = append(orders, &order)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error with orders rows: %w", err)
 	}
 
 	return orders, nil
 }
+
+func (r *queryResolver) getOrderItems(ctx context.Context, orderID string) ([]*model.OrderItem, error) {
+	rows, err := r.DB5.QueryContext(ctx, `
+		SELECT id, order_id, menu_item_id, quantity, price, customizations, created_at
+		FROM order_items
+		WHERE order_id = $1
+		ORDER BY created_at DESC
+	`, orderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch order items: %w", err)
+	}
+	defer rows.Close()
+
+	var items []*model.OrderItem
+	for rows.Next() {
+		var item model.OrderItem
+		err := rows.Scan(&item.ID, &item.OrderID, &item.MenuItemID, &item.Quantity, &item.Price, &item.Customizations, &item.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan order item: %w", err)
+		}
+		items = append(items, &item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error with order items rows: %w", err)
+	}
+
+	return items, nil
+}
+
+type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }
