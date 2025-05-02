@@ -4,7 +4,7 @@ import { ArrowLeft, CreditCard, Truck, Smartphone } from "lucide-react";
 type PaymentMethod = "cod" | "credit" | "online" | null;
 type OnlinePaymentType = "gcash" | "paymaya" | "paypal" | null;
 
-const PaymentService = () => {
+const Payments = () => {
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(null);
   const [onlinePaymentType, setOnlinePaymentType] =
     useState<OnlinePaymentType>(null);
@@ -176,4 +176,4 @@ const PaymentService = () => {
   );
 };
 
-export default PaymentService;
+export default Payments;

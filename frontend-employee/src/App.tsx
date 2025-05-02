@@ -9,7 +9,8 @@ import ForgotPassword from './pages/ForgotPassword'
 import UpdatePassword from './pages/UpdatePassword';
 import MenuItem from './pages/MenuItems';
 import { supabase } from './utils/supabaseClient';
-import PaymentService from "./pages/Payment";
+import PaymentService from "./pages/PaymentService";
+// import Payments from './components/Payment';
 
 function App() {
   useEffect(() => {
@@ -85,7 +86,8 @@ function App() {
         <Route path="/register" element={<RegisterPage/>} />
         <Route path="/forgot" element={<ForgotPassword/>} />
         <Route path="/reset/:token" element={<UpdatePassword/>} />
-        <Route path="/payment" element={<PaymentService />} />
+        {/* <Route path="/payment" element={<Payments />} /> */}
+        <Route path="/payment-service" element={<PaymentService />} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
