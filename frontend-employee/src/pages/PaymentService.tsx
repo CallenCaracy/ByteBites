@@ -1,7 +1,12 @@
 import type React from "react"
 
-import { useState } from "react"
-import { ArrowLeft, CreditCard, Truck, Wifi, Mail, Phone, Utensils, Info, ShoppingBag, AlertCircle } from "lucide-react"
+import { useState} from "react"
+import { ArrowLeft, CreditCard, Truck, Wifi, Mail, Phone, Info, ShoppingBag, AlertCircle } from "lucide-react"
+import { useMutation, useQuery } from "@apollo/client"
+import { CREATE_TRANSACTION, CREATE_RECEIPT} from "../graphql/Paymentqueries"
+import { GET_AUTHENTICATED_USER } from "../graphql/Userqueries"
+import { v4 as uuidv4 } from 'uuid'
+import Navbar from "../components/NavBar"
 
 export default function PaymentService() {
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null)
@@ -9,6 +14,7 @@ export default function PaymentService() {
   const [phoneNumber, setPhoneNumber] = useState("")
   const [email, setEmail] = useState("")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [paymentInfo, setPaymentInfo] = useState({
     cardNumber: "",
     cardHolder: "",
@@ -16,11 +22,16 @@ export default function PaymentService() {
     cvv: "",
   })
 
+  // Get authenticated user
+  const { data: userData } = useQuery(GET_AUTHENTICATED_USER)
+  
+  // GraphQL mutations
+  const [createTransaction, { loading: transactionLoading }] = useMutation(CREATE_TRANSACTION)
+  const [createReceipt, { loading: receiptLoading }] = useMutation(CREATE_RECEIPT)
+
   // You can set this to an empty array to test the empty cart functionality
   const items = [
-    { name: "Premium Steak", qty: 2, price: 59.98 },
-    { name: "Premium Burger", qty: 1, price: 19.99 },
-    { name: "Red Wine", qty: 1, price: 129.99 },
+    { name: "Premium Steak", qty: 2, price: 529.98 },
   ]
 
   // This will work even if items is undefined, null, or empty
@@ -58,9 +69,10 @@ export default function PaymentService() {
     return false
   }
 
-  const handlePayNowClick = () => {
-    // Clear any previous error messages
+  const handlePayNowClick = async () => {
+    // Clear any previous messages
     setErrorMessage(null)
+    setSuccessMessage(null)
 
     // Check if cart is empty
     if (isCartEmpty) {
@@ -98,7 +110,70 @@ export default function PaymentService() {
     }
 
     // If all validations pass, proceed with payment
-    alert("Payment processing...")
+    try {
+      // Instead of creating a random UUID, we should use an actual order ID
+      // If you don't have an actual order system yet, we can add more error handling
+      // to make the API call more robust
+      const mockOrderId = uuidv4()
+      
+      // Get user ID from authenticated user
+      const userId = userData?.getAuthenticatedUser?.id
+      
+      if (!userId) {
+        setErrorMessage("User authentication required")
+        return
+      }
+      
+      // Map payment method to GraphQL enum
+      let paymentMethodEnum;
+      if (selectedPayment === "credit") {
+        paymentMethodEnum = "credit_card";
+      } else if (selectedPayment === "online") {
+        paymentMethodEnum = onlineMethod?.toLowerCase() || "other";
+      } else {
+        paymentMethodEnum = "cash";
+      }
+      
+      // Add error handling and logging for better debugging
+      console.log("Creating transaction with:", {
+        orderId: mockOrderId,
+        userId: userId,
+        amountPaid: total,
+        paymentMethod: paymentMethodEnum
+      })
+      
+      // Create transaction - remove the .replace(/"/g, '') as it's not needed
+      // and might be causing issues with the enum parsing
+      const transactionResult = await createTransaction({
+        variables: {
+          orderId: mockOrderId,
+          userId: userId,
+          amountPaid: total,
+          paymentMethod: paymentMethodEnum,
+          status: "completed"
+        }
+      })
+      
+      if (transactionResult.data?.createTransaction) {
+        // Create receipt
+        const receiptResult = await createReceipt({
+          variables: {
+            transactionId: transactionResult.data.createTransaction.id,
+            userId: userId,
+            amount: total,
+            paymentMethod: paymentMethodEnum
+          }
+        })
+        
+        if (receiptResult.data?.createReceipt) {
+          setSuccessMessage("Payment processed successfully!")
+          // Reset form or redirect as needed
+        }
+      }
+    } catch (error) {
+      console.error("Payment error:", error)
+      setErrorMessage("Payment processing failed. Please try again.")
+    }
   }
 
   // Safely calculate totals even if items is not defined
@@ -300,145 +375,138 @@ export default function PaymentService() {
         </div>
       )
     }
-    return (
-      <div className="mt-6 pt-6 border-t border-gray-300">
-        <div className="flex items-start p-4 bg-gray-50 rounded-md border border-gray-200">
-          <Info className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
-          <p className="text-gray-600">Please choose a payment option to proceed with your order.</p>
-        </div>
-      </div>
-    )
+    return null
   }
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-8 max-w-6xl mx-auto relative">
-      {/* Error Message */}
-      {errorMessage && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md shadow-md flex items-center z-50">
-          <AlertCircle className="h-5 w-5 mr-2" />
-          <span>{errorMessage}</span>
+    <>
+      <Navbar />
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="flex items-center mb-6">
+          <button
+            onClick={() => window.history.back()}
+            className="flex items-center text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="mr-2 h-5 w-5" />
+            <span>Back</span>
+          </button>
+          <h1 className="text-2xl font-bold text-center flex-grow">Payment</h1>
         </div>
-      )}
 
-      {/* Header */}
-      <header className="flex items-center justify-between mb-8">
-        <button className="flex items-center rounded-full cursor-pointer transition-all duration-200 bg-transparent border-none hover:bg-gray-300">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="w-24"></div> {/* Spacer for alignment */}
-      </header>
-
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Payment Method Section */}
-        <div className="w-full md:w-3/5 border border-gray-300 rounded-lg p-6">
-          <h2 className="text-xl font-bold mb-1">Payment Method</h2>
-          <p className="text-gray-500 mb-6">Select your preferred payment method</p>
-
-          <div className="space-y-4">
-            <label
-              className="flex items-center space-x-3 cursor-pointer p-2 rounded-md hover:bg-gray-50"
-              onClick={() => {
-                setSelectedPayment(selectedPayment === "credit" ? null : "credit")
-                setOnlineMethod(null)
-              }}
-            >
-              <div
-                className={`h-5 w-5 rounded-full border flex items-center justify-center ${selectedPayment === "credit" ? "border-green-500" : "border-gray-300"}`}
-              >
-                {selectedPayment === "credit" && <div className="h-3 w-3 rounded-full bg-green-500"></div>}
+        {/* Main content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Payment methods */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-4">Payment Method</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button
+                  className={`p-4 border rounded-md flex flex-col items-center justify-center transition-colors ${
+                    selectedPayment === "credit" ? "border-green-500 bg-green-50" : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => setSelectedPayment(selectedPayment === "credit" ? null : "credit")}
+                >
+                  <CreditCard className="h-6 w-6 mb-2" />
+                  <span>Credit Card</span>
+                </button>
+                <button
+                  className={`p-4 border rounded-md flex flex-col items-center justify-center transition-colors ${
+                    selectedPayment === "cash" ? "border-green-500 bg-green-50" : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => setSelectedPayment(selectedPayment === "cash" ? null : "cash")}
+                >
+                  <Truck className="h-6 w-6 mb-2" />
+                  <span>Cash on Delivery</span>
+                </button>
+                <button
+                  className={`p-4 border rounded-md flex flex-col items-center justify-center transition-colors ${
+                    selectedPayment === "online" ? "border-green-500 bg-green-50" : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => setSelectedPayment(selectedPayment === "online" ? null : "online")}
+                >
+                  <Wifi className="h-6 w-6 mb-2" />
+                  <span>Online Payment</span>
+                </button>
               </div>
-              <CreditCard className="h-5 w-5 text-gray-600" />
-              <span className="text-gray-800">Credit Card</span>
-            </label>
 
-            <label
-              className="flex items-center space-x-3 cursor-pointer p-2 rounded-md hover:bg-gray-50"
-              onClick={() => {
-                setSelectedPayment(selectedPayment === "cash" ? null : "cash")
-                setOnlineMethod(null)
-              }}
-            >
-              <div
-                className={`h-5 w-5 rounded-full border flex items-center justify-center ${selectedPayment === "cash" ? "border-green-500" : "border-gray-300"}`}
-              >
-                {selectedPayment === "cash" && <div className="h-3 w-3 rounded-full bg-green-500"></div>}
-              </div>
-              <Truck className="h-5 w-5 text-gray-600" />
-              <span className="text-gray-800">Cash on Delivery</span>
-            </label>
-
-            <label
-              className="flex items-center space-x-3 cursor-pointer p-2 rounded-md hover:bg-gray-50"
-              onClick={() => {
-                setSelectedPayment(selectedPayment === "online" ? null : "online")
-                setOnlineMethod(null)
-              }}
-            >
-              <div
-                className={`h-5 w-5 rounded-full border flex items-center justify-center ${selectedPayment === "online" ? "border-green-500" : "border-gray-300"}`}
-              >
-                {selectedPayment === "online" && <div className="h-3 w-3 rounded-full bg-green-500"></div>}
-              </div>
-              <Wifi className="h-5 w-5 text-gray-600" />
-              <span className="text-gray-800">Online Payment</span>
-            </label>
+              {renderPaymentDetails()}
+            </div>
           </div>
 
-          {renderPaymentDetails()}
-        </div>
-
-        {/* Order Summary Section */}
-        <div className="w-full md:w-2/5 border border-gray-300 rounded-lg p-6">
-          <h2 className="text-xl font-bold flex items-center mb-6">
-            <Utensils className="h-6 w-6 mr-2" />
-            Order Summary
-          </h2>
-
-          {isCartEmpty ? (
-            <div className="text-center py-8 bg-amber-50 rounded-lg border border-amber-200">
-              <ShoppingBag className="h-12 w-12 mx-auto text-amber-500 mb-2" />
-              <p className="text-amber-800 font-medium text-lg">No food selected!</p>
-              <p className="text-amber-700 mt-1">Order now!</p>
-            </div>
-          ) : (
-            <>
-              <div className="space-y-4 mb-6">
-                {items.map((item, index) => (
-                  <div key={index} className="flex justify-between">
-                    <div>
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-gray-500 text-sm">Qty: {item.qty}</p>
-                    </div>
-                    <p className="font-medium">${item.price.toFixed(2)}</p>
+          {/* Order summary */}
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+              {isCartEmpty ? (
+                <div className="flex flex-col items-center justify-center py-6 text-gray-500">
+                  <ShoppingBag className="h-12 w-12 mb-2" />
+                  <p>Your cart is empty</p>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-4 mb-6">
+                    {items.map((item, index) => (
+                      <div key={index} className="flex justify-between">
+                        <div>
+                          <span className="font-medium">{item.name}</span>
+                          <span className="text-gray-500 text-sm ml-2">x{item.qty}</span>
+                        </div>
+                        <span>${item.price.toFixed(2)}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                  <div className="border-t border-gray-200 pt-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span>Subtotal</span>
+                      <span>${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tax (10%)</span>
+                      <span>${tax.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>Total</span>
+                      <span>${total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </>
+              )}
 
-              <div className="border-t pt-4 border-gray-300 space-y-2">
-                <div className="flex justify-between">
-                  <p className="text-gray-600">Subtotal</p>
-                  <p className="font-medium">${subtotal.toFixed(2)}</p>
+              {errorMessage && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start">
+                  <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                  <p className="text-red-700 text-sm">{errorMessage}</p>
                 </div>
-                <div className="flex justify-between">
-                  <p className="text-gray-600">Tax (10%)</p>
-                  <p className="font-medium">${tax.toFixed(2)}</p>
+              )}
+
+              {successMessage && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md flex items-start">
+                  <Info className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                  <p className="text-green-700 text-sm">{successMessage}</p>
                 </div>
-                <div className="flex justify-between font-bold text-lg mt-4">
-                  <p>Total</p>
-                  <p>${total.toFixed(2)}</p>
+              )}
+
+              <button
+                onClick={handlePayNowClick}
+                disabled={transactionLoading || receiptLoading}
+                className="w-full mt-6 bg-green-600 text-white py-3 rounded-md font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
+              >
+                {transactionLoading || receiptLoading ? "Processing..." : "Pay Now"}
+              </button>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="flex items-start">
+                <Info className="h-5 w-5 text-blue-500 mr-2 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-700">
+                  <p className="font-medium mb-1">Secure Payment</p>
+                  <p>All transactions are secure and encrypted.</p>
                 </div>
               </div>
-            </>
-          )}
-
-          <button
-            className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 rounded-md mt-6 transition-colors"
-            onClick={handlePayNowClick}
-          >
-            Pay Now
-          </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
