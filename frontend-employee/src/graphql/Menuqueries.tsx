@@ -33,8 +33,8 @@ export const GET_MENU_ITEM_BY_ID = gql`
 `;
 
 export const ADD_MENU_ITEM = gql`
-  mutation AddMenuItem($input: NewMenuItem!) {
-    addMenuItem(input: $input) {
+  mutation CreateMenuItem($input: NewMenuItem!) {
+    createMenuItem(input: $input) {
       id
       name
       description

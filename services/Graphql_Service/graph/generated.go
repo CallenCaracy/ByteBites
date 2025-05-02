@@ -79,13 +79,11 @@ type ComplexityRoot struct {
 	}
 
 	Inventory struct {
-		ExpiryDate        func(childComplexity int) int
+		AvailableServings func(childComplexity int) int
 		ID                func(childComplexity int) int
-		ItemName          func(childComplexity int) int
 		LastUpdated       func(childComplexity int) int
 		LowStockThreshold func(childComplexity int) int
-		Quantity          func(childComplexity int) int
-		Unit              func(childComplexity int) int
+		MenuID            func(childComplexity int) int
 	}
 
 	MenuItem struct {
@@ -105,10 +103,10 @@ type ComplexityRoot struct {
 		AddCartItem              func(childComplexity int, input model.AddCartItemInput) int
 		ClearCart                func(childComplexity int, cartID string) int
 		CreateCart               func(childComplexity int, userID string) int
-		CreateInventory          func(childComplexity int, itemName string, quantity int32, unit string, lowStockThreshold *int32, expiryDate *string) int
+		CreateInventory          func(childComplexity int, menuID string, availableServings int32, lowStockThreshold *int32) int
 		CreateMenuItem           func(childComplexity int, input model.NewMenuItem) int
 		CreateOrderFromCart      func(childComplexity int, cartID string, userID string, orderType string, deliveryAddress *string, specialRequests *string) int
-		CreateOrderQueue         func(childComplexity int, orderID string, status *model.KitchenStatus, priority *int32) int
+		CreateOrderQueue         func(childComplexity int, menuID string, orderID string, status *model.KitchenStatus) int
 		CreateTransactionRecords func(childComplexity int, amountPaid float64, paymentMethod string, transactionStatus string, userID string, orderID string) int
 		DeleteInventory          func(childComplexity int, id string) int
 		DeleteMenuItem           func(childComplexity int, id string) int
@@ -120,9 +118,9 @@ type ComplexityRoot struct {
 		SignOut                  func(childComplexity int) int
 		SignUp                   func(childComplexity int, input model.SignUpInput) int
 		UpdateCartItem           func(childComplexity int, input model.UpdateCartItemInput) int
-		UpdateInventory          func(childComplexity int, id string, itemName *string, quantity *int32, unit *string, lowStockThreshold *int32, expiryDate *string) int
+		UpdateInventory          func(childComplexity int, id string, availableServings *int32, lowStockThreshold *int32) int
 		UpdateMenuItem           func(childComplexity int, id string, input model.UpdateMenuItem) int
-		UpdateOrderQueue         func(childComplexity int, id string, status *model.KitchenStatus, priority *int32) int
+		UpdateOrderQueue         func(childComplexity int, id string, status *model.KitchenStatus) int
 		UpdateOrderStatus        func(childComplexity int, orderID string, orderStatus string) int
 		UpdateUser               func(childComplexity int, id string, input model.UpdateUserInput) int
 	}
@@ -151,11 +149,11 @@ type ComplexityRoot struct {
 	}
 
 	OrderQueue struct {
-		ID          func(childComplexity int) int
-		LastUpdated func(childComplexity int) int
-		OrderID     func(childComplexity int) int
-		Priority    func(childComplexity int) int
-		Status      func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		MenuID    func(childComplexity int) int
+		OrderID   func(childComplexity int) int
+		Status    func(childComplexity int) int
 	}
 
 	Query struct {
@@ -219,11 +217,11 @@ type MutationResolver interface {
 	RemoveCartItem(ctx context.Context, id string) (bool, error)
 	CreateOrderFromCart(ctx context.Context, cartID string, userID string, orderType string, deliveryAddress *string, specialRequests *string) (*model.Order, error)
 	UpdateOrderStatus(ctx context.Context, orderID string, orderStatus string) (*model.Order, error)
-	CreateInventory(ctx context.Context, itemName string, quantity int32, unit string, lowStockThreshold *int32, expiryDate *string) (*model.Inventory, error)
-	UpdateInventory(ctx context.Context, id string, itemName *string, quantity *int32, unit *string, lowStockThreshold *int32, expiryDate *string) (*model.Inventory, error)
+	CreateInventory(ctx context.Context, menuID string, availableServings int32, lowStockThreshold *int32) (*model.Inventory, error)
+	UpdateInventory(ctx context.Context, id string, availableServings *int32, lowStockThreshold *int32) (*model.Inventory, error)
 	DeleteInventory(ctx context.Context, id string) (bool, error)
-	CreateOrderQueue(ctx context.Context, orderID string, status *model.KitchenStatus, priority *int32) (*model.OrderQueue, error)
-	UpdateOrderQueue(ctx context.Context, id string, status *model.KitchenStatus, priority *int32) (*model.OrderQueue, error)
+	CreateOrderQueue(ctx context.Context, menuID string, orderID string, status *model.KitchenStatus) (*model.OrderQueue, error)
+	UpdateOrderQueue(ctx context.Context, id string, status *model.KitchenStatus) (*model.OrderQueue, error)
 	DeleteOrderQueue(ctx context.Context, id string) (bool, error)
 	CreateMenuItem(ctx context.Context, input model.NewMenuItem) (*model.MenuItem, error)
 	UpdateMenuItem(ctx context.Context, id string, input model.UpdateMenuItem) (*model.MenuItem, error)
@@ -393,12 +391,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ForgotPasswordResponse.Success(childComplexity), true
 
-	case "Inventory.expiryDate":
-		if e.complexity.Inventory.ExpiryDate == nil {
+	case "Inventory.availableServings":
+		if e.complexity.Inventory.AvailableServings == nil {
 			break
 		}
 
-		return e.complexity.Inventory.ExpiryDate(childComplexity), true
+		return e.complexity.Inventory.AvailableServings(childComplexity), true
 
 	case "Inventory.id":
 		if e.complexity.Inventory.ID == nil {
@@ -406,13 +404,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Inventory.ID(childComplexity), true
-
-	case "Inventory.itemName":
-		if e.complexity.Inventory.ItemName == nil {
-			break
-		}
-
-		return e.complexity.Inventory.ItemName(childComplexity), true
 
 	case "Inventory.lastUpdated":
 		if e.complexity.Inventory.LastUpdated == nil {
@@ -428,19 +419,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Inventory.LowStockThreshold(childComplexity), true
 
-	case "Inventory.quantity":
-		if e.complexity.Inventory.Quantity == nil {
+	case "Inventory.menuId":
+		if e.complexity.Inventory.MenuID == nil {
 			break
 		}
 
-		return e.complexity.Inventory.Quantity(childComplexity), true
-
-	case "Inventory.unit":
-		if e.complexity.Inventory.Unit == nil {
-			break
-		}
-
-		return e.complexity.Inventory.Unit(childComplexity), true
+		return e.complexity.Inventory.MenuID(childComplexity), true
 
 	case "MenuItem.availability_status":
 		if e.complexity.MenuItem.AvailabilityStatus == nil {
@@ -558,7 +542,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateInventory(childComplexity, args["itemName"].(string), args["quantity"].(int32), args["unit"].(string), args["lowStockThreshold"].(*int32), args["expiryDate"].(*string)), true
+		return e.complexity.Mutation.CreateInventory(childComplexity, args["menuId"].(string), args["availableServings"].(int32), args["lowStockThreshold"].(*int32)), true
 
 	case "Mutation.createMenuItem":
 		if e.complexity.Mutation.CreateMenuItem == nil {
@@ -594,7 +578,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateOrderQueue(childComplexity, args["orderId"].(string), args["status"].(*model.KitchenStatus), args["priority"].(*int32)), true
+		return e.complexity.Mutation.CreateOrderQueue(childComplexity, args["menuId"].(string), args["orderId"].(string), args["status"].(*model.KitchenStatus)), true
 
 	case "Mutation.createTransactionRecords":
 		if e.complexity.Mutation.CreateTransactionRecords == nil {
@@ -733,7 +717,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateInventory(childComplexity, args["id"].(string), args["itemName"].(*string), args["quantity"].(*int32), args["unit"].(*string), args["lowStockThreshold"].(*int32), args["expiryDate"].(*string)), true
+		return e.complexity.Mutation.UpdateInventory(childComplexity, args["id"].(string), args["availableServings"].(*int32), args["lowStockThreshold"].(*int32)), true
 
 	case "Mutation.updateMenuItem":
 		if e.complexity.Mutation.UpdateMenuItem == nil {
@@ -757,7 +741,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateOrderQueue(childComplexity, args["id"].(string), args["status"].(*model.KitchenStatus), args["priority"].(*int32)), true
+		return e.complexity.Mutation.UpdateOrderQueue(childComplexity, args["id"].(string), args["status"].(*model.KitchenStatus)), true
 
 	case "Mutation.updateOrderStatus":
 		if e.complexity.Mutation.UpdateOrderStatus == nil {
@@ -902,6 +886,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrderItem.Quantity(childComplexity), true
 
+	case "OrderQueue.createdAt":
+		if e.complexity.OrderQueue.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.OrderQueue.CreatedAt(childComplexity), true
+
 	case "OrderQueue.id":
 		if e.complexity.OrderQueue.ID == nil {
 			break
@@ -909,12 +900,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrderQueue.ID(childComplexity), true
 
-	case "OrderQueue.lastUpdated":
-		if e.complexity.OrderQueue.LastUpdated == nil {
+	case "OrderQueue.menuId":
+		if e.complexity.OrderQueue.MenuID == nil {
 			break
 		}
 
-		return e.complexity.OrderQueue.LastUpdated(childComplexity), true
+		return e.complexity.OrderQueue.MenuID(childComplexity), true
 
 	case "OrderQueue.orderId":
 		if e.complexity.OrderQueue.OrderID == nil {
@@ -922,13 +913,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OrderQueue.OrderID(childComplexity), true
-
-	case "OrderQueue.priority":
-		if e.complexity.OrderQueue.Priority == nil {
-			break
-		}
-
-		return e.complexity.OrderQueue.Priority(childComplexity), true
 
 	case "OrderQueue.status":
 		if e.complexity.OrderQueue.Status == nil {
@@ -1462,69 +1446,46 @@ func (ec *executionContext) field_Mutation_createCart_argsUserID(
 func (ec *executionContext) field_Mutation_createInventory_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Mutation_createInventory_argsItemName(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_createInventory_argsMenuID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["itemName"] = arg0
-	arg1, err := ec.field_Mutation_createInventory_argsQuantity(ctx, rawArgs)
+	args["menuId"] = arg0
+	arg1, err := ec.field_Mutation_createInventory_argsAvailableServings(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["quantity"] = arg1
-	arg2, err := ec.field_Mutation_createInventory_argsUnit(ctx, rawArgs)
+	args["availableServings"] = arg1
+	arg2, err := ec.field_Mutation_createInventory_argsLowStockThreshold(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["unit"] = arg2
-	arg3, err := ec.field_Mutation_createInventory_argsLowStockThreshold(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["lowStockThreshold"] = arg3
-	arg4, err := ec.field_Mutation_createInventory_argsExpiryDate(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["expiryDate"] = arg4
+	args["lowStockThreshold"] = arg2
 	return args, nil
 }
-func (ec *executionContext) field_Mutation_createInventory_argsItemName(
+func (ec *executionContext) field_Mutation_createInventory_argsMenuID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("itemName"))
-	if tmp, ok := rawArgs["itemName"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("menuId"))
+	if tmp, ok := rawArgs["menuId"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
 	var zeroVal string
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_createInventory_argsQuantity(
+func (ec *executionContext) field_Mutation_createInventory_argsAvailableServings(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int32, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
-	if tmp, ok := rawArgs["quantity"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("availableServings"))
+	if tmp, ok := rawArgs["availableServings"]; ok {
 		return ec.unmarshalNInt2int32(ctx, tmp)
 	}
 
 	var zeroVal int32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_createInventory_argsUnit(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("unit"))
-	if tmp, ok := rawArgs["unit"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -1538,19 +1499,6 @@ func (ec *executionContext) field_Mutation_createInventory_argsLowStockThreshold
 	}
 
 	var zeroVal *int32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_createInventory_argsExpiryDate(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("expiryDate"))
-	if tmp, ok := rawArgs["expiryDate"]; ok {
-		return ec.unmarshalODateTime2ᚖstring(ctx, tmp)
-	}
-
-	var zeroVal *string
 	return zeroVal, nil
 }
 
@@ -1675,23 +1623,36 @@ func (ec *executionContext) field_Mutation_createOrderFromCart_argsSpecialReques
 func (ec *executionContext) field_Mutation_createOrderQueue_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Mutation_createOrderQueue_argsOrderID(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_createOrderQueue_argsMenuID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["orderId"] = arg0
-	arg1, err := ec.field_Mutation_createOrderQueue_argsStatus(ctx, rawArgs)
+	args["menuId"] = arg0
+	arg1, err := ec.field_Mutation_createOrderQueue_argsOrderID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["status"] = arg1
-	arg2, err := ec.field_Mutation_createOrderQueue_argsPriority(ctx, rawArgs)
+	args["orderId"] = arg1
+	arg2, err := ec.field_Mutation_createOrderQueue_argsStatus(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["priority"] = arg2
+	args["status"] = arg2
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_createOrderQueue_argsMenuID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("menuId"))
+	if tmp, ok := rawArgs["menuId"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_createOrderQueue_argsOrderID(
 	ctx context.Context,
 	rawArgs map[string]any,
@@ -1715,19 +1676,6 @@ func (ec *executionContext) field_Mutation_createOrderQueue_argsStatus(
 	}
 
 	var zeroVal *model.KitchenStatus
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_createOrderQueue_argsPriority(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*int32, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("priority"))
-	if tmp, ok := rawArgs["priority"]; ok {
-		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
-	}
-
-	var zeroVal *int32
 	return zeroVal, nil
 }
 
@@ -2041,31 +1989,16 @@ func (ec *executionContext) field_Mutation_updateInventory_args(ctx context.Cont
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := ec.field_Mutation_updateInventory_argsItemName(ctx, rawArgs)
+	arg1, err := ec.field_Mutation_updateInventory_argsAvailableServings(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["itemName"] = arg1
-	arg2, err := ec.field_Mutation_updateInventory_argsQuantity(ctx, rawArgs)
+	args["availableServings"] = arg1
+	arg2, err := ec.field_Mutation_updateInventory_argsLowStockThreshold(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["quantity"] = arg2
-	arg3, err := ec.field_Mutation_updateInventory_argsUnit(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["unit"] = arg3
-	arg4, err := ec.field_Mutation_updateInventory_argsLowStockThreshold(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["lowStockThreshold"] = arg4
-	arg5, err := ec.field_Mutation_updateInventory_argsExpiryDate(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["expiryDate"] = arg5
+	args["lowStockThreshold"] = arg2
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_updateInventory_argsID(
@@ -2081,42 +2014,16 @@ func (ec *executionContext) field_Mutation_updateInventory_argsID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_updateInventory_argsItemName(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("itemName"))
-	if tmp, ok := rawArgs["itemName"]; ok {
-		return ec.unmarshalOString2ᚖstring(ctx, tmp)
-	}
-
-	var zeroVal *string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateInventory_argsQuantity(
+func (ec *executionContext) field_Mutation_updateInventory_argsAvailableServings(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*int32, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
-	if tmp, ok := rawArgs["quantity"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("availableServings"))
+	if tmp, ok := rawArgs["availableServings"]; ok {
 		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
 	}
 
 	var zeroVal *int32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateInventory_argsUnit(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("unit"))
-	if tmp, ok := rawArgs["unit"]; ok {
-		return ec.unmarshalOString2ᚖstring(ctx, tmp)
-	}
-
-	var zeroVal *string
 	return zeroVal, nil
 }
 
@@ -2130,19 +2037,6 @@ func (ec *executionContext) field_Mutation_updateInventory_argsLowStockThreshold
 	}
 
 	var zeroVal *int32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateInventory_argsExpiryDate(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("expiryDate"))
-	if tmp, ok := rawArgs["expiryDate"]; ok {
-		return ec.unmarshalODateTime2ᚖstring(ctx, tmp)
-	}
-
-	var zeroVal *string
 	return zeroVal, nil
 }
 
@@ -2200,11 +2094,6 @@ func (ec *executionContext) field_Mutation_updateOrderQueue_args(ctx context.Con
 		return nil, err
 	}
 	args["status"] = arg1
-	arg2, err := ec.field_Mutation_updateOrderQueue_argsPriority(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["priority"] = arg2
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_updateOrderQueue_argsID(
@@ -2230,19 +2119,6 @@ func (ec *executionContext) field_Mutation_updateOrderQueue_argsStatus(
 	}
 
 	var zeroVal *model.KitchenStatus
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateOrderQueue_argsPriority(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*int32, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("priority"))
-	if tmp, ok := rawArgs["priority"]; ok {
-		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
-	}
-
-	var zeroVal *int32
 	return zeroVal, nil
 }
 
@@ -3433,8 +3309,8 @@ func (ec *executionContext) fieldContext_Inventory_id(_ context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _Inventory_itemName(ctx context.Context, field graphql.CollectedField, obj *model.Inventory) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Inventory_itemName(ctx, field)
+func (ec *executionContext) _Inventory_menuId(ctx context.Context, field graphql.CollectedField, obj *model.Inventory) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Inventory_menuId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3447,7 +3323,7 @@ func (ec *executionContext) _Inventory_itemName(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ItemName, nil
+		return obj.MenuID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3461,24 +3337,24 @@ func (ec *executionContext) _Inventory_itemName(ctx context.Context, field graph
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Inventory_itemName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Inventory_menuId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Inventory",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Inventory_quantity(ctx context.Context, field graphql.CollectedField, obj *model.Inventory) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Inventory_quantity(ctx, field)
+func (ec *executionContext) _Inventory_availableServings(ctx context.Context, field graphql.CollectedField, obj *model.Inventory) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Inventory_availableServings(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3491,7 +3367,7 @@ func (ec *executionContext) _Inventory_quantity(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Quantity, nil
+		return obj.AvailableServings, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3508,7 +3384,7 @@ func (ec *executionContext) _Inventory_quantity(ctx context.Context, field graph
 	return ec.marshalNInt2int32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Inventory_quantity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Inventory_availableServings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Inventory",
 		Field:      field,
@@ -3516,50 +3392,6 @@ func (ec *executionContext) fieldContext_Inventory_quantity(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Inventory_unit(ctx context.Context, field graphql.CollectedField, obj *model.Inventory) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Inventory_unit(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Unit, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Inventory_unit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Inventory",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3604,47 +3436,6 @@ func (ec *executionContext) fieldContext_Inventory_lowStockThreshold(_ context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Inventory_expiryDate(ctx context.Context, field graphql.CollectedField, obj *model.Inventory) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Inventory_expiryDate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ExpiryDate, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalODateTime2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Inventory_expiryDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Inventory",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4610,7 +4401,7 @@ func (ec *executionContext) _Mutation_createInventory(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateInventory(rctx, fc.Args["itemName"].(string), fc.Args["quantity"].(int32), fc.Args["unit"].(string), fc.Args["lowStockThreshold"].(*int32), fc.Args["expiryDate"].(*string))
+		return ec.resolvers.Mutation().CreateInventory(rctx, fc.Args["menuId"].(string), fc.Args["availableServings"].(int32), fc.Args["lowStockThreshold"].(*int32))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4637,16 +4428,12 @@ func (ec *executionContext) fieldContext_Mutation_createInventory(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Inventory_id(ctx, field)
-			case "itemName":
-				return ec.fieldContext_Inventory_itemName(ctx, field)
-			case "quantity":
-				return ec.fieldContext_Inventory_quantity(ctx, field)
-			case "unit":
-				return ec.fieldContext_Inventory_unit(ctx, field)
+			case "menuId":
+				return ec.fieldContext_Inventory_menuId(ctx, field)
+			case "availableServings":
+				return ec.fieldContext_Inventory_availableServings(ctx, field)
 			case "lowStockThreshold":
 				return ec.fieldContext_Inventory_lowStockThreshold(ctx, field)
-			case "expiryDate":
-				return ec.fieldContext_Inventory_expiryDate(ctx, field)
 			case "lastUpdated":
 				return ec.fieldContext_Inventory_lastUpdated(ctx, field)
 			}
@@ -4681,7 +4468,7 @@ func (ec *executionContext) _Mutation_updateInventory(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateInventory(rctx, fc.Args["id"].(string), fc.Args["itemName"].(*string), fc.Args["quantity"].(*int32), fc.Args["unit"].(*string), fc.Args["lowStockThreshold"].(*int32), fc.Args["expiryDate"].(*string))
+		return ec.resolvers.Mutation().UpdateInventory(rctx, fc.Args["id"].(string), fc.Args["availableServings"].(*int32), fc.Args["lowStockThreshold"].(*int32))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4708,16 +4495,12 @@ func (ec *executionContext) fieldContext_Mutation_updateInventory(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Inventory_id(ctx, field)
-			case "itemName":
-				return ec.fieldContext_Inventory_itemName(ctx, field)
-			case "quantity":
-				return ec.fieldContext_Inventory_quantity(ctx, field)
-			case "unit":
-				return ec.fieldContext_Inventory_unit(ctx, field)
+			case "menuId":
+				return ec.fieldContext_Inventory_menuId(ctx, field)
+			case "availableServings":
+				return ec.fieldContext_Inventory_availableServings(ctx, field)
 			case "lowStockThreshold":
 				return ec.fieldContext_Inventory_lowStockThreshold(ctx, field)
-			case "expiryDate":
-				return ec.fieldContext_Inventory_expiryDate(ctx, field)
 			case "lastUpdated":
 				return ec.fieldContext_Inventory_lastUpdated(ctx, field)
 			}
@@ -4807,7 +4590,7 @@ func (ec *executionContext) _Mutation_createOrderQueue(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateOrderQueue(rctx, fc.Args["orderId"].(string), fc.Args["status"].(*model.KitchenStatus), fc.Args["priority"].(*int32))
+		return ec.resolvers.Mutation().CreateOrderQueue(rctx, fc.Args["menuId"].(string), fc.Args["orderId"].(string), fc.Args["status"].(*model.KitchenStatus))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4834,14 +4617,14 @@ func (ec *executionContext) fieldContext_Mutation_createOrderQueue(ctx context.C
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_OrderQueue_id(ctx, field)
+			case "menuId":
+				return ec.fieldContext_OrderQueue_menuId(ctx, field)
 			case "orderId":
 				return ec.fieldContext_OrderQueue_orderId(ctx, field)
 			case "status":
 				return ec.fieldContext_OrderQueue_status(ctx, field)
-			case "priority":
-				return ec.fieldContext_OrderQueue_priority(ctx, field)
-			case "lastUpdated":
-				return ec.fieldContext_OrderQueue_lastUpdated(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_OrderQueue_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrderQueue", field.Name)
 		},
@@ -4874,7 +4657,7 @@ func (ec *executionContext) _Mutation_updateOrderQueue(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateOrderQueue(rctx, fc.Args["id"].(string), fc.Args["status"].(*model.KitchenStatus), fc.Args["priority"].(*int32))
+		return ec.resolvers.Mutation().UpdateOrderQueue(rctx, fc.Args["id"].(string), fc.Args["status"].(*model.KitchenStatus))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4901,14 +4684,14 @@ func (ec *executionContext) fieldContext_Mutation_updateOrderQueue(ctx context.C
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_OrderQueue_id(ctx, field)
+			case "menuId":
+				return ec.fieldContext_OrderQueue_menuId(ctx, field)
 			case "orderId":
 				return ec.fieldContext_OrderQueue_orderId(ctx, field)
 			case "status":
 				return ec.fieldContext_OrderQueue_status(ctx, field)
-			case "priority":
-				return ec.fieldContext_OrderQueue_priority(ctx, field)
-			case "lastUpdated":
-				return ec.fieldContext_OrderQueue_lastUpdated(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_OrderQueue_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrderQueue", field.Name)
 		},
@@ -6449,6 +6232,50 @@ func (ec *executionContext) fieldContext_OrderQueue_id(_ context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _OrderQueue_menuId(ctx context.Context, field graphql.CollectedField, obj *model.OrderQueue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrderQueue_menuId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MenuID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrderQueue_menuId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrderQueue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrderQueue_orderId(ctx context.Context, field graphql.CollectedField, obj *model.OrderQueue) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrderQueue_orderId(ctx, field)
 	if err != nil {
@@ -6537,8 +6364,8 @@ func (ec *executionContext) fieldContext_OrderQueue_status(_ context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _OrderQueue_priority(ctx context.Context, field graphql.CollectedField, obj *model.OrderQueue) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OrderQueue_priority(ctx, field)
+func (ec *executionContext) _OrderQueue_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.OrderQueue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrderQueue_createdAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6551,51 +6378,7 @@ func (ec *executionContext) _OrderQueue_priority(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Priority, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int32)
-	fc.Result = res
-	return ec.marshalNInt2int32(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_OrderQueue_priority(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "OrderQueue",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _OrderQueue_lastUpdated(ctx context.Context, field graphql.CollectedField, obj *model.OrderQueue) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OrderQueue_lastUpdated(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LastUpdated, nil
+		return obj.CreatedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6612,7 +6395,7 @@ func (ec *executionContext) _OrderQueue_lastUpdated(ctx context.Context, field g
 	return ec.marshalNDateTime2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_OrderQueue_lastUpdated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_OrderQueue_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "OrderQueue",
 		Field:      field,
@@ -6880,16 +6663,12 @@ func (ec *executionContext) fieldContext_Query_inventories(_ context.Context, fi
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Inventory_id(ctx, field)
-			case "itemName":
-				return ec.fieldContext_Inventory_itemName(ctx, field)
-			case "quantity":
-				return ec.fieldContext_Inventory_quantity(ctx, field)
-			case "unit":
-				return ec.fieldContext_Inventory_unit(ctx, field)
+			case "menuId":
+				return ec.fieldContext_Inventory_menuId(ctx, field)
+			case "availableServings":
+				return ec.fieldContext_Inventory_availableServings(ctx, field)
 			case "lowStockThreshold":
 				return ec.fieldContext_Inventory_lowStockThreshold(ctx, field)
-			case "expiryDate":
-				return ec.fieldContext_Inventory_expiryDate(ctx, field)
 			case "lastUpdated":
 				return ec.fieldContext_Inventory_lastUpdated(ctx, field)
 			}
@@ -6937,16 +6716,12 @@ func (ec *executionContext) fieldContext_Query_inventory(ctx context.Context, fi
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Inventory_id(ctx, field)
-			case "itemName":
-				return ec.fieldContext_Inventory_itemName(ctx, field)
-			case "quantity":
-				return ec.fieldContext_Inventory_quantity(ctx, field)
-			case "unit":
-				return ec.fieldContext_Inventory_unit(ctx, field)
+			case "menuId":
+				return ec.fieldContext_Inventory_menuId(ctx, field)
+			case "availableServings":
+				return ec.fieldContext_Inventory_availableServings(ctx, field)
 			case "lowStockThreshold":
 				return ec.fieldContext_Inventory_lowStockThreshold(ctx, field)
-			case "expiryDate":
-				return ec.fieldContext_Inventory_expiryDate(ctx, field)
 			case "lastUpdated":
 				return ec.fieldContext_Inventory_lastUpdated(ctx, field)
 			}
@@ -7008,14 +6783,14 @@ func (ec *executionContext) fieldContext_Query_orderQueues(_ context.Context, fi
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_OrderQueue_id(ctx, field)
+			case "menuId":
+				return ec.fieldContext_OrderQueue_menuId(ctx, field)
 			case "orderId":
 				return ec.fieldContext_OrderQueue_orderId(ctx, field)
 			case "status":
 				return ec.fieldContext_OrderQueue_status(ctx, field)
-			case "priority":
-				return ec.fieldContext_OrderQueue_priority(ctx, field)
-			case "lastUpdated":
-				return ec.fieldContext_OrderQueue_lastUpdated(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_OrderQueue_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrderQueue", field.Name)
 		},
@@ -7061,14 +6836,14 @@ func (ec *executionContext) fieldContext_Query_orderQueue(ctx context.Context, f
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_OrderQueue_id(ctx, field)
+			case "menuId":
+				return ec.fieldContext_OrderQueue_menuId(ctx, field)
 			case "orderId":
 				return ec.fieldContext_OrderQueue_orderId(ctx, field)
 			case "status":
 				return ec.fieldContext_OrderQueue_status(ctx, field)
-			case "priority":
-				return ec.fieldContext_OrderQueue_priority(ctx, field)
-			case "lastUpdated":
-				return ec.fieldContext_OrderQueue_lastUpdated(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_OrderQueue_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrderQueue", field.Name)
 		},
@@ -11375,18 +11150,13 @@ func (ec *executionContext) _Inventory(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "itemName":
-			out.Values[i] = ec._Inventory_itemName(ctx, field, obj)
+		case "menuId":
+			out.Values[i] = ec._Inventory_menuId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "quantity":
-			out.Values[i] = ec._Inventory_quantity(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "unit":
-			out.Values[i] = ec._Inventory_unit(ctx, field, obj)
+		case "availableServings":
+			out.Values[i] = ec._Inventory_availableServings(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -11395,8 +11165,6 @@ func (ec *executionContext) _Inventory(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "expiryDate":
-			out.Values[i] = ec._Inventory_expiryDate(ctx, field, obj)
 		case "lastUpdated":
 			out.Values[i] = ec._Inventory_lastUpdated(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -11848,6 +11616,11 @@ func (ec *executionContext) _OrderQueue(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "menuId":
+			out.Values[i] = ec._OrderQueue_menuId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "orderId":
 			out.Values[i] = ec._OrderQueue_orderId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -11858,13 +11631,8 @@ func (ec *executionContext) _OrderQueue(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "priority":
-			out.Values[i] = ec._OrderQueue_priority(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "lastUpdated":
-			out.Values[i] = ec._OrderQueue_lastUpdated(ctx, field, obj)
+		case "createdAt":
+			out.Values[i] = ec._OrderQueue_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -13602,22 +13370,6 @@ func (ec *executionContext) marshalOCart2ᚖGraphql_ServiceᚋgraphᚋmodelᚐCa
 		return graphql.Null
 	}
 	return ec._Cart(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalODateTime2ᚖstring(ctx context.Context, v any) (*string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalString(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalODateTime2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := graphql.MarshalString(*v)
-	return res
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v any) (*float64, error) {

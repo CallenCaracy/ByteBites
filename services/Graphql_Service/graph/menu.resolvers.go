@@ -147,4 +147,7 @@ func (r *subscriptionResolver) MenuItemCreated(ctx context.Context) (<-chan *mod
 	return ch, nil
 }
 
+// Subscription returns SubscriptionResolver implementation.
+func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
+
 type subscriptionResolver struct{ *Resolver }

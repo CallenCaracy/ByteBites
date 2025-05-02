@@ -1,24 +1,59 @@
-import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
+import {
+  ApolloClient,
+  InMemoryCache,
+  split,
+  HttpLink
+} from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
+import { getMainDefinition } from "@apollo/client/utilities";
 
-const httpLink = createHttpLink({
+// Regular HTTP link for queries & mutations
+const httpLink = new HttpLink({
   uri: "http://localhost:8080/query",
   credentials: "include",
 });
 
+// WebSocket link for subscriptions
+const wsLink = new GraphQLWsLink(createClient({
+  url: "ws://localhost:8080/query",
+  connectionParams: () => {
+    const token = localStorage.getItem("accessToken");
+    return {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    };
+  },
+}));
+
+// Auth middleware (still applies to HTTP)
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem("accessToken");
   return {
-      headers: {
-          ...headers,
-          Authorization: token ? `Bearer ${token}` : "",
-      }
+    headers: {
+      ...headers,
+      Authorization: token ? `Bearer ${token}` : "",
+    },
   };
 });
 
+// Split links: send data to each link depending on operation type
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === "OperationDefinition" &&
+      definition.operation === "subscription"
+    );
+  },
+  wsLink,
+  authLink.concat(httpLink)
+);
+
+// Apollo Client setup
 export const client = new ApolloClient({
-  link: authLink.concat(httpLink),
+  link: splitLink,
   cache: new InMemoryCache(),
 });
-
-export default client;

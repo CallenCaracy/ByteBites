@@ -50,13 +50,11 @@ type ForgotPasswordResponse struct {
 }
 
 type Inventory struct {
-	ID                string  `json:"id"`
-	ItemName          string  `json:"itemName"`
-	Quantity          int32   `json:"quantity"`
-	Unit              string  `json:"unit"`
-	LowStockThreshold int32   `json:"lowStockThreshold"`
-	ExpiryDate        *string `json:"expiryDate,omitempty"`
-	LastUpdated       string  `json:"lastUpdated"`
+	ID                string `json:"id"`
+	MenuID            string `json:"menuId"`
+	AvailableServings int32  `json:"availableServings"`
+	LowStockThreshold int32  `json:"lowStockThreshold"`
+	LastUpdated       string `json:"lastUpdated"`
 }
 
 type MenuItem struct {
@@ -109,11 +107,11 @@ type OrderItem struct {
 }
 
 type OrderQueue struct {
-	ID          string        `json:"id"`
-	OrderID     string        `json:"orderId"`
-	Status      KitchenStatus `json:"status"`
-	Priority    int32         `json:"priority"`
-	LastUpdated string        `json:"lastUpdated"`
+	ID        string        `json:"id"`
+	MenuID    string        `json:"menuId"`
+	OrderID   string        `json:"orderId"`
+	Status    KitchenStatus `json:"status"`
+	CreatedAt string        `json:"createdAt"`
 }
 
 type Query struct {
@@ -205,20 +203,20 @@ type User struct {
 type KitchenStatus string
 
 const (
-	KitchenStatusCooking   KitchenStatus = "cooking"
 	KitchenStatusPreparing KitchenStatus = "preparing"
 	KitchenStatusReady     KitchenStatus = "ready"
+	KitchenStatusComplete  KitchenStatus = "complete"
 )
 
 var AllKitchenStatus = []KitchenStatus{
-	KitchenStatusCooking,
 	KitchenStatusPreparing,
 	KitchenStatusReady,
+	KitchenStatusComplete,
 }
 
 func (e KitchenStatus) IsValid() bool {
 	switch e {
-	case KitchenStatusCooking, KitchenStatusPreparing, KitchenStatusReady:
+	case KitchenStatusPreparing, KitchenStatusReady, KitchenStatusComplete:
 		return true
 	}
 	return false
