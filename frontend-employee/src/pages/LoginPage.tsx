@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { useMutation } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import { SIGN_IN_MUTATION } from "../graphql/Userqueries";
-import "../styles/login.css";
+import "../styles/main.css";
 import logo from "../assets/ByteBitesLogo/logo.png";
 import bg from "../assets/loginwallpaper.jpg";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { supabase } from "../utils/supabaseClient";
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState("");
@@ -21,14 +22,19 @@ const LoginPage: React.FC = () => {
         const { data } = await signIn({
             variables: { email, password },
         });
+        const { accessToken, refreshToken } = data.signInOnlyEmployee;
 
-        if (data?.signInOnlyEmployee?.accessToken) {
-            localStorage.setItem("accessToken", data.signInOnlyEmployee.accessToken);
-            localStorage.setItem("refreshToken", data.signInOnlyEmployee.refreshToken);
+        const { error: supaErr } = await supabase.auth.setSession({
+            access_token:  accessToken,
+            refresh_token: refreshToken,
+        });
+        if (supaErr) {
+            console.error("Failed to set Supabase session", supaErr);
+            return;
+        }else {
             navigate("/dashboard");
-        } else {
-            alert(data?.signInOnlyEmployee?.error || "Invalid login");
         }
+
     } catch (err) {
         console.error("Login error:", err);
 

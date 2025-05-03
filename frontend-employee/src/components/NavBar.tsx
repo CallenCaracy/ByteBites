@@ -3,81 +3,71 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/ByteBitesLogo/logo-transparent.png";
 import { useApolloClient, useMutation } from "@apollo/client";
 import { SIGN_OUT_USER } from "../graphql/Userqueries";
+import { supabase } from "../utils/supabaseClient";
 
 const Navbar: React.FC = () => {
     const navigate = useNavigate();
     const isAuthenticated = Boolean(localStorage.getItem("accessToken"));
 
-    const [signOut, { loading, error }] = useMutation(SIGN_OUT_USER);
-
+    const [signOut] = useMutation(SIGN_OUT_USER);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
     const [userId, setUserId] = useState<string | null>(null);
-
+    const [logoutInProgress, setLogoutInProgress] = useState(false);
     const client = useApolloClient();
 
     useEffect(() => {
         const token = localStorage.getItem("accessToken");
         if (token) {
-            const payloadRaw = token.split('.')[1];
-            const decoded = atob(payloadRaw);
-            console.log("Decoded JWT payload string:", decoded);
-    
             try {
-                const payload = JSON.parse(decoded);
-                console.log("Parsed payload object:", payload);
-    
-                if (payload.sub) {
-                    setUserId(payload.sub);
-                } else {
-                    console.warn("No userId in payload! Check the token structure.");
-                }
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                setUserId(payload.sub || null);
             } catch (e) {
-                console.error("Failed to parse JWT payload:", e);
+                console.error("Invalid token payload", e);
             }
         }
     }, []);
-    
 
     const handleLogout = async () => {
+        if (logoutInProgress) return;
+
+        setLogoutInProgress(true);
+
         try {
             const { data } = await signOut();
             if (data?.signOut) {
-                if (loading) return <p className="text-center text-gray-600">Signing out...</p>;
-                if (error) return <p className="text-center text-red-500">Error signing out.</p>;
-                console.log("Logout successful");
-
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("refreshToken");
+                localStorage.removeItem("expiresAt");
 
-                client.resetStore();
+                await supabase.auth.signOut();
+                await client.resetStore();
+
+                console.log("User signed out cleanly.");
                 navigate("/login");
             } else {
-                console.error("Logout failed");
+                console.error("SignOut mutation failed");
             }
         } catch (err) {
-            console.error("Error signing out:", err);
+            console.error("Logout error:", err);
+        } finally {
+            setLogoutInProgress(false);
         }
-    }
+    };
 
     const handleViewAccountClick = () => {
-        if (userId) {
-            navigate(`/account/${userId}`);
-        }
+        if (userId) navigate(`/account/${userId}`);
     };
 
     const handleHomeClick = () => {
-        if (userId) {
-            navigate(`/dashboard`);
-        }
+        navigate(`/dashboard`);
     };
 
     return (
-        <nav className="bg-gray-800 text-white p-4 shadow-md">
+        <nav className="bg-blue-950 text-white p-4 shadow-md">
             <div className="container mx-auto flex justify-between items-center">
                 <Link to="/" className="flex items-center space-x-2">
                     <img src={logo} alt="Logo" className="h-15 w-15 object-contain" />
-                    <span className="text-xl font-semibold">ByteBites</span>
+                    <span className="text-xl font-semibold text-white">ByteBites</span>
                 </Link>
                 <ul className="hidden md:flex space-x-6">
                     <li>

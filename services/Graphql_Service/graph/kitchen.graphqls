@@ -1,0 +1,77 @@
+# kitchen.graphqls
+
+# Custom scalar for handling timestamp values
+scalar DateTime
+
+# Enum for the allowed order statuses
+enum OrderStatus {
+  cooking
+  preparing
+  ready 
+}
+
+
+# Inventory type corresponding to the inventory table.
+type Inventory {
+  id: ID!                   # UUID primary key
+  itemName: String!         # Maps to item_name column
+  quantity: Int!            # Maps to quantity column (must be >= 0)
+  unit: String!             # Maps to unit column
+  lowStockThreshold: Int!   # Maps to low_stock_threshold column, default is 5
+  expiryDate: DateTime      # Maps to expiry_date (nullable timestamp)
+  lastUpdated: DateTime!    # Maps to last_updated column
+}
+
+# OrderQueue type corresponding to the order_queue table.
+type OrderQueue {
+  id: ID!                   # Maps to the id column (UUID primary key)
+  orderId: ID!              # Maps to the order_id column
+  status: OrderStatus!      # Maps to the status column with allowed values
+  priority: Int!            # Maps to the priority column
+  lastUpdated: DateTime!     # Maps to the last_updated column
+}
+
+# Query type for fetching both inventory items and order queue records.
+extend type Query {
+  # Inventory queries
+  inventories: [Inventory!]!
+  inventory(id: ID!): Inventory
+
+  # OrderQueue queries
+  orderQueues: [OrderQueue!]!
+  orderQueue(id: ID!): OrderQueue
+}
+
+# Mutation type for modifying both inventory and order queue records.
+extend type Mutation {
+  # Inventory mutations
+  createInventory(
+    itemName: String!
+    quantity: Int!
+    unit: String!
+    lowStockThreshold: Int
+    expiryDate: DateTime
+  ): Inventory!
+  updateInventory(
+    id: ID!
+    itemName: String
+    quantity: Int
+    unit: String
+    lowStockThreshold: Int
+    expiryDate: DateTime
+  ): Inventory!
+  deleteInventory(id: ID!): Boolean!
+
+  # OrderQueue mutations
+  createOrderQueue(
+    orderId: ID!
+    status: OrderStatus
+    priority: Int
+  ): OrderQueue!
+  updateOrderQueue(
+    id: ID!
+    status: OrderStatus
+    priority: Int
+  ): OrderQueue!
+  deleteOrderQueue(id: ID!): Boolean!
+}

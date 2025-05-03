@@ -1,6 +1,6 @@
-import { useParams, useNavigate } from "react-router-dom"; // useNavigate
-import { useQuery, useMutation } from "@apollo/client"; // useMutation
-import { GET_MENU_ITEM_BY_ID, DELETE_MENU_ITEM} from "../graphql/Menuqueries"; // added deleteMenu
+import { useParams } from "react-router-dom";
+import { useQuery } from "@apollo/client";
+import { GET_MENU_ITEM_BY_ID} from "../graphql/Menuqueries";
 import Navbar from "../components/NavBar";
 
 
@@ -10,8 +10,6 @@ import Navbar from "../components/NavBar";
 
 const MenuItem: React.FC = () => {
     const { menuId } = useParams();
-    const navigate = useNavigate();  
-
 
     // ! this is to fetch the menu ITEM BY ID
     const { data, loading, error } = useQuery(GET_MENU_ITEM_BY_ID, {
@@ -40,6 +38,7 @@ const MenuItem: React.FC = () => {
     <div className="flex justify-center items-center min-h-[90vh] bg-gray-100"> {/* 🔹 Center container */}
         <div className="p-8 w-full max-w-2xl bg-white rounded-xl shadow-md space-y-6 max-h-[85vh] overflow-y-auto"> {/* 🔹 Bigger card with scroll */}
             <button
+            onClick={() => navigate("/dashboard")}
                 onClick={() => navigate(-1)}
                 className="text-blue-600 underline"
             >

@@ -19,13 +19,12 @@ const Account: React.FC = () => {
         address: "",
         phone: "",
         isActive: "active",
-        age: "",
         gender: "",
         userType: "",
         pfp: "",
+        birthDate: "",
     });
     const [formErrors, setFormErrors] = useState({
-        age: "",
         phone: "",
     });
 
@@ -41,14 +40,6 @@ const Account: React.FC = () => {
         }));
 
         let errors = { ...formErrors };
-
-        if (name === "age") {
-            if (!/^\d*$/.test(value) || +value < 1 || +value > 100) {
-                errors.age = "Age must be between 1 and 100.";
-            } else {
-                errors.age = "";
-            }
-        }
 
         if (name === "phone") {
             if (!/^\d*$/.test(value)) {
@@ -68,6 +59,10 @@ const Account: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        const formattedBirthDate = formData.birthDate
+        ? new Date(formData.birthDate).toISOString().split("T")[0]
+        : "";
+
         try {
             await updateUser({
                 variables: {
@@ -77,11 +72,10 @@ const Account: React.FC = () => {
                         lastName: formData.lastName,
                         address: formData.address,
                         phone: formData.phone,
-                        age: parseInt(formData.age),
+                        birthDate: formattedBirthDate,
                         userType: formData.userType,
                         gender: formData.gender,
-                        // pfp: formData.pfp,
-                        isActive: formData.isActive
+                        isActive: formData.isActive,
                     },
                 },
             });
@@ -94,101 +88,90 @@ const Account: React.FC = () => {
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
-        if (file) {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${userId}-${Date.now()}.${fileExt}`;
-            const filePath = `pfp/${fileName}`;
     
-            const { error: uploadError } = await supabase.storage
-                .from('pictures')
-                .upload(filePath, file);
+        const oldPfpUrl = formData.pfp;
+        let oldPfpPath: string | null = null;
     
-            if (uploadError) {
-                console.error('Error uploading file:', uploadError.message);
-                return;
-            }
-    
-            const { data: publicUrlData } = supabase
-                .storage
-                .from('pictures')
-                .getPublicUrl(filePath);
-
-            const publicUrl = publicUrlData.publicUrl;
-    
-            setFormData((prev) => ({
-                ...prev,
-                pfp: publicUrlData.publicUrl,
-            }));
-
+        if (oldPfpUrl) {
             try {
-                await updateUser({
-                    variables: {
-                        id: userId,
-                        input: {
-                            pfp: publicUrl,
-                        },
-                    },
-                });
-            } catch (error) {
-                console.error("Error updating profile picture:", error);
+                const url = new URL(oldPfpUrl);
+                const pathname = url.pathname;
+                const match = pathname.match(/\/storage\/v1\/object\/public\/pictures\/(.+)/);
+
+                if (match) {
+                    oldPfpPath = match[1];
+                }
+            } catch (err) {
+                console.warn('Failed to parse oldPfpUrl:', err);
             }
         }
-    };
-
-    // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    //     const file = e.target.files?.[0];
-    //     if (!file) return;
     
-    //     const oldPfpUrl = formData.pfp;
-    //     let oldPfpPath: string | null = null;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${userId}-${Date.now()}.${fileExt}`;
+        const filePath = `pfp/${fileName}`;
     
-    //     if (oldPfpUrl) {
-    //         const urlParts = oldPfpUrl.split('/');
-    //         const index = urlParts.indexOf('pictures');
-    //         if (index !== -1) {
-    //             oldPfpPath = urlParts.slice(index + 1).join('/');
-    //         }
-    //     }
+        if (oldPfpPath) {
+            const { error: deleteError } = await supabase
+                .storage
+                .from('pictures')
+                .remove([oldPfpPath]);
+                const { data: items, error: listError } = await supabase
+                .storage
+                .from('pictures')
+                .list('pfp', { limit: 100 });
+                console.log("🗂 Remaining in pfp/:", items, listError);
     
-    //     const fileExt = file.name.split('.').pop();
-    //     const fileName = `${userId}-${Date.now()}.${fileExt}`;
-    //     const filePath = `pfp/${fileName}`;
+            if
+            (deleteError) {
+                console.error('Error deleting old file:', deleteError.message);
+            } else {
+                console.log('Old file deleted successfully');
+            }
+        }
     
-    //     if (oldPfpPath) {
-    //         const { error: deleteError } = await supabase
-    //             .storage
-    //             .from('pictures')
-    //             .remove([oldPfpPath]);
+        const { error: uploadError } = await supabase
+            .storage
+            .from('pictures')
+            .upload(filePath, file);
     
-    //         if (deleteError) {
-    //             console.error('Error deleting old file:', deleteError.message);
-    //         }
-    //     }
+        if (uploadError) {
+            console.error('Error uploading file:', uploadError.message);
+            return;
+        }
     
-    //     const { error: uploadError } = await supabase
-    //         .storage
-    //         .from('pictures')
-    //         .upload(filePath, file);
+        const { data: publicUrlData } = supabase
+            .storage
+            .from('pictures')
+            .getPublicUrl(filePath);
     
-    //     if (uploadError) {
-    //         console.error('Error uploading file:', uploadError.message);
-    //         return;
-    //     }
+        const publicUrl = publicUrlData.publicUrl;
     
-    //     const { data: publicUrlData } = supabase
-    //         .storage
-    //         .from('pictures')
-    //         .getPublicUrl(filePath);
+        setFormData((prev) => ({
+            ...prev,
+            pfp: publicUrl,
+        }));
     
-    //     setFormData((prev) => ({
-    //         ...prev,
-    //         pfp: publicUrlData.publicUrl,
-    //     }));
-    // };
+        try {
+            await updateUser({
+                variables: {
+                    id: userId,
+                    input: {
+                        pfp: publicUrl,
+                    },
+                },
+            });
+        } catch (error) {
+            console.error("Error updating profile picture:", error);
+        }
+    };    
 
     const handleEditClick = () => {
         setIsEditing(true);
+
+        const formattedBirthDate = data.getUserById.birthDate
+        ? new Date(data.getUserById.birthDate).toISOString().split("T")[0]
+        : "";
+
         setFormData({
             ...formData,
             firstName: data.getUserById.firstName,
@@ -197,16 +180,16 @@ const Account: React.FC = () => {
             address: data.getUserById.address || "",
             phone: data.getUserById.phone || "",
             isActive: data.getUserById.isActive === "active" ? "active" : "inactive",
-            age: data.getUserById.age || "0",
             gender: data.getUserById.gender || "",
             userType: data.getUserById.userType || "",
             pfp: data.getUserById.pfp || "",
+            birthDate: formattedBirthDate || "",
         });
     };
 
     return (
         <div>
-            <Navbar userId={data?.getUserById?.id} />
+            <Navbar />
             {/* <h1 className="text-3xl font-semibold text-gray-800 mb-6">Account Profile</h1> */}
             <div className="bg-white p-6 rounded-lg shadow-md flex flex-col md:flex-row gap-8">
                 <div className="flex flex-col items-center md:w-1/4">
@@ -281,16 +264,15 @@ const Account: React.FC = () => {
                                     {formErrors.phone && <p className="text-red-500 text-sm">{formErrors.phone}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Age</label>
+                                    <label className="block text-sm font-medium text-gray-700">Birth Date</label>
                                     <input
-                                        title="Age"
-                                        type="number"
-                                        name="age"
-                                        value={formData.age}
+                                        title="Birth Date"
+                                        type="date"
+                                        name="birthDate"
+                                        value={formData.birthDate}
                                         onChange={handleInputChange}
                                         className="text-black mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                                     />
-                                    {formErrors.age && <p className="text-red-500 text-sm">{formErrors.age}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Gender</label>
@@ -332,7 +314,11 @@ const Account: React.FC = () => {
                             <p className="text-black"><strong>Account Is:</strong> {data?.getUserById?.isActive || "No status info available"}</p>
                             <p className="text-black"><strong>Name:</strong> {data?.getUserById?.firstName || "No name available"} {data?.getUserById?.lastName || "No last name available"}</p>
                             <p className="text-black"><strong>Email:</strong> {data?.getUserById?.email || "No email available"}</p>
-                            <p className="text-black"><strong>Age:</strong> {data?.getUserById?.age || "No age available"}</p>
+                            <p className="text-black">
+                            <strong>Birth Date:</strong> {data?.getUserById?.birthDate 
+                                ? new Date(data.getUserById.birthDate).toISOString().split("T")[0]
+                                : "No birthDate available"}
+                            </p>
                             <p className="text-black"><strong>Gender:</strong> {data?.getUserById?.gender || "No gender available"}</p>
                             <p className="text-black"><strong>User Type:</strong> {data?.getUserById?.userType || "No user type available"}</p>
                             <p className="text-black"><strong>Role:</strong> {data?.getUserById?.role || "No role available"}</p>
