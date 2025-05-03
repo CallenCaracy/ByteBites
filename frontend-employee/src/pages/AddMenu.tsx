@@ -169,7 +169,11 @@ const AddMenu = () => {
               <button type="submit" disabled={loading} className="btn btn-primary w-1/2 text-amber-50">
                   {loading || fileUploading ? "Loading..." : "Add Menu Item"}
               </button>
-              <button className="btn btn-primary w-1/2 text-amber-50">
+              <button 
+                  type="button" 
+                  onClick={() => navigate(-1)} 
+                  className="btn btn-primary w-1/2 text-amber-50"
+              >
                   Back
               </button>
           </div>
