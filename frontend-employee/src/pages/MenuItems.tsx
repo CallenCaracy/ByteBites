@@ -33,7 +33,7 @@ const MenuItem: React.FC = () => {
     return (
         <>
           <Navbar />
-          <div className="p-8 max-w-4xl mx-auto bg-white rounded-xl shadow-lg space-y-6">
+          <div className="p-8 max-w-4xl mx-auto bg-white rounded-xl shadow-[0_4px_10px_0_rgba(0,0,0,0.5)] space-y-6 mt-10">
       
             {/* Back Button */}
             <button

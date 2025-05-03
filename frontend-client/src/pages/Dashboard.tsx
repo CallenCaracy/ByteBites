@@ -6,6 +6,7 @@ import { GET_AUTHENTICATED_USER } from "../graphql/Userqueries";
 import { useSubscription } from "@apollo/client";
 import { MENU_ITEM_CREATED } from "../graphql/Menuqueries";
 import Navbar from "../components/NavBar";
+import "../styles/main.css";
 import placeholderpic from "../assets/placeholder.jpg";
 
 const Dashboard: React.FC = () => {
@@ -74,7 +75,7 @@ const Dashboard: React.FC = () => {
                           {item.description}
                       </p>
                       <p className="text-gray-900 font-bold group-hover:text-amber-300">
-                          ${item.price.toFixed(2)}
+                        ₱{item.price.toFixed(2)}
                       </p>
                   </div>
               ))}

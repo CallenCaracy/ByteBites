@@ -45,7 +45,7 @@ const Dashboard: React.FC = () => {
                               {item.description}
                           </p>
                           <p className="text-gray-900 font-bold group-hover:text-amber-300">
-                              ${item.price.toFixed(2)}
+                            ₱{item.price.toFixed(2)}
                           </p>
                       </div>
                   ))}
