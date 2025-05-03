@@ -8,6 +8,7 @@ export const GET_MENU_ITEMS = gql`
       description
       price
       category
+      discount
       availability_status
       image_url
       created_at
@@ -23,6 +24,7 @@ export const GET_MENU_ITEM_BY_ID = gql`
       description
       price
       category
+      discount
       availability_status
       image_url
       created_at
@@ -31,13 +33,14 @@ export const GET_MENU_ITEM_BY_ID = gql`
 `;
 
 export const ADD_MENU_ITEM = gql`
-  mutation AddMenuItem($input: NewMenuItem!) {
-    addMenuItem(input: $input) {
+  mutation CreateMenuItem($input: NewMenuItem!) {
+    createMenuItem(input: $input) {
       id
       name
       description
       price
       category
+      discount
       availability_status
       image_url
       created_at
@@ -53,6 +56,7 @@ export const UPDATE_MENU_ITEM = gql`
       description
       price
       category
+      discount
       availability_status
       image_url
       updated_at
@@ -65,6 +69,22 @@ export const DELETE_MENU_ITEM = gql`
     deleteMenuItem(id: $id) {
       id
       name
+    }
+  }
+`;
+
+export const MENU_ITEM_CREATED = gql`
+  subscription {
+    menuItemCreated {
+      id
+      name
+      description
+      price
+      category
+      discount
+      availability_status
+      image_url
+      created_at
     }
   }
 `;

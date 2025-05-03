@@ -1,81 +1,85 @@
-scalar UUID
-scalar Time
-scalar JSON
-
-# Define order status and type as enums for better type safety
-enum OrderStatus {
-  PENDING
-  PREPARING
-  READY
-  DELIVERED
-  CANCELLED
+# Cart types
+type Cart {
+  id: ID!
+  user_id: ID!
+  created_at: String!
+  updated_at: String
+  items: [CartItem!]!
 }
 
-enum OrderType {
-  "dine-in"    # Changed to match database constraint
-  takeout
-  delivery
+type CartItem {
+  id: ID!
+  cart_id: ID!
+  menu_item_id: ID!
+  quantity: Int!
+  price: Float!
+  customizations: String
+  created_at: String!
+  updated_at: String
+}
+
+# Input for adding a cart item
+input AddCartItemInput {
+  user_id: ID!
+  menu_item_id: ID!
+  quantity: Int!
+  price: Float!
+  customizations: String
+}
+
+# Input for updating a cart item
+input UpdateCartItemInput {
+  id: ID!
+  quantity: Int
+  price: Float
+  customizations: String
+}
+
+# Queries
+type Query {
+  getCart(user_id: ID!): Cart
+  getCartItemsByCartId(cart_id: ID!): [CartItem!]!
+  getUserOrders(userID: String!): [Order!]!
+}
+
+# Mutations
+type Mutation {
+  createCart(user_id: ID!): Cart!
+  clearCart(cart_id: ID!): Boolean!
+  
+  addCartItem(input: AddCartItemInput!): CartItem!
+  updateCartItem(input: UpdateCartItemInput!): CartItem!
+  removeCartItem(id: ID!): Boolean!
+
+  createOrderFromCart(
+    cartID: ID!
+    userID: ID!
+    orderType: String!           # 'dine-in', 'takeout', 'delivery'
+    deliveryAddress: String
+    specialRequests: String
+  ): Order!
+  updateOrderStatus(orderID: ID!, orderStatus: String!): Order
 }
 
 type Order {
-  id: UUID!
-  userId: UUID!
+  id: ID!
+  userID: ID!
   totalPrice: Float!
-  orderStatus: OrderStatus!  # Changed to enum
-  orderType: OrderType      # Changed to enum
+  orderStatus: String!
+  orderType: String
   deliveryAddress: String
   specialRequests: String
-  createdAt: Time
-  updatedAt: Time
+  createdAt: String!
+  updatedAt: String
   items: [OrderItem!]!
 }
 
-# Rest of the types remain the same
 type OrderItem {
-  id: UUID!
-  orderId: UUID!
-  menuItemId: UUID!
+  id: ID!
+  orderID: ID!
+  menuItemID: ID!
   quantity: Int!
   price: Float!
-  customizations: JSON
-  createdAt: Time
-}
-
-input CreateOrderInput {
-  userId: UUID!
-  totalPrice: Float!
-  orderStatus: OrderStatus  # Changed to enum
-  orderType: OrderType     # Changed to enum
-  deliveryAddress: String
-  specialRequests: String
-  items: [CreateOrderItemInput!]!
-}
-
-input CreateOrderItemInput {
-  menuItemId: UUID!
-  quantity: Int!
-  price: Float!
-  customizations: JSON
-}
-
-input UpdateOrderInput {
-  id: UUID!
-  totalPrice: Float
-  orderStatus: OrderStatus  # Changed to enum
-  orderType: OrderType     # Changed to enum
-  deliveryAddress: String
-  specialRequests: String
-  updatedAt: Time
-}
-
-# Queries and Mutations remain the same
-type Mutation {
-  createOrder(input: CreateOrderInput!): Order!
-  updateOrder(input: UpdateOrderInput!): Order!
-  deleteOrder(id: UUID!): Boolean!
-}
-
-type Query {
-  order(id: UUID!): Order
-  ordersByUser(userId: UUID!): [Order!]!
+  customizations: String
+  createdAt: String!
 }

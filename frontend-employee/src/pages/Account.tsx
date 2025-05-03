@@ -110,7 +110,7 @@ const Account: React.FC = () => {
         const fileName = `${userId}-${Date.now()}.${fileExt}`;
         const filePath = `pfp/${fileName}`;
     
-        if (oldPfpPath) {
+        if (oldPfpPath && oldPfpPath !== 'pfp/defualtpic.jpg') {
             const { error: deleteError } = await supabase
                 .storage
                 .from('pictures')

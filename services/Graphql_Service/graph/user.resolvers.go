@@ -6,6 +6,7 @@ package graph
 
 import (
 	"Graphql_Service/graph/model"
+	service "Graphql_Service/grpc_clients"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -20,7 +21,6 @@ import (
 	"github.com/CallenCaracy/ByteBites/services/User_Service/pb"
 	supabase "github.com/nedpals/supabase-go"
 	"github.com/supabase-community/auth-go/types"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -115,18 +115,10 @@ func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) 
 
 // SignInOnlyEmployee is the resolver for the signInOnlyEmployee field.
 func (r *mutationResolver) SignInOnlyEmployee(ctx context.Context, input model.SignInInput) (*model.AuthResponse, error) {
-	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
-	}
-	defer conn.Close()
-
-	client := pb.NewAuthServiceClient(conn)
-
 	req := model.SignInInput(input)
 
 	// Get user role via gRPC
-	getRole, err := client.GetUserRole(ctx, &pb.GetUserRoleRequest{Email: req.Email})
+	getRole, err := service.UserClient.GetUserRole(ctx, &pb.GetUserRoleRequest{Email: req.Email})
 	if err != nil {
 		r.Logger.Error("Error retrieving role for %s: %v", req.Email, err)
 		return nil, fmt.Errorf("failed to retrieve user role: %v", err)
@@ -374,15 +366,7 @@ func (r *queryResolver) GetAuthenticatedUser(ctx context.Context) (*model.User, 
 
 	token := strings.TrimPrefix(tokenList[0], "Bearer ")
 
-	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
-	}
-	defer conn.Close()
-
-	client := pb.NewAuthServiceClient(conn)
-
-	resp, err := client.VerifyToken(ctx, &pb.TokenRequest{Token: token})
+	resp, err := service.UserClient.VerifyToken(ctx, &pb.TokenRequest{Token: token})
 	if err != nil {
 		return nil, fmt.Errorf("failed to verify token: %v", err)
 	}
@@ -425,15 +409,7 @@ func (r *queryResolver) CheckToken(ctx context.Context) (*model.TokenCheckRespon
 
 	token := strings.TrimPrefix(tokenList[0], "Bearer ")
 
-	conn, err := grpc.Dial("localhost:50050", grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
-	}
-	defer conn.Close()
-
-	client := pb.NewAuthServiceClient(conn)
-
-	resp, err := client.VerifyToken(ctx, &pb.TokenRequest{Token: token})
+	resp, err := service.UserClient.VerifyToken(ctx, &pb.TokenRequest{Token: token})
 	if err != nil {
 		return nil, fmt.Errorf("failed to verify token: %v", err)
 	}

@@ -2,6 +2,8 @@ package main
 
 import (
 	"Graphql_Service/graph"
+	"Graphql_Service/graph/model"
+	service "Graphql_Service/grpc_clients"
 	"Graphql_Service/middleware"
 	"database/sql"
 	"log"
@@ -14,6 +16,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/CallenCaracy/ByteBites/services/User_Service/utils"
+	"github.com/gorilla/websocket"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
@@ -28,6 +31,8 @@ func main() {
 	if err != nil {
 		logger.Fatal("Failed to create logger: %v", err)
 	}
+
+	service.InitGRPCClients()
 
 	if err := godotenv.Load(); err != nil {
 		logger.Fatal("No .env file found, using system environment variables")
@@ -84,12 +89,13 @@ func main() {
 	defer db7.Close()
 
 	resolver := &graph.Resolver{
-		DB1:        db1,
-		DB2:        db2,
-		DB5:        db5,
-		DB7:        db7,
-		AuthClient: client,
-		Logger:     logger,
+		DB1:             db1,
+		DB2:             db2,
+		DB5:             db5,
+		DB7:             db7,
+		AuthClient:      client,
+		Logger:          logger,
+		MenuItemCreated: make(chan *model.MenuItem),
 	}
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
@@ -97,6 +103,14 @@ func main() {
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
+
+	srv.AddTransport(transport.Websocket{
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		},
+	})
 
 	srv.Use(extension.Introspection{})
 	srv.SetQueryCache(lru.New[*ast.QueryDocument](100))
@@ -111,7 +125,9 @@ func main() {
 	mux.Handle("/query", middleware.AuthMiddleware(srv))
 
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins: []string{
+			"http://localhost:5173",
+			"http://localhost:5174"},
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,

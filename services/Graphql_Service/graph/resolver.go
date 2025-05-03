@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"Graphql_Service/graph/model"
 	"database/sql"
 
 	"github.com/CallenCaracy/ByteBites/services/User_Service/utils"
@@ -11,12 +12,13 @@ import (
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 type Resolver struct {
-	DB1        *sql.DB // Supabase Database USER
-	DB2        *sql.DB // Supabase Database MENU
-	DB5        *sql.DB
-	DB7        *sql.DB // Supabase Database KITCHEN
-	AuthClient auth.Client
-	Logger     *utils.Logger
+	DB1             *sql.DB // Supabase Database USER
+	DB2             *sql.DB // Supabase Database MENU
+	DB5             *sql.DB
+	DB7             *sql.DB // Supabase Database KITCHEN
+	AuthClient      auth.Client
+	Logger          *utils.Logger
+	MenuItemCreated chan *model.MenuItem
 }
 
 // Mutation method that returns a mutation resolver.
