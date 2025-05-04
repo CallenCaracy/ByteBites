@@ -32,6 +32,7 @@ export const GET_MENU_ITEM_BY_ID = gql`
   }
 `;
 
+
 export const ADD_MENU_ITEM = gql`
   mutation CreateMenuItem($input: NewMenuItem!) {
     createMenuItem(input: $input) {
@@ -43,10 +44,12 @@ export const ADD_MENU_ITEM = gql`
       discount
       availability_status
       image_url
-      created_at
+      createdAt
+      updatedAt
     }
   }
 `;
+
 
 export const UPDATE_MENU_ITEM = gql`
   mutation UpdateMenuItem($id: ID!, $input: UpdateMenuItem!) {
@@ -64,12 +67,19 @@ export const UPDATE_MENU_ITEM = gql`
   }
 `;
 
+// export const DELETE_MENU_ITEM = gql`
+//   mutation DeleteMenuItem($id: ID!) {
+//     deleteMenuItem(id: $id) {
+//       id
+//       name
+//     }
+//   }
+// `;
+
+
 export const DELETE_MENU_ITEM = gql`
   mutation DeleteMenuItem($id: ID!) {
-    deleteMenuItem(id: $id) {
-      id
-      name
-    }
+    deleteMenuItem(id: $id)
   }
 `;
 
