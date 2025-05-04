@@ -70,6 +70,20 @@ type MenuItem struct {
 	UpdatedAt          *string `json:"updated_at,omitempty"`
 }
 
+type MenuItemFull struct {
+	ID                 string  `json:"id"`
+	Name               string  `json:"name"`
+	Description        *string `json:"description,omitempty"`
+	Price              float64 `json:"price"`
+	Category           *string `json:"category,omitempty"`
+	AvailabilityStatus bool    `json:"availability_status"`
+	Discount           float64 `json:"discount"`
+	DiscountedPrice    float64 `json:"discounted_price"`
+	ImageURL           *string `json:"image_url,omitempty"`
+	CreatedAt          string  `json:"created_at"`
+	UpdatedAt          *string `json:"updated_at,omitempty"`
+}
+
 type Mutation struct {
 }
 
@@ -166,7 +180,7 @@ type UpdateMenuItem struct {
 	Description        *string  `json:"description,omitempty"`
 	Price              *float64 `json:"price,omitempty"`
 	Category           *string  `json:"category,omitempty"`
-	Discount           float64  `json:"discount"`
+	Discount           *float64 `json:"discount,omitempty"`
 	AvailabilityStatus *bool    `json:"availability_status,omitempty"`
 	ImageURL           *string  `json:"image_url,omitempty"`
 }

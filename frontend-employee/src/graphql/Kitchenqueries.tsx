@@ -23,3 +23,9 @@ export const GET_INVENTORY = gql`
     }
   }
 `;
+
+export const DELETE_INVENTORY = gql`
+  mutation DeleteInventory($id: ID!) {
+    deleteInventory(id: $id)
+  }
+`;

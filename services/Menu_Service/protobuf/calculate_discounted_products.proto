@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package menu;
+
+option go_package = "./pb";
+
+service MenuService {
+    rpc CalculateDiscount (DiscountRequest) returns (DiscountResponse);
+}  
+
+message DiscountRequest {
+  float price = 1;
+  float discount = 2;
+}
+
+message DiscountResponse {
+  float discounted_price = 1;
+}

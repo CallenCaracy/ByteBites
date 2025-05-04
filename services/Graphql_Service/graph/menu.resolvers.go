@@ -10,7 +10,7 @@ import (
 )
 
 // CreateMenuItem - Insert a new menu item
-func (r *mutationResolver) CreateMenuItem(ctx context.Context, input model.NewMenuItem) (*model.MenuItem, error) {
+func (r *mutationResolver) CreateMenuItem(ctx context.Context, input model.NewMenuItem) (*model.MenuItemFull, error) {
 	query := `INSERT INTO public.menu_list (name, description, price, category, discount, availability_status, image_url, created_at, updated_at)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
 	RETURNING id, name, description, price, category, discount, availability_status, image_url, created_at, updated_at`
@@ -38,13 +38,29 @@ func (r *mutationResolver) CreateMenuItem(ctx context.Context, input model.NewMe
 		return nil, err
 	}
 
+	// resp, err := service.MenuClient.CalculateDiscountedPrice(ctx, &pb.DiscountedPriceRequest{Price: item.Price, Discount: item.Discount})
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to calculate discounted price: %v", err)
+	// }
+
 	r.MenuItemCreated <- item
 
-	return item, nil
+	return &model.MenuItemFull{
+		ID:                 item.ID,
+		Name:               item.Name,
+		Description:        item.Description,
+		Price:              item.Price,
+		Category:           item.Category,
+		Discount:           item.Discount,
+		AvailabilityStatus: item.AvailabilityStatus,
+		ImageURL:           item.ImageURL,
+		CreatedAt:          item.CreatedAt,
+		UpdatedAt:          item.UpdatedAt,
+	}, nil
 }
 
 // UpdateMenuItem - Update an existing menu item
-func (r *mutationResolver) UpdateMenuItem(ctx context.Context, id string, input model.UpdateMenuItem) (*model.MenuItem, error) {
+func (r *mutationResolver) UpdateMenuItem(ctx context.Context, id string, input model.UpdateMenuItem) (*model.MenuItemFull, error) {
 	query := `UPDATE public.menu_list
 	SET name = $1, description = $2, price = $3, category = $4, discount = $5,
 	    availability_status = $6, image_url = $7, updated_at = NOW()
@@ -65,7 +81,18 @@ func (r *mutationResolver) UpdateMenuItem(ctx context.Context, id string, input 
 		return nil, err
 	}
 
-	return &item, nil
+	return &model.MenuItemFull{
+		ID:                 item.ID,
+		Name:               item.Name,
+		Description:        item.Description,
+		Price:              item.Price,
+		Category:           item.Category,
+		Discount:           item.Discount,
+		AvailabilityStatus: item.AvailabilityStatus,
+		ImageURL:           item.ImageURL,
+		CreatedAt:          item.CreatedAt,
+		UpdatedAt:          item.UpdatedAt,
+	}, nil
 }
 
 // DeleteMenuItem is the resolver for the deleteMenuItem field.
@@ -79,7 +106,7 @@ func (r *mutationResolver) DeleteMenuItem(ctx context.Context, id string) (bool,
 }
 
 // GetAllMenuItems - Fetch all menu items
-func (r *queryResolver) GetAllMenuItems(ctx context.Context) ([]*model.MenuItem, error) {
+func (r *queryResolver) GetAllMenuItems(ctx context.Context) ([]*model.MenuItemFull, error) {
 	query := `SELECT id, name, description, price, category, discount, availability_status, image_url, created_at, updated_at FROM public.menu_list`
 	rows, err := r.Resolver.DB2.Query(query)
 	if err != nil {
@@ -105,12 +132,27 @@ func (r *queryResolver) GetAllMenuItems(ctx context.Context) ([]*model.MenuItem,
 		return nil, err
 	}
 
-	return menuItems, nil
+	var menuItemsFull []*model.MenuItemFull
+	for _, item := range menuItems {
+		menuItemsFull = append(menuItemsFull, &model.MenuItemFull{
+			ID:                 item.ID,
+			Name:               item.Name,
+			Description:        item.Description,
+			Price:              item.Price,
+			Category:           item.Category,
+			Discount:           item.Discount,
+			AvailabilityStatus: item.AvailabilityStatus,
+			ImageURL:           item.ImageURL,
+			CreatedAt:          item.CreatedAt,
+			UpdatedAt:          item.UpdatedAt,
+		})
+	}
+	return menuItemsFull, nil
 }
 
 // GetMenuItemByID is the resolver for the getMenuItemById field.
 // GetMenuItemByID - Fetch a single menu item by ID
-func (r *queryResolver) GetMenuItemByID(ctx context.Context, id string) (*model.MenuItem, error) {
+func (r *queryResolver) GetMenuItemByID(ctx context.Context, id string) (*model.MenuItemFull, error) {
 	query := `SELECT id, name, description, price, category, discount, availability_status, image_url, created_at, updated_at 
 	          FROM public.menu_list WHERE id = $1`
 
@@ -125,7 +167,18 @@ func (r *queryResolver) GetMenuItemByID(ctx context.Context, id string) (*model.
 		return nil, err
 	}
 
-	return &item, nil
+	return &model.MenuItemFull{
+		ID:                 item.ID,
+		Name:               item.Name,
+		Description:        item.Description,
+		Price:              item.Price,
+		Category:           item.Category,
+		Discount:           item.Discount,
+		AvailabilityStatus: item.AvailabilityStatus,
+		ImageURL:           item.ImageURL,
+		CreatedAt:          item.CreatedAt,
+		UpdatedAt:          item.UpdatedAt,
+	}, nil
 }
 
 // MenuItemCreated is the resolver for the menuItemCreated field.

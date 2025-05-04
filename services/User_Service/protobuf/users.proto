@@ -8,9 +8,7 @@ service AuthService {
   rpc GetUserRole(GetUserRoleRequest) returns (GetUserRoleResponse);
   rpc VerifyToken(TokenRequest) returns (TokenResponse);
   rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse); //Not working
-  rpc ChangeUserPassword(ChangeUserPasswordRequest) returns (ChangeUserPasswordResponse); //Not working
-  // rpc ReactivateUser(ReactivateUserRequest) returns (ReactivateUserResponse); Moved to gqlgen
-  // rpc DeactivateUser(DeactivateUserRequest) returns (DeactivateUserResponse); Moved to gqlgen
+  rpc ChangeUserPassword(ChangeUserPasswordRequest) returns (ChangeUserPasswordResponse);
 }
 
 message GetUserRoleRequest {
