@@ -146,7 +146,7 @@ const AddMenu = () => {
                   <option value="Salad">Salad</option>
                   <option value="Sides">Sides</option>
                   <option value="Vegan">Vegan</option>
-                  <option value="Kids">Kids Menu</option>
+                  <option value="Kids Meal">Kids Menu</option>
               </select>
           </div>
 
@@ -166,7 +166,7 @@ const AddMenu = () => {
           </div>
 
           <div className="flex space-x-2">
-              <button type="submit" disabled={loading} className="btn btn-primary w-1/2 text-amber-50">
+              <button type="submit" disabled={loading || fileUploading} className="btn btn-primary w-1/2 text-amber-50">
                   {loading || fileUploading ? "Loading..." : "Add Menu Item"}
               </button>
               <button className="btn btn-primary w-1/2 text-amber-50">

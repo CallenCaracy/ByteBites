@@ -143,6 +143,9 @@ const MenuItem: React.FC = () => {
                     <p className="text-xl font-semibold text-green-700 whitespace-nowrap">
                         ₱{item.price.toFixed(2)}
                     </p>
+                    <p className="text-xl font-semibold text-yellow-400 whitespace-nowrap">
+                        {item?.discount ? `${item.discount.toFixed(2)}% OFF` : "No Discount"}
+                    </p>
                     <p className="text-sm text-gray-500">
                         Stock Left:{" "}
                         <span

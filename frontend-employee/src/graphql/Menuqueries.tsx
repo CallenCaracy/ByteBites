@@ -7,11 +7,13 @@ export const GET_MENU_ITEMS = gql`
       name
       description
       price
+      discounted_price
       category
       discount
       availability_status
       image_url
       created_at
+      updated_at
     }
   }
 `;
@@ -23,15 +25,16 @@ export const GET_MENU_ITEM_BY_ID = gql`
       name
       description
       price
+      discounted_price
       category
       discount
       availability_status
       image_url
       created_at
+      updated_at
     }
   }
 `;
-
 
 export const ADD_MENU_ITEM = gql`
   mutation CreateMenuItem($input: NewMenuItem!) {
@@ -40,16 +43,16 @@ export const ADD_MENU_ITEM = gql`
       name
       description
       price
+      discounted_price
       category
       discount
       availability_status
       image_url
-      createdAt
-      updatedAt
+      created_at
+      updated_at
     }
   }
 `;
-
 
 export const UPDATE_MENU_ITEM = gql`
   mutation UpdateMenuItem($id: ID!, $input: UpdateMenuItem!) {
@@ -58,24 +61,16 @@ export const UPDATE_MENU_ITEM = gql`
       name
       description
       price
+      discounted_price
       category
       discount
       availability_status
       image_url
+      created_at
       updated_at
     }
   }
 `;
-
-// export const DELETE_MENU_ITEM = gql`
-//   mutation DeleteMenuItem($id: ID!) {
-//     deleteMenuItem(id: $id) {
-//       id
-//       name
-//     }
-//   }
-// `;
-
 
 export const DELETE_MENU_ITEM = gql`
   mutation DeleteMenuItem($id: ID!) {
@@ -90,6 +85,7 @@ export const MENU_ITEM_CREATED = gql`
       name
       description
       price
+      discounted_price
       category
       discount
       availability_status

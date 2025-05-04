@@ -33,9 +33,14 @@ const Dashboard: React.FC = () => {
                           className="group bg-white p-4 rounded-lg shadow-md cursor-pointer hover:bg-blue-950 transition"
                           onClick={() => navigate(`/menu-item/${item.id}`)}
                       >
-                          <h2 className="text-xl font-semibold text-gray-700 group-hover:text-white">
-                              {item.name}
-                          </h2>
+                          <div className="flex justify-between items-center">
+                            <h2 className="text-xl font-semibold text-gray-700 group-hover:text-white">
+                                {item.name}
+                            </h2>
+                            <p className="text-xl font-semibold text-gray-700 group-hover:text-white">
+                                {item?.discount ? `${item.discount.toFixed(2)}% Off` : "No Discount"}
+                            </p>
+                           </div>
                           <img
                               src={item?.image_url || placeholderpic} 
                               alt="Menu Picture"
