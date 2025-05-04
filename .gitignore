@@ -1,3 +1,7 @@
+# Ignore gqlgen auto-generated files
+Graphql_Service/graph/generated.go
+Graphql_Service/graph/model/models_gen.go
+
 # Binaries for programs and plugins
 *.exe
 *.exe~

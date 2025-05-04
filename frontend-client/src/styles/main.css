@@ -18,3 +18,13 @@ body {
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(100%);
 }
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  overflow: -moz-scrollbars-none;  /* Fallback for older browsers */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, and Opera */
+}

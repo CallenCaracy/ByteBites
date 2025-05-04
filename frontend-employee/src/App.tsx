@@ -8,6 +8,8 @@ import Account from './pages/Account';
 import ForgotPassword from './pages/ForgotPassword'
 import UpdatePassword from './pages/UpdatePassword';
 import MenuItem from './pages/MenuItems';
+import AddMenu from './pages/AddMenu';
+import MakeInventory from './pages/MakeInventory';
 import { supabase } from './utils/supabaseClient';
 
 function App() {
@@ -90,6 +92,8 @@ function App() {
             <Route path="/dashboard" element={<Dashboard/>} />
             <Route path="/account/:userId" element={<Account/>} />
             <Route path="/menu-item/:menuId" element={<MenuItem/>} />
+            <Route path="/add-menu/:userId" element={<AddMenu/>} />
+            <Route path="/add-inventory/:menuId" element={<MakeInventory/>} />
           </Route>
       </Routes>
     </Router>

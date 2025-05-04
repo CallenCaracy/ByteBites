@@ -8,9 +8,36 @@ import (
 	"strconv"
 )
 
+type AddCartItemInput struct {
+	UserID         string  `json:"user_id"`
+	MenuItemID     string  `json:"menu_item_id"`
+	Quantity       int32   `json:"quantity"`
+	Price          float64 `json:"price"`
+	Customizations *string `json:"customizations,omitempty"`
+}
+
 type AuthResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
+}
+
+type Cart struct {
+	ID        string      `json:"id"`
+	UserID    string      `json:"user_id"`
+	CreatedAt string      `json:"created_at"`
+	UpdatedAt *string     `json:"updated_at,omitempty"`
+	Items     []*CartItem `json:"items"`
+}
+
+type CartItem struct {
+	ID             string  `json:"id"`
+	CartID         string  `json:"cart_id"`
+	MenuItemID     string  `json:"menu_item_id"`
+	Quantity       int32   `json:"quantity"`
+	Price          float64 `json:"price"`
+	Customizations *string `json:"customizations,omitempty"`
+	CreatedAt      string  `json:"created_at"`
+	UpdatedAt      *string `json:"updated_at,omitempty"`
 }
 
 type ForgotPasswordInput struct {
@@ -23,13 +50,11 @@ type ForgotPasswordResponse struct {
 }
 
 type Inventory struct {
-	ID                string  `json:"id"`
-	ItemName          string  `json:"itemName"`
-	Quantity          int32   `json:"quantity"`
-	Unit              string  `json:"unit"`
-	LowStockThreshold int32   `json:"lowStockThreshold"`
-	ExpiryDate        *string `json:"expiryDate,omitempty"`
-	LastUpdated       string  `json:"lastUpdated"`
+	ID                string `json:"id"`
+	MenuID            string `json:"menuId"`
+	AvailableServings int32  `json:"availableServings"`
+	LowStockThreshold int32  `json:"lowStockThreshold"`
+	LastUpdated       string `json:"lastUpdated"`
 }
 
 type MenuItem struct {
@@ -39,6 +64,7 @@ type MenuItem struct {
 	Price              float64 `json:"price"`
 	Category           *string `json:"category,omitempty"`
 	AvailabilityStatus bool    `json:"availability_status"`
+	Discount           float64 `json:"discount"`
 	ImageURL           *string `json:"image_url,omitempty"`
 	CreatedAt          string  `json:"created_at"`
 	UpdatedAt          *string `json:"updated_at,omitempty"`
@@ -52,16 +78,40 @@ type NewMenuItem struct {
 	Description        *string `json:"description,omitempty"`
 	Price              float64 `json:"price"`
 	Category           *string `json:"category,omitempty"`
+	Discount           float64 `json:"discount"`
 	AvailabilityStatus bool    `json:"availability_status"`
 	ImageURL           *string `json:"image_url,omitempty"`
 }
 
+type Order struct {
+	ID              string       `json:"id"`
+	UserID          string       `json:"userID"`
+	TotalPrice      float64      `json:"totalPrice"`
+	OrderStatus     string       `json:"orderStatus"`
+	OrderType       *string      `json:"orderType,omitempty"`
+	DeliveryAddress *string      `json:"deliveryAddress,omitempty"`
+	SpecialRequests *string      `json:"specialRequests,omitempty"`
+	CreatedAt       string       `json:"createdAt"`
+	UpdatedAt       *string      `json:"updatedAt,omitempty"`
+	Items           []*OrderItem `json:"items"`
+}
+
+type OrderItem struct {
+	ID             string  `json:"id"`
+	OrderID        string  `json:"orderID"`
+	MenuItemID     string  `json:"menuItemID"`
+	Quantity       int32   `json:"quantity"`
+	Price          float64 `json:"price"`
+	Customizations *string `json:"customizations,omitempty"`
+	CreatedAt      string  `json:"createdAt"`
+}
+
 type OrderQueue struct {
-	ID          string      `json:"id"`
-	OrderID     string      `json:"orderId"`
-	Status      OrderStatus `json:"status"`
-	Priority    int32       `json:"priority"`
-	LastUpdated string      `json:"lastUpdated"`
+	ID        string        `json:"id"`
+	MenuID    string        `json:"menuId"`
+	OrderID   string        `json:"orderId"`
+	Status    KitchenStatus `json:"status"`
+	CreatedAt string        `json:"createdAt"`
 }
 
 type Query struct {
@@ -86,9 +136,29 @@ type SignUpInput struct {
 	Gender    *string `json:"gender,omitempty"`
 }
 
+type Subscription struct {
+}
+
 type TokenCheckResponse struct {
 	ID    string `json:"id"`
 	Email string `json:"email"`
+}
+
+type Transaction struct {
+	TransactionID     string  `json:"transaction_id"`
+	AmountPaid        float64 `json:"amount_paid"`
+	PaymentMethod     string  `json:"payment_method"`
+	Timestamp         string  `json:"timestamp"`
+	TransactionStatus string  `json:"transaction_status"`
+	UserID            string  `json:"user_id"`
+	OrderID           string  `json:"order_id"`
+}
+
+type UpdateCartItemInput struct {
+	ID             string   `json:"id"`
+	Quantity       *int32   `json:"quantity,omitempty"`
+	Price          *float64 `json:"price,omitempty"`
+	Customizations *string  `json:"customizations,omitempty"`
 }
 
 type UpdateMenuItem struct {
@@ -96,6 +166,7 @@ type UpdateMenuItem struct {
 	Description        *string  `json:"description,omitempty"`
 	Price              *float64 `json:"price,omitempty"`
 	Category           *string  `json:"category,omitempty"`
+	Discount           float64  `json:"discount"`
 	AvailabilityStatus *bool    `json:"availability_status,omitempty"`
 	ImageURL           *string  `json:"image_url,omitempty"`
 }
@@ -129,45 +200,45 @@ type User struct {
 	BirthDate string  `json:"birthDate"`
 }
 
-type OrderStatus string
+type KitchenStatus string
 
 const (
-	OrderStatusCooking   OrderStatus = "cooking"
-	OrderStatusPreparing OrderStatus = "preparing"
-	OrderStatusReady     OrderStatus = "ready"
+	KitchenStatusPreparing KitchenStatus = "preparing"
+	KitchenStatusReady     KitchenStatus = "ready"
+	KitchenStatusComplete  KitchenStatus = "complete"
 )
 
-var AllOrderStatus = []OrderStatus{
-	OrderStatusCooking,
-	OrderStatusPreparing,
-	OrderStatusReady,
+var AllKitchenStatus = []KitchenStatus{
+	KitchenStatusPreparing,
+	KitchenStatusReady,
+	KitchenStatusComplete,
 }
 
-func (e OrderStatus) IsValid() bool {
+func (e KitchenStatus) IsValid() bool {
 	switch e {
-	case OrderStatusCooking, OrderStatusPreparing, OrderStatusReady:
+	case KitchenStatusPreparing, KitchenStatusReady, KitchenStatusComplete:
 		return true
 	}
 	return false
 }
 
-func (e OrderStatus) String() string {
+func (e KitchenStatus) String() string {
 	return string(e)
 }
 
-func (e *OrderStatus) UnmarshalGQL(v any) error {
+func (e *KitchenStatus) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = OrderStatus(str)
+	*e = KitchenStatus(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid OrderStatus", str)
+		return fmt.Errorf("%s is not a valid KitchenStatus", str)
 	}
 	return nil
 }
 
-func (e OrderStatus) MarshalGQL(w io.Writer) {
+func (e KitchenStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

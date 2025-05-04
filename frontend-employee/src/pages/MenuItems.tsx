@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@apollo/client";
 import {
     GET_MENU_ITEM_BY_ID,
     DELETE_MENU_ITEM,
     UPDATE_MENU_ITEM,
 } from "../graphql/Menuqueries";
+import { useNavigate, useParams } from "react-router-dom";
+import { GET_INVENTORY } from "../graphql/Kitchenqueries";
 import Navbar from "../components/NavBar";
 
 const MenuItem: React.FC = () => {
@@ -44,7 +45,27 @@ const MenuItem: React.FC = () => {
     if (error) return <p>Error fetching menu data: {error.message}</p>;
     if (!data || !data.getMenuItemById) return <p>No menu data found.</p>;
 
-    const item = data.getMenuItemById;
+    const { data: inventoryData, loading: inventoryLoading, error: inventoryError } = useQuery(GET_INVENTORY, {
+    variables: { menuId: menuId }
+    });
+
+    const { data: menuData, loading: menuLoading, error: menuError } = useQuery(GET_MENU_ITEM_BY_ID, {
+    variables: { id: menuId },
+    skip: !menuId,
+    });
+
+    if (menuLoading) return <p>Loading menu item...</p>;
+    if (menuError) return <p>Error fetching menu item: {menuError.message}</p>;
+
+    if (inventoryLoading) return <p>Loading inventory...</p>;
+    if (inventoryError) return <p>Error fetching inventory: {inventoryError.message}</p>;
+
+    if (!menuData || !menuData.getMenuItemById || !inventoryData || !inventoryData.inventory) {
+    return <p>No data found.</p>;
+    }
+
+    const item = menuData.getMenuItemById;
+    const inventory = inventoryData.inventory;
 
     const handleFormChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -111,31 +132,66 @@ const MenuItem: React.FC = () => {
 
     return (
         <>
-            <Navbar />
-            <div className="flex justify-center items-center min-h-[90vh] bg-gray-100">
-                <div className="p-8 w-full max-w-2xl bg-white rounded-xl shadow-md space-y-6 max-h-[85vh] overflow-y-auto">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="text-blue-600 underline"
-                    >
-                        Back
-                    </button>
-
-                    <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="w-full h-72 object-cover rounded"
-                    />
-                    <h2 className="text-gray-900 text-3xl font-bold">{item.name}</h2>
-                    <p className="text-gray-700 text-lg">{item.description}</p>
-                    <p className="text-2xl font-semibold text-green-700">${item.price.toFixed(2)}</p>
-                    <p className="text-base text-gray-500">Category: {item.category}</p>
-                    <p className="text-base text-gray-500">
-                        Status: {item.availability_status ? "Available" : "Out of stock"}
-                    </p>
-
-                    <div className="flex justify-between">
-                        <button
+          <Navbar />
+          <div className="p-8 max-w-4xl mx-auto bg-white rounded-xl shadow-[0_4px_10px_0_rgba(0,0,0,0.5)] space-y-6 mt-10">
+      
+            {/* Back Button */}
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center text-white focus:outline-none focus:ring-2 focus:ring-blue-500 px-4 py-2 rounded-md text-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+      
+            {/* Full-width Image */}
+            <img
+              src={item.image_url}
+              alt={item.name}
+              className="w-full rounded-xl object-cover h-72 shadow-md"
+            />
+      
+            {/* Info Section: Two Columns */}
+            <div className="grid md:grid-cols-2 gap-8 mt-6">
+              
+              {/* Left: Text Info */}
+              <div className="space-y-3">
+                <h2 className="text-gray-900 text-3xl font-semibold">{item.name}</h2>
+                <p className="text-gray-700 text-lg">{item.description}</p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Category:</span> {item.category}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Status:</span>{" "}
+                  <span className={item.availability_status ? "text-green-600" : "text-red-600"}>
+                    {item.availability_status ? "Available" : "Out of stock"}
+                  </span>
+                </p>
+              </div>
+      
+              {/* Right: Price and Inventory */}
+              <div className="space-y-3 text-right">
+                <p className="text-2xl font-bold text-green-700">
+                  ₱{item.price.toFixed(2)}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Quantity Available:{" "}
+                  <span className={`${inventory.availableServings <= inventory.lowStockThreshold ? "text-red-500" : "text-green-600"}`}>
+                    {inventory.availableServings}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Low Stock Threshold:{" "}
+                  <span className="text-yellow-500">{inventory.lowStockThreshold}</span>
+                </p>
+              </div>
+            </div>
+      
+            {/* Action Buttons: Centered Below */}
+            <div className="flex justify-center gap-4 pt-6">
+              <button
                             onClick={() => setIsUpdateModalOpen(true)}
                             className="bg-black text-yellow-500 px-4 py-2 rounded hover:bg-gray-800"
                         >
@@ -159,16 +215,8 @@ const MenuItem: React.FC = () => {
                                 className="bg-black text-red-500 px-4 py-2 rounded hover:bg-gray-800"
                                 >
                                 Delete
-                                </button>
-
-
-                        // ! end for button
-
-
-                    </div>
-                </div>
+                            </button>
             </div>
-
             {isUpdateModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-100 bg-opacity-90 z-50">
                     <div className="bg-white p-6 rounded w-[400px] relative">
@@ -249,8 +297,9 @@ const MenuItem: React.FC = () => {
                     </div>
                 </div>
             )}
+          </div>
         </>
-    );
-};
-
-export default MenuItem;
+      );
+  };
+  
+  export default MenuItem; 

@@ -1,37 +1,32 @@
-# kitchen.graphqls
-
 # Custom scalar for handling timestamp values
 scalar DateTime
 
-# Enum for the allowed order statuses
-enum OrderStatus {
-  cooking
+# Enum matching the order_queue.status values in SQL
+enum KitchenStatus {
   preparing
-  ready 
+  ready
+  complete
 }
 
-
-# Inventory type corresponding to the inventory table.
+# Inventory type corresponding to the menu_stock table
 type Inventory {
-  id: ID!                   # UUID primary key
-  itemName: String!         # Maps to item_name column
-  quantity: Int!            # Maps to quantity column (must be >= 0)
-  unit: String!             # Maps to unit column
-  lowStockThreshold: Int!   # Maps to low_stock_threshold column, default is 5
-  expiryDate: DateTime      # Maps to expiry_date (nullable timestamp)
-  lastUpdated: DateTime!    # Maps to last_updated column
+  id: ID!                   
+  menuId: ID!                # Maps to menu_id
+  availableServings: Int!   # Maps to available_servings
+  lowStockThreshold: Int!   # Maps to low_stock_threshold
+  lastUpdated: DateTime!    # Maps to last_updated
 }
 
-# OrderQueue type corresponding to the order_queue table.
+# OrderQueue type corresponding to the order_queue table
 type OrderQueue {
-  id: ID!                   # Maps to the id column (UUID primary key)
-  orderId: ID!              # Maps to the order_id column
-  status: OrderStatus!      # Maps to the status column with allowed values
-  priority: Int!            # Maps to the priority column
-  lastUpdated: DateTime!     # Maps to the last_updated column
+  id: ID!
+  menuId: ID!
+  orderId: ID!
+  status: KitchenStatus!
+  createdAt: DateTime!
 }
 
-# Query type for fetching both inventory items and order queue records.
+# Query for fetching inventory and order queues
 extend type Query {
   # Inventory queries
   inventories: [Inventory!]!
@@ -42,36 +37,34 @@ extend type Query {
   orderQueue(id: ID!): OrderQueue
 }
 
-# Mutation type for modifying both inventory and order queue records.
+# Mutations for modifying inventory and order queue entries
 extend type Mutation {
   # Inventory mutations
   createInventory(
-    itemName: String!
-    quantity: Int!
-    unit: String!
+    menuId: ID!
+    availableServings: Int!
     lowStockThreshold: Int
-    expiryDate: DateTime
   ): Inventory!
+
   updateInventory(
     id: ID!
-    itemName: String
-    quantity: Int
-    unit: String
+    availableServings: Int
     lowStockThreshold: Int
-    expiryDate: DateTime
   ): Inventory!
+
   deleteInventory(id: ID!): Boolean!
 
   # OrderQueue mutations
   createOrderQueue(
+    menuId: ID!
     orderId: ID!
-    status: OrderStatus
-    priority: Int
+    status: KitchenStatus
   ): OrderQueue!
+
   updateOrderQueue(
     id: ID!
-    status: OrderStatus
-    priority: Int
+    status: KitchenStatus
   ): OrderQueue!
+
   deleteOrderQueue(id: ID!): Boolean!
 }

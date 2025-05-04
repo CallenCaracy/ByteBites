@@ -5,6 +5,7 @@ type MenuItem {
   price: Float!
   category: String
   availability_status: Boolean!
+  discount: Float!
   image_url: String
   created_at: String!
   updated_at: String
@@ -15,6 +16,7 @@ input NewMenuItem {
   description: String
   price: Float!
   category: String
+  discount: Float!
   availability_status: Boolean!
   image_url: String
 }
@@ -24,6 +26,7 @@ input UpdateMenuItem {
   description: String
   price: Float
   category: String
+  discount: Float!
   availability_status: Boolean
   image_url: String
 }
@@ -37,4 +40,8 @@ extend type Mutation {
   createMenuItem(input: NewMenuItem!): MenuItem!
   updateMenuItem(id: ID!, input: UpdateMenuItem!): MenuItem!
   deleteMenuItem(id: ID!): Boolean!
+}
+
+extend type Subscription {
+  menuItemCreated: MenuItem!
 }
