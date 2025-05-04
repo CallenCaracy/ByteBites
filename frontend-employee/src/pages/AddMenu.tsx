@@ -114,10 +114,6 @@ const AddMenu = () => {
         }
     };
 
-    const HandleNavigateDashboard = () => {
-        navigate("/dashboard");
-    }
-
   return (
     <><Navbar />
     <form onSubmit={handleSubmit} className="max-w-150 mx-auto p-4 shadow-md rounded-xl bg-white space-y-4 text-black mt-4">
@@ -173,8 +169,11 @@ const AddMenu = () => {
               <button type="submit" disabled={loading || fileUploading} className="btn btn-primary w-1/2 text-amber-50">
                   {loading || fileUploading ? "Loading..." : "Add Menu Item"}
               </button>
-              <button className="btn btn-primary w-1/2 text-amber-50"
-              onClick={HandleNavigateDashboard}>
+              <button 
+                  type="button" 
+                  onClick={() => navigate(-1)} 
+                  className="btn btn-primary w-1/2 text-amber-50"
+              >
                   Back
               </button>
           </div>

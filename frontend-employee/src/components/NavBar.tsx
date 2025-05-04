@@ -69,7 +69,7 @@ const Navbar: React.FC = () => {
     return (
         <nav className="bg-blue-950 text-white p-4 shadow-md">
             <div className="container mx-auto flex justify-between items-center">
-                <Link to="/" className="flex items-center space-x-2">
+                <Link to="/dashboard" className="flex items-center space-x-2">
                     <img src={logo} alt="Logo" className="h-15 w-15 object-contain" />
                     <span className="text-xl font-semibold text-white">ByteBites</span>
                 </Link>
