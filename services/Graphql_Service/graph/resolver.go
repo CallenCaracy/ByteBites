@@ -14,6 +14,7 @@ import (
 type Resolver struct {
 	DB1             *sql.DB // Supabase Database USER
 	DB2             *sql.DB // Supabase Database MENU
+	DB3             *sql.DB // Supabase Database ORDER
 	DB5             *sql.DB
 	DB7             *sql.DB // Supabase Database KITCHEN
 	AuthClient      auth.Client
@@ -21,12 +22,7 @@ type Resolver struct {
 	MenuItemCreated chan *model.MenuItem
 }
 
-// Mutation method that returns a mutation resolver.
-func (r *Resolver) Mutation() MutationResolver {
-	return &mutationResolver{r} // Return the mutation resolver
-}
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
-// Query method that returns a query resolver.
-func (r *Resolver) Query() QueryResolver {
-	return &queryResolver{r} // Return the query resolver
-}
+// Query returns QueryResolver implementation.
+func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }

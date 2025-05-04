@@ -405,32 +405,12 @@ func (r *queryResolver) GetUserOrders(ctx context.Context, userID string) ([]*mo
 		}
 
 		// Step 3: Get order items for the current order
-		itemRows, err := r.DB5.QueryContext(ctx, `
-			SELECT id, order_id, menu_item_id, quantity, price, customizations, created_at
-			FROM order_items
-			WHERE order_id = $1
-			ORDER BY created_at DESC
-		`, order.ID)
+		items, err := r.getOrderItems(ctx, order.ID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch order items: %w", err)
 		}
-		defer itemRows.Close()
+		order.Items = items
 
-		var orderItems []*model.OrderItem
-		for itemRows.Next() {
-			var item model.OrderItem
-			err := itemRows.Scan(&item.ID, &item.OrderID, &item.MenuItemID, &item.Quantity, &item.Price, &item.Customizations, &item.CreatedAt)
-			if err != nil {
-				return nil, fmt.Errorf("failed to scan order item: %w", err)
-			}
-			orderItems = append(orderItems, &item)
-		}
-
-		if err := itemRows.Err(); err != nil {
-			return nil, fmt.Errorf("error with order items rows: %w", err)
-		}
-
-		order.Items = orderItems
 		orders = append(orders, &order)
 	}
 
@@ -511,5 +491,10 @@ func (r *queryResolver) GetCartAndMenuItems(ctx context.Context, userID string) 
 }
 
 // Mutation returns MutationResolver implementation.
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
+// Query returns QueryResolver implementation.
+func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

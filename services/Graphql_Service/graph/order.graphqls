@@ -111,4 +111,5 @@ type OrderItem {
   price: Float!
   customizations: String
   createdAt: String!
+  updated_at: String
 }
