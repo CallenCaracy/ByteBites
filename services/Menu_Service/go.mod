@@ -1,4 +1,4 @@
-module Menu_Service
+module github.com/CallenCaracy/ByteBites/services/Menu_Service
 
 go 1.24.0
 
