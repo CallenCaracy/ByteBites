@@ -7,11 +7,13 @@ export const GET_MENU_ITEMS = gql`
       name
       description
       price
+      discounted_price
       category
       discount
       availability_status
       image_url
       created_at
+      updated_at
     }
   }
 `;
@@ -23,52 +25,27 @@ export const GET_MENU_ITEM_BY_ID = gql`
       name
       description
       price
+      discounted_price
       category
       discount
       availability_status
       image_url
       created_at
-    }
-  }
-`;
-
-export const ADD_MENU_ITEM = gql`
-  mutation AddMenuItem($input: NewMenuItem!) {
-    addMenuItem(input: $input) {
-      id
-      name
-      description
-      price
-      category
-      discount
-      availability_status
-      image_url
-      created_at
-    }
-  }
-`;
-
-export const UPDATE_MENU_ITEM = gql`
-  mutation UpdateMenuItem($id: ID!, $input: UpdateMenuItem!) {
-    updateMenuItem(id: $id, input: $input) {
-      id
-      name
-      description
-      price
-      category
-      discount
-      availability_status
-      image_url
       updated_at
     }
   }
 `;
 
-export const DELETE_MENU_ITEM = gql`
-  mutation DeleteMenuItem($id: ID!) {
-    deleteMenuItem(id: $id) {
+export const GET_MENU_ITEM_BY_ID_FOR_CART = gql`
+  query GetMenuItemById($id: ID!) {
+    getMenuItemById(id: $id) {
       id
       name
+      price
+      category
+      discount
+      availability_status
+      image_url
     }
   }
 `;

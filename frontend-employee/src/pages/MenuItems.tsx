@@ -233,8 +233,17 @@ const MenuItem: React.FC = () => {
               </div>
       
               <div className="space-y-3 text-right">
-                <p className="text-2xl font-bold text-green-700">₱{item.price.toFixed(2)}</p>
-                <p className="text-gray-900 text-2xl font-semibold">
+                <div className="flex items-center space-x-4 justify-end">
+                    {item.discount > 0 ? (
+                        <>
+                            <p className="text-lg text-gray-500 line-through">₱{item.price.toFixed(2)}</p>
+                            <p className="text-2xl font-bold text-green-700">₱{item.discounted_price.toFixed(2)}</p>
+                        </>
+                    ) : (
+                        <p className="text-2xl font-bold text-green-700">₱{item.price.toFixed(2)}</p>
+                    )}
+                </div>
+                <p className="text-gray-900 text-lg font-semibold">
                     {item?.discount ? `${item.discount.toFixed(2)}% OFF` : "No Discount"}
                 </p>
                 <p className="text-sm text-gray-600">

@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@apollo/client";
-import { GET_CART, GET_CART_ITEMS, CREATE_ORDER_FROM_CART } from "../graphql/Orderqueries";
+import { GET_CART_AND_ITEMS, CREATE_ORDER_FROM_CART } from "../graphql/Orderqueries";
 import Navbar from "../components/NavBar";
 import "../styles/main.css";
 import { useNavigate, useParams } from "react-router-dom";
@@ -11,44 +11,22 @@ const YourCart: React.FC = () => {
     const { userId } = useParams<{ userId: string }>();
 
     const [orderType, setOrderType] = useState("dine-in");
+    const [orderData, setOrderData] = useState<any>(null);
     const [deliveryAddress, setDeliveryAddress] = useState("");
     const [specialRequests, setSpecialRequests] = useState("");
 
-    const {
-        data: cartData,
-        loading: cartLoading,
-        error: cartError,
-    } = useQuery(GET_CART, {
+    const { data, loading, error } = useQuery(GET_CART_AND_ITEMS, {
         variables: { user_id: userId },
+        skip: !userId,
     });
 
-    const cart = cartData?.getCart;
+    const cart = data?.getCartAndMenuItems;
+    const cartItems = cart?.items || [];
 
-    const {
-        data: cartItemsData,
-        loading: cartItemsLoading,
-        error: cartItemsError,
-        called: cartItemsCalled,
-    } = useQuery(GET_CART_ITEMS, {
-        variables: { cart_id: cart?.id },
-        skip: !cart?.id,
-    });
+    const [createOrderFromCart, { loading: creatingOrder, error: createOrderError }] = useMutation(CREATE_ORDER_FROM_CART);
 
-    const [createOrderFromCart, { loading: creatingOrder, error: createOrderError, data: orderData }] =
-        useMutation(CREATE_ORDER_FROM_CART);
-
-    const cartItems = cartItemsData?.getCartItemsByCartId;
-
-    if (cartLoading || (cart?.id && !cartItemsCalled) || cartItemsLoading) {
-        return <p>Loading your cart...</p>;
-    }
-
-    if (cartError) {
-        return <p>Error loading cart: {cartError.message}</p>;
-    }
-    if (cartItemsError) {
-        return <p>Error loading cart items: {cartItemsError.message}</p>;
-    }
+    if (loading) return <p>Loading your cart...</p>;
+    if (error) return <p>Error loading cart: {error.message}</p>;
 
     if (!cartItems || cartItems.length === 0) {
         return (
@@ -60,7 +38,7 @@ const YourCart: React.FC = () => {
                     <p className="text-gray-500 mt-4">If not showing. Try reloading!</p>
                 </div>
             </>
-        )
+        );
     }
 
     const handleCreateOrder = async () => {
@@ -75,45 +53,67 @@ const YourCart: React.FC = () => {
                     specialRequests,
                 },
             });
-    
             console.log("Order created:", data.createOrderFromCart);
+            setOrderData(data);
             navigate(`/payment/${userId}`);
-            setTimeout(() => window.location.reload(), 100);
         } catch (err) {
             console.error("Failed to create order:", err);
         }
     };
+
+    const totalPrice = cartItems.reduce((total: number, item: any) => {
+        return total + item.price * item.quantity;
+    }, 0).toFixed(2);
 
     return (
         <>
             <Navbar />
             <div className="p-8 max-w-4xl mx-auto">
                 <h2 className="text-3xl font-bold mb-6 text-black">Your Cart</h2>
-                <div className="max-h-[500px] overflow-y-auto border rounded-lg p-4 shadow-md bg-white scrollbar-hide">
+                <div className="max-h-[500px] overflow-y-auto border rounded-lg p-4 shadow-xl bg-white scrollbar-hide">
                     {cartItems?.map((item: any) => (
-                        <div
-                            key={item.id}
-                            className="border-b last:border-none pb-3 mb-3 flex justify-between items-center"
-                        >
-                            <div className="space-y-1">
-                                <p className="text-lg font-semibold">Menu Item ID: {item.menu_item_id}</p>
-                                <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                                <p className="text-sm text-gray-600">
-                                    Customizations: {item.customizations || "None"}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                    Added on: {new Date(item.created_at).toLocaleString()}
-                                </p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-lg font-bold text-green-700">₱{item.price.toFixed(2)}</p>
-                            </div>
+                    <div
+                        key={item.id}
+                        className="border-b last:border-none pb-3 mb-3 flex justify-between items-start gap-4"
+                    >
+                        <img
+                        src={item.menuItem?.image_url}
+                        alt={item.menuItem?.name}
+                        className="w-24 h-24 object-cover rounded-md border"
+                        />
+
+                        <div className="flex-1 space-y-1">
+                        <p className="text-lg font-semibold text-black">{item.menuItem?.name}</p>
+                        <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                        <p className="text-sm text-gray-600">
+                            Customizations: {item.customizations || "None"}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                            Added on: {new Date(item.created_at).toLocaleString()}
+                        </p>
                         </div>
+
+                        <div className="text-right min-w-[80px]">
+                            {item.price != item.menuItem.price ? (
+                                <>
+                                    <p className="text-lg text-gray-500 line-through">₱{item.menuItem.price.toFixed(2)}</p>
+                                    <p className="text-lg font-bold text-green-700">₱{item.price.toFixed(2)}</p>
+                                </>
+                            ) : (
+                                <p className="text-lg font-bold text-green-700">₱{item.price.toFixed(2)}</p>
+                            )}
+                        </div>
+                        <button>
+                            Update
+                        </button>
+                    </div>
                     ))}
+                </div>
+                <div className="mt-6 border-t pt-6">
+                    <h3 className="text-xl text-black font-semibold mb-4">Total: ₱{totalPrice}</h3>
                 </div>
 
                 <div className="mt-6 border-t pt-6">
-                    <h3 className="text-xl font-semibold mb-4">Place Your Order</h3>
                     <form
                         className="fixed bottom-0 left-0 w-full bg-white shadow-lg p-4 flex flex-wrap gap-4 items-end border-t z-50"
                         onSubmit={(e) => {

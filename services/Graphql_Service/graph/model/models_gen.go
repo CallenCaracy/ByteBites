@@ -40,6 +40,26 @@ type CartItem struct {
 	UpdatedAt      *string `json:"updated_at,omitempty"`
 }
 
+type CartItemWithMenuItem struct {
+	ID             string           `json:"id"`
+	CartID         string           `json:"cart_id"`
+	MenuItemID     string           `json:"menu_item_id"`
+	Quantity       int32            `json:"quantity"`
+	Price          float64          `json:"price"`
+	Customizations *string          `json:"customizations,omitempty"`
+	CreatedAt      string           `json:"created_at"`
+	UpdatedAt      *string          `json:"updated_at,omitempty"`
+	MenuItem       *MenuItemForCart `json:"menuItem,omitempty"`
+}
+
+type CartWithMenu struct {
+	ID        string                  `json:"id"`
+	UserID    string                  `json:"user_id"`
+	CreatedAt string                  `json:"created_at"`
+	UpdatedAt *string                 `json:"updated_at,omitempty"`
+	Items     []*CartItemWithMenuItem `json:"items"`
+}
+
 type ForgotPasswordInput struct {
 	Email string `json:"email"`
 }
@@ -68,6 +88,14 @@ type MenuItem struct {
 	ImageURL           *string `json:"image_url,omitempty"`
 	CreatedAt          string  `json:"created_at"`
 	UpdatedAt          *string `json:"updated_at,omitempty"`
+}
+
+type MenuItemForCart struct {
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Price       float64 `json:"price"`
+	ImageURL    *string `json:"image_url,omitempty"`
 }
 
 type MenuItemFull struct {

@@ -3,14 +3,14 @@ package menu
 import (
 	"context"
 
-	"Menu_Service/pb"
+	"github.com/CallenCaracy/ByteBites/services/Menu_Service/pb"
 )
 
-type Server struct {
+type MenuServiceServer struct {
 	pb.UnimplementedMenuServiceServer
 }
 
-func (s *Server) CalculateDiscount(ctx context.Context, req *pb.DiscountRequest) (*pb.DiscountResponse, error) {
+func (s *MenuServiceServer) CalculateDiscount(ctx context.Context, req *pb.DiscountRequest) (*pb.DiscountResponse, error) {
 	price := req.GetPrice()
 	discount := req.GetDiscount()
 	discounted := price * (1 - discount/100)

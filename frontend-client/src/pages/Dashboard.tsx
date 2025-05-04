@@ -79,9 +79,16 @@ const Dashboard: React.FC = () => {
                       <p className="text-gray-600 group-hover:text-gray-300">
                           {item.description}
                       </p>
-                      <p className="text-gray-900 font-bold group-hover:text-amber-300">
-                        ₱{item.price.toFixed(2)}
-                      </p>
+                      <div className="flex items-center space-x-4 justify-start">
+                        {item.discount > 0 ? (
+                            <>
+                                <p className="text-lg text-gray-500 line-through">₱{item.price.toFixed(2)}</p>
+                                <p className="text-2xl font-bold text-green-700">₱{item.discounted_price.toFixed(2)}</p>
+                            </>
+                        ) : (
+                            <p className="text-2xl font-bold text-green-700">₱{item.price.toFixed(2)}</p>
+                        )}
+                    </div>
                   </div>
               ))}
           </div>

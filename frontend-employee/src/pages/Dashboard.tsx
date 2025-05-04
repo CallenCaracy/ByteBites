@@ -34,13 +34,13 @@ const Dashboard: React.FC = () => {
                           onClick={() => navigate(`/menu-item/${item.id}`)}
                       >
                           <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-semibold text-gray-700 group-hover:text-white">
-                                {item.name}
-                            </h2>
-                            <p className="text-xl font-semibold text-gray-700 group-hover:text-white">
-                                {item?.discount ? `${item.discount.toFixed(2)}% Off` : "No Discount"}
-                            </p>
-                           </div>
+                          <h2 className="text-xl font-semibold text-gray-700 group-hover:text-white">
+                            {item.name}
+                          </h2>
+                          <p className="text-xl font-semibold text-gray-700 group-hover:text-white">
+                            {item?.discount ? `${item.discount.toFixed(2)}% Off` : "No Discount"}
+                          </p>
+                        </div>
                           <img
                               src={item?.image_url || placeholderpic} 
                               alt="Menu Picture"
@@ -49,9 +49,16 @@ const Dashboard: React.FC = () => {
                           <p className="text-gray-600 group-hover:text-gray-300">
                               {item.description}
                           </p>
-                          <p className="text-gray-900 font-bold group-hover:text-amber-300">
-                            ₱{item.price.toFixed(2)}
-                          </p>
+                          <div className="flex items-center space-x-4 justify-start">
+                                {item.discount > 0 ? (
+                                    <>
+                                        <p className="text-lg text-gray-500 line-through">₱{item.price.toFixed(2)}</p>
+                                        <p className="text-2xl font-bold text-green-700">₱{item.discounted_price.toFixed(2)}</p>
+                                    </>
+                                ) : (
+                                    <p className="text-2xl font-bold text-green-700">₱{item.price.toFixed(2)}</p>
+                                )}
+                            </div>
                       </div>
                   ))}
               </div>

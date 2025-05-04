@@ -73,6 +73,26 @@ type ComplexityRoot struct {
 		UpdatedAt      func(childComplexity int) int
 	}
 
+	CartItemWithMenuItem struct {
+		CartID         func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		Customizations func(childComplexity int) int
+		ID             func(childComplexity int) int
+		MenuItem       func(childComplexity int) int
+		MenuItemID     func(childComplexity int) int
+		Price          func(childComplexity int) int
+		Quantity       func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
+	}
+
+	CartWithMenu struct {
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Items     func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+		UserID    func(childComplexity int) int
+	}
+
 	ForgotPasswordResponse struct {
 		Message func(childComplexity int) int
 		Success func(childComplexity int) int
@@ -97,6 +117,14 @@ type ComplexityRoot struct {
 		Name               func(childComplexity int) int
 		Price              func(childComplexity int) int
 		UpdatedAt          func(childComplexity int) int
+	}
+
+	MenuItemForCart struct {
+		Description func(childComplexity int) int
+		ID          func(childComplexity int) int
+		ImageURL    func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Price       func(childComplexity int) int
 	}
 
 	MenuItemFull struct {
@@ -175,6 +203,7 @@ type ComplexityRoot struct {
 		GetAllMenuItems               func(childComplexity int) int
 		GetAuthenticatedUser          func(childComplexity int) int
 		GetCart                       func(childComplexity int, userID string) int
+		GetCartAndMenuItems           func(childComplexity int, userID string) int
 		GetCartItemsByCartID          func(childComplexity int, cartID string) int
 		GetMenuItemByID               func(childComplexity int, id string) int
 		GetTransactionRecordsByUserID func(childComplexity int, id string) int
@@ -252,6 +281,7 @@ type QueryResolver interface {
 	GetCart(ctx context.Context, userID string) (*model.Cart, error)
 	GetCartItemsByCartID(ctx context.Context, cartID string) ([]*model.CartItem, error)
 	GetUserOrders(ctx context.Context, userID string) ([]*model.Order, error)
+	GetCartAndMenuItems(ctx context.Context, userID string) (*model.CartWithMenu, error)
 	Inventories(ctx context.Context) ([]*model.Inventory, error)
 	Inventory(ctx context.Context, id string) (*model.Inventory, error)
 	OrderQueues(ctx context.Context) ([]*model.OrderQueue, error)
@@ -391,6 +421,104 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CartItem.UpdatedAt(childComplexity), true
 
+	case "CartItemWithMenuItem.cart_id":
+		if e.complexity.CartItemWithMenuItem.CartID == nil {
+			break
+		}
+
+		return e.complexity.CartItemWithMenuItem.CartID(childComplexity), true
+
+	case "CartItemWithMenuItem.created_at":
+		if e.complexity.CartItemWithMenuItem.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.CartItemWithMenuItem.CreatedAt(childComplexity), true
+
+	case "CartItemWithMenuItem.customizations":
+		if e.complexity.CartItemWithMenuItem.Customizations == nil {
+			break
+		}
+
+		return e.complexity.CartItemWithMenuItem.Customizations(childComplexity), true
+
+	case "CartItemWithMenuItem.id":
+		if e.complexity.CartItemWithMenuItem.ID == nil {
+			break
+		}
+
+		return e.complexity.CartItemWithMenuItem.ID(childComplexity), true
+
+	case "CartItemWithMenuItem.menuItem":
+		if e.complexity.CartItemWithMenuItem.MenuItem == nil {
+			break
+		}
+
+		return e.complexity.CartItemWithMenuItem.MenuItem(childComplexity), true
+
+	case "CartItemWithMenuItem.menu_item_id":
+		if e.complexity.CartItemWithMenuItem.MenuItemID == nil {
+			break
+		}
+
+		return e.complexity.CartItemWithMenuItem.MenuItemID(childComplexity), true
+
+	case "CartItemWithMenuItem.price":
+		if e.complexity.CartItemWithMenuItem.Price == nil {
+			break
+		}
+
+		return e.complexity.CartItemWithMenuItem.Price(childComplexity), true
+
+	case "CartItemWithMenuItem.quantity":
+		if e.complexity.CartItemWithMenuItem.Quantity == nil {
+			break
+		}
+
+		return e.complexity.CartItemWithMenuItem.Quantity(childComplexity), true
+
+	case "CartItemWithMenuItem.updated_at":
+		if e.complexity.CartItemWithMenuItem.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.CartItemWithMenuItem.UpdatedAt(childComplexity), true
+
+	case "CartWithMenu.created_at":
+		if e.complexity.CartWithMenu.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.CartWithMenu.CreatedAt(childComplexity), true
+
+	case "CartWithMenu.id":
+		if e.complexity.CartWithMenu.ID == nil {
+			break
+		}
+
+		return e.complexity.CartWithMenu.ID(childComplexity), true
+
+	case "CartWithMenu.items":
+		if e.complexity.CartWithMenu.Items == nil {
+			break
+		}
+
+		return e.complexity.CartWithMenu.Items(childComplexity), true
+
+	case "CartWithMenu.updated_at":
+		if e.complexity.CartWithMenu.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.CartWithMenu.UpdatedAt(childComplexity), true
+
+	case "CartWithMenu.user_id":
+		if e.complexity.CartWithMenu.UserID == nil {
+			break
+		}
+
+		return e.complexity.CartWithMenu.UserID(childComplexity), true
+
 	case "ForgotPasswordResponse.message":
 		if e.complexity.ForgotPasswordResponse.Message == nil {
 			break
@@ -509,6 +637,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MenuItem.UpdatedAt(childComplexity), true
+
+	case "MenuItemForCart.description":
+		if e.complexity.MenuItemForCart.Description == nil {
+			break
+		}
+
+		return e.complexity.MenuItemForCart.Description(childComplexity), true
+
+	case "MenuItemForCart.id":
+		if e.complexity.MenuItemForCart.ID == nil {
+			break
+		}
+
+		return e.complexity.MenuItemForCart.ID(childComplexity), true
+
+	case "MenuItemForCart.image_url":
+		if e.complexity.MenuItemForCart.ImageURL == nil {
+			break
+		}
+
+		return e.complexity.MenuItemForCart.ImageURL(childComplexity), true
+
+	case "MenuItemForCart.name":
+		if e.complexity.MenuItemForCart.Name == nil {
+			break
+		}
+
+		return e.complexity.MenuItemForCart.Name(childComplexity), true
+
+	case "MenuItemForCart.price":
+		if e.complexity.MenuItemForCart.Price == nil {
+			break
+		}
+
+		return e.complexity.MenuItemForCart.Price(childComplexity), true
 
 	case "MenuItemFull.availability_status":
 		if e.complexity.MenuItemFull.AvailabilityStatus == nil {
@@ -1044,6 +1207,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetCart(childComplexity, args["user_id"].(string)), true
+
+	case "Query.getCartAndMenuItems":
+		if e.complexity.Query.GetCartAndMenuItems == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getCartAndMenuItems_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetCartAndMenuItems(childComplexity, args["user_id"].(string)), true
 
 	case "Query.getCartItemsByCartId":
 		if e.complexity.Query.GetCartItemsByCartID == nil {
@@ -2318,6 +2493,29 @@ func (ec *executionContext) field_Query___type_argsName(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_getCartAndMenuItems_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getCartAndMenuItems_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["user_id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_getCartAndMenuItems_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("user_id"))
+	if tmp, ok := rawArgs["user_id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_getCartItemsByCartId_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3271,6 +3469,642 @@ func (ec *executionContext) fieldContext_CartItem_updated_at(_ context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _CartItemWithMenuItem_id(ctx context.Context, field graphql.CollectedField, obj *model.CartItemWithMenuItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartItemWithMenuItem_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartItemWithMenuItem_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartItemWithMenuItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartItemWithMenuItem_cart_id(ctx context.Context, field graphql.CollectedField, obj *model.CartItemWithMenuItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartItemWithMenuItem_cart_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CartID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartItemWithMenuItem_cart_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartItemWithMenuItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartItemWithMenuItem_menu_item_id(ctx context.Context, field graphql.CollectedField, obj *model.CartItemWithMenuItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartItemWithMenuItem_menu_item_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MenuItemID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartItemWithMenuItem_menu_item_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartItemWithMenuItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartItemWithMenuItem_quantity(ctx context.Context, field graphql.CollectedField, obj *model.CartItemWithMenuItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartItemWithMenuItem_quantity(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Quantity, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int32)
+	fc.Result = res
+	return ec.marshalNInt2int32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartItemWithMenuItem_quantity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartItemWithMenuItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartItemWithMenuItem_price(ctx context.Context, field graphql.CollectedField, obj *model.CartItemWithMenuItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartItemWithMenuItem_price(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Price, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartItemWithMenuItem_price(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartItemWithMenuItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartItemWithMenuItem_customizations(ctx context.Context, field graphql.CollectedField, obj *model.CartItemWithMenuItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartItemWithMenuItem_customizations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Customizations, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartItemWithMenuItem_customizations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartItemWithMenuItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartItemWithMenuItem_created_at(ctx context.Context, field graphql.CollectedField, obj *model.CartItemWithMenuItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartItemWithMenuItem_created_at(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartItemWithMenuItem_created_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartItemWithMenuItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartItemWithMenuItem_updated_at(ctx context.Context, field graphql.CollectedField, obj *model.CartItemWithMenuItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartItemWithMenuItem_updated_at(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartItemWithMenuItem_updated_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartItemWithMenuItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartItemWithMenuItem_menuItem(ctx context.Context, field graphql.CollectedField, obj *model.CartItemWithMenuItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartItemWithMenuItem_menuItem(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MenuItem, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.MenuItemForCart)
+	fc.Result = res
+	return ec.marshalOMenuItemForCart2ᚖGraphql_ServiceᚋgraphᚋmodelᚐMenuItemForCart(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartItemWithMenuItem_menuItem(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartItemWithMenuItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MenuItemForCart_id(ctx, field)
+			case "name":
+				return ec.fieldContext_MenuItemForCart_name(ctx, field)
+			case "description":
+				return ec.fieldContext_MenuItemForCart_description(ctx, field)
+			case "price":
+				return ec.fieldContext_MenuItemForCart_price(ctx, field)
+			case "image_url":
+				return ec.fieldContext_MenuItemForCart_image_url(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MenuItemForCart", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartWithMenu_id(ctx context.Context, field graphql.CollectedField, obj *model.CartWithMenu) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartWithMenu_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartWithMenu_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartWithMenu",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartWithMenu_user_id(ctx context.Context, field graphql.CollectedField, obj *model.CartWithMenu) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartWithMenu_user_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartWithMenu_user_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartWithMenu",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartWithMenu_created_at(ctx context.Context, field graphql.CollectedField, obj *model.CartWithMenu) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartWithMenu_created_at(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartWithMenu_created_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartWithMenu",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartWithMenu_updated_at(ctx context.Context, field graphql.CollectedField, obj *model.CartWithMenu) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartWithMenu_updated_at(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartWithMenu_updated_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartWithMenu",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CartWithMenu_items(ctx context.Context, field graphql.CollectedField, obj *model.CartWithMenu) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CartWithMenu_items(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Items, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CartItemWithMenuItem)
+	fc.Result = res
+	return ec.marshalNCartItemWithMenuItem2ᚕᚖGraphql_ServiceᚋgraphᚋmodelᚐCartItemWithMenuItemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CartWithMenu_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CartWithMenu",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CartItemWithMenuItem_id(ctx, field)
+			case "cart_id":
+				return ec.fieldContext_CartItemWithMenuItem_cart_id(ctx, field)
+			case "menu_item_id":
+				return ec.fieldContext_CartItemWithMenuItem_menu_item_id(ctx, field)
+			case "quantity":
+				return ec.fieldContext_CartItemWithMenuItem_quantity(ctx, field)
+			case "price":
+				return ec.fieldContext_CartItemWithMenuItem_price(ctx, field)
+			case "customizations":
+				return ec.fieldContext_CartItemWithMenuItem_customizations(ctx, field)
+			case "created_at":
+				return ec.fieldContext_CartItemWithMenuItem_created_at(ctx, field)
+			case "updated_at":
+				return ec.fieldContext_CartItemWithMenuItem_updated_at(ctx, field)
+			case "menuItem":
+				return ec.fieldContext_CartItemWithMenuItem_menuItem(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CartItemWithMenuItem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ForgotPasswordResponse_success(ctx context.Context, field graphql.CollectedField, obj *model.ForgotPasswordResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ForgotPasswordResponse_success(ctx, field)
 	if err != nil {
@@ -3994,6 +4828,223 @@ func (ec *executionContext) _MenuItem_updated_at(ctx context.Context, field grap
 func (ec *executionContext) fieldContext_MenuItem_updated_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MenuItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MenuItemForCart_id(ctx context.Context, field graphql.CollectedField, obj *model.MenuItemForCart) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MenuItemForCart_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MenuItemForCart_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MenuItemForCart",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MenuItemForCart_name(ctx context.Context, field graphql.CollectedField, obj *model.MenuItemForCart) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MenuItemForCart_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MenuItemForCart_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MenuItemForCart",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MenuItemForCart_description(ctx context.Context, field graphql.CollectedField, obj *model.MenuItemForCart) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MenuItemForCart_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MenuItemForCart_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MenuItemForCart",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MenuItemForCart_price(ctx context.Context, field graphql.CollectedField, obj *model.MenuItemForCart) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MenuItemForCart_price(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Price, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MenuItemForCart_price(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MenuItemForCart",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MenuItemForCart_image_url(ctx context.Context, field graphql.CollectedField, obj *model.MenuItemForCart) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MenuItemForCart_image_url(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ImageURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MenuItemForCart_image_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MenuItemForCart",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7183,6 +8234,73 @@ func (ec *executionContext) fieldContext_Query_getUserOrders(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_getUserOrders_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getCartAndMenuItems(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getCartAndMenuItems(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetCartAndMenuItems(rctx, fc.Args["user_id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CartWithMenu)
+	fc.Result = res
+	return ec.marshalNCartWithMenu2ᚖGraphql_ServiceᚋgraphᚋmodelᚐCartWithMenu(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getCartAndMenuItems(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CartWithMenu_id(ctx, field)
+			case "user_id":
+				return ec.fieldContext_CartWithMenu_user_id(ctx, field)
+			case "created_at":
+				return ec.fieldContext_CartWithMenu_created_at(ctx, field)
+			case "updated_at":
+				return ec.fieldContext_CartWithMenu_updated_at(ctx, field)
+			case "items":
+				return ec.fieldContext_CartWithMenu_items(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CartWithMenu", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getCartAndMenuItems_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11664,6 +12782,132 @@ func (ec *executionContext) _CartItem(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var cartItemWithMenuItemImplementors = []string{"CartItemWithMenuItem"}
+
+func (ec *executionContext) _CartItemWithMenuItem(ctx context.Context, sel ast.SelectionSet, obj *model.CartItemWithMenuItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cartItemWithMenuItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CartItemWithMenuItem")
+		case "id":
+			out.Values[i] = ec._CartItemWithMenuItem_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cart_id":
+			out.Values[i] = ec._CartItemWithMenuItem_cart_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "menu_item_id":
+			out.Values[i] = ec._CartItemWithMenuItem_menu_item_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quantity":
+			out.Values[i] = ec._CartItemWithMenuItem_quantity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "price":
+			out.Values[i] = ec._CartItemWithMenuItem_price(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "customizations":
+			out.Values[i] = ec._CartItemWithMenuItem_customizations(ctx, field, obj)
+		case "created_at":
+			out.Values[i] = ec._CartItemWithMenuItem_created_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updated_at":
+			out.Values[i] = ec._CartItemWithMenuItem_updated_at(ctx, field, obj)
+		case "menuItem":
+			out.Values[i] = ec._CartItemWithMenuItem_menuItem(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var cartWithMenuImplementors = []string{"CartWithMenu"}
+
+func (ec *executionContext) _CartWithMenu(ctx context.Context, sel ast.SelectionSet, obj *model.CartWithMenu) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cartWithMenuImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CartWithMenu")
+		case "id":
+			out.Values[i] = ec._CartWithMenu_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "user_id":
+			out.Values[i] = ec._CartWithMenu_user_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "created_at":
+			out.Values[i] = ec._CartWithMenu_created_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updated_at":
+			out.Values[i] = ec._CartWithMenu_updated_at(ctx, field, obj)
+		case "items":
+			out.Values[i] = ec._CartWithMenu_items(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var forgotPasswordResponseImplementors = []string{"ForgotPasswordResponse"}
 
 func (ec *executionContext) _ForgotPasswordResponse(ctx context.Context, sel ast.SelectionSet, obj *model.ForgotPasswordResponse) graphql.Marshaler {
@@ -11813,6 +13057,62 @@ func (ec *executionContext) _MenuItem(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "updated_at":
 			out.Values[i] = ec._MenuItem_updated_at(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var menuItemForCartImplementors = []string{"MenuItemForCart"}
+
+func (ec *executionContext) _MenuItemForCart(ctx context.Context, sel ast.SelectionSet, obj *model.MenuItemForCart) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, menuItemForCartImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MenuItemForCart")
+		case "id":
+			out.Values[i] = ec._MenuItemForCart_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._MenuItemForCart_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._MenuItemForCart_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "price":
+			out.Values[i] = ec._MenuItemForCart_price(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "image_url":
+			out.Values[i] = ec._MenuItemForCart_image_url(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12377,6 +13677,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getUserOrders(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getCartAndMenuItems":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getCartAndMenuItems(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -13288,6 +14610,74 @@ func (ec *executionContext) marshalNCartItem2ᚖGraphql_Serviceᚋgraphᚋmodel�
 	return ec._CartItem(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNCartItemWithMenuItem2ᚕᚖGraphql_ServiceᚋgraphᚋmodelᚐCartItemWithMenuItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CartItemWithMenuItem) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCartItemWithMenuItem2ᚖGraphql_ServiceᚋgraphᚋmodelᚐCartItemWithMenuItem(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCartItemWithMenuItem2ᚖGraphql_ServiceᚋgraphᚋmodelᚐCartItemWithMenuItem(ctx context.Context, sel ast.SelectionSet, v *model.CartItemWithMenuItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CartItemWithMenuItem(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCartWithMenu2Graphql_ServiceᚋgraphᚋmodelᚐCartWithMenu(ctx context.Context, sel ast.SelectionSet, v model.CartWithMenu) graphql.Marshaler {
+	return ec._CartWithMenu(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCartWithMenu2ᚖGraphql_ServiceᚋgraphᚋmodelᚐCartWithMenu(ctx context.Context, sel ast.SelectionSet, v *model.CartWithMenu) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CartWithMenu(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNDateTime2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -14087,6 +15477,13 @@ func (ec *executionContext) marshalOKitchenStatus2ᚖGraphql_Serviceᚋgraphᚋm
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOMenuItemForCart2ᚖGraphql_ServiceᚋgraphᚋmodelᚐMenuItemForCart(ctx context.Context, sel ast.SelectionSet, v *model.MenuItemForCart) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MenuItemForCart(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOMenuItemFull2ᚖGraphql_ServiceᚋgraphᚋmodelᚐMenuItemFull(ctx context.Context, sel ast.SelectionSet, v *model.MenuItemFull) graphql.Marshaler {

@@ -4,11 +4,11 @@ import (
 	"net"
 	"os"
 
-	"Menu_Service/utils"
+	"github.com/CallenCaracy/ByteBites/services/Menu_Service/utils"
 
-	"Menu_Service/pb"
+	"github.com/CallenCaracy/ByteBites/services/Menu_Service/pb"
 
-	menu "Menu_Service/server/menus"
+	menu "github.com/CallenCaracy/ByteBites/services/Menu_Service/server/menus"
 
 	"google.golang.org/grpc"
 )
@@ -26,7 +26,7 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	pb.RegisterMenuServiceServer(grpcServer, &menu.Server{})
+	pb.RegisterMenuServiceServer(grpcServer, &menu.MenuServiceServer{})
 
 	log.Info("Menu Service running on port 50051...")
 	if err := grpcServer.Serve(lis); err != nil {

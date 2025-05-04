@@ -87,7 +87,7 @@ const MenuItem: React.FC = () => {
                         user_id: userId,
                         menu_item_id: menuId,
                         quantity: orderData.quantity,
-                        price: menuData?.getMenuItemById.price || 0,
+                        price: menuData?.getMenuItemById.discounted_price || 0,
                         customizations: orderData.customizations
                     },
                 },
@@ -140,9 +140,16 @@ const MenuItem: React.FC = () => {
 
                 {/* RIGHT side */}
                 <div className="flex flex-col justify-between items-end text-right space-y-2">
-                    <p className="text-xl font-semibold text-green-700 whitespace-nowrap">
-                        ₱{item.price.toFixed(2)}
-                    </p>
+                    <div className="flex items-center space-x-4 justify-end">
+                        {item.discount > 0 ? (
+                            <>
+                                <p className="text-lg text-gray-500 line-through">₱{item.price.toFixed(2)}</p>
+                                <p className="text-2xl font-bold text-green-700">₱{item.discounted_price.toFixed(2)}</p>
+                            </>
+                        ) : (
+                            <p className="text-2xl font-bold text-green-700">₱{item.price.toFixed(2)}</p>
+                        )}
+                    </div>
                     <p className="text-xl font-semibold text-yellow-400 whitespace-nowrap">
                         {item?.discount ? `${item.discount.toFixed(2)}% OFF` : "No Discount"}
                     </p>

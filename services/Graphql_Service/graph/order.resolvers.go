@@ -421,6 +421,75 @@ func (r *queryResolver) GetUserOrders(ctx context.Context, userID string) ([]*mo
 	return orders, nil
 }
 
+// GetCartAndMenuItems is the resolver for the getCartAndMenuItems field.
+func (r *queryResolver) GetCartAndMenuItems(ctx context.Context, userID string) (*model.CartWithMenu, error) {
+	cartQuery := `SELECT id, user_id, created_at, updated_at FROM carts WHERE user_id = $1`
+	var cart model.CartWithMenu
+	err := r.DB5.QueryRow(cartQuery, userID).Scan(&cart.ID, &cart.UserID, &cart.CreatedAt, &cart.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	cartItemsQuery := `SELECT id, cart_id, menu_item_id, quantity, price, customizations, created_at, updated_at FROM cart_items WHERE cart_id = $1`
+	rows, err := r.DB5.Query(cartItemsQuery, cart.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var cartItems []*model.CartItemWithMenuItem
+	for rows.Next() {
+		var cartItem model.CartItemWithMenuItem
+		err := rows.Scan(&cartItem.ID, &cartItem.CartID, &cartItem.MenuItemID, &cartItem.Quantity, &cartItem.Price, &cartItem.Customizations, &cartItem.CreatedAt, &cartItem.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		menuItem, err := r.GetMenuItemByID(ctx, cartItem.MenuItemID)
+		if err != nil {
+			return nil, err
+		}
+
+		cartItem.MenuItem = &model.MenuItemForCart{
+			ID:          menuItem.ID,
+			Name:        menuItem.Name,
+			Description: *menuItem.Description,
+			Price:       menuItem.Price,
+			ImageURL:    menuItem.ImageURL,
+		}
+		cartItems = append(cartItems, &cartItem)
+	}
+
+	cartResponse := &model.Cart{
+		ID:        cart.ID,
+		UserID:    cart.UserID,
+		CreatedAt: cart.CreatedAt,
+		UpdatedAt: cart.UpdatedAt,
+		Items:     []*model.CartItem{},
+	}
+
+	for _, cartItemWithMenu := range cartItems {
+		cartResponse.Items = append(cartResponse.Items, &model.CartItem{
+			ID:             cartItemWithMenu.ID,
+			CartID:         cartItemWithMenu.CartID,
+			MenuItemID:     cartItemWithMenu.MenuItemID,
+			Quantity:       cartItemWithMenu.Quantity,
+			Price:          cartItemWithMenu.Price,
+			Customizations: cartItemWithMenu.Customizations,
+			CreatedAt:      cartItemWithMenu.CreatedAt,
+			UpdatedAt:      cartItemWithMenu.UpdatedAt,
+		})
+	}
+
+	return &model.CartWithMenu{
+		ID:        cartResponse.ID,
+		UserID:    cartResponse.UserID,
+		CreatedAt: cartResponse.CreatedAt,
+		UpdatedAt: cartResponse.UpdatedAt,
+		Items:     cartItems,
+	}, nil
+}
+
 func (r *queryResolver) getOrderItems(ctx context.Context, orderID string) ([]*model.OrderItem, error) {
 	rows, err := r.DB5.QueryContext(ctx, `
 		SELECT id, order_id, menu_item_id, quantity, price, customizations, created_at

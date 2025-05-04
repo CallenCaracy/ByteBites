@@ -14,6 +14,7 @@ export const ADD_CART_ITEM = gql`
   }
 `;
 
+// Unused
 export const GET_CART = gql`
   query GetCart($user_id: ID!) {
     getCart(user_id: $user_id) {
@@ -34,6 +35,7 @@ export const GET_CART = gql`
   }
 `;
 
+// Unused
 export const GET_CART_ITEMS = gql`
 query GetCartItemsByCartID($cart_id: ID!) {
     getCartItemsByCartId(cart_id: $cart_id) {
@@ -45,6 +47,34 @@ query GetCartItemsByCartID($cart_id: ID!) {
       customizations
       created_at
       updated_at
+    }
+  }
+`;
+
+export const GET_CART_AND_ITEMS = gql`
+  query GetCartAndMenuItems($user_id: ID!) {
+    getCartAndMenuItems(user_id: $user_id) {
+      id
+      user_id
+      created_at
+      updated_at
+      items {
+        id
+        cart_id
+        menu_item_id
+        quantity
+        price
+        customizations
+        created_at
+        updated_at
+        menuItem {
+          id
+          name
+          description
+          price
+          image_url
+        }
+      }
     }
   }
 `;
