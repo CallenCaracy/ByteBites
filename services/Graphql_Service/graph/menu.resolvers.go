@@ -6,14 +6,36 @@ package graph
 
 import (
 	"Graphql_Service/graph/model"
+	service "Graphql_Service/grpc_clients"
 	"context"
+	"fmt"
+
+	"github.com/CallenCaracy/ByteBites/services/Menu_Service/pb"
 )
 
 // CreateMenuItem - Insert a new menu item
 func (r *mutationResolver) CreateMenuItem(ctx context.Context, input model.NewMenuItem) (*model.MenuItemFull, error) {
-	query := `INSERT INTO public.menu_list (name, description, price, category, discount, availability_status, image_url, created_at, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-	RETURNING id, name, description, price, category, discount, availability_status, image_url, created_at, updated_at`
+	var discountedPrice float32
+	if input.Discount > 0 {
+		resp, err := service.MenuClient.CalculateDiscount(ctx, &pb.DiscountRequest{Price: float32(input.Price), Discount: float32(input.Discount)})
+		if err != nil {
+			return nil, fmt.Errorf("failed to calculate discounted price: %v", err)
+
+		}
+		discountedPrice = resp.DiscountedPrice
+	} else {
+		discountedPrice = float32(input.Price)
+	}
+
+	query := `INSERT INTO public.menu_list (
+		name, description, price, category, discount, discounted_price,
+		availability_status, image_url, created_at, updated_at
+	) VALUES (
+		$1, $2, $3, $4, $5, $6,
+		$7, $8, NOW(), NOW()
+	)
+	RETURNING id, name, description, price, category, discount, discounted_price,
+		availability_status, image_url, created_at, updated_at`
 
 	item := &model.MenuItem{
 		Name:               input.Name,
@@ -27,21 +49,18 @@ func (r *mutationResolver) CreateMenuItem(ctx context.Context, input model.NewMe
 
 	err := r.Resolver.DB2.QueryRow(query,
 		item.Name, item.Description, item.Price, item.Category,
-		item.Discount, item.AvailabilityStatus, item.ImageURL,
+		item.Discount, discountedPrice,
+		item.AvailabilityStatus, item.ImageURL,
 	).Scan(
 		&item.ID, &item.Name, &item.Description, &item.Price, &item.Category,
-		&item.Discount, &item.AvailabilityStatus, &item.ImageURL,
+		&item.Discount, &discountedPrice,
+		&item.AvailabilityStatus, &item.ImageURL,
 		&item.CreatedAt, &item.UpdatedAt,
 	)
 
 	if err != nil {
 		return nil, err
 	}
-
-	// resp, err := service.MenuClient.CalculateDiscountedPrice(ctx, &pb.DiscountedPriceRequest{Price: item.Price, Discount: item.Discount})
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to calculate discounted price: %v", err)
-	// }
 
 	r.MenuItemCreated <- item
 
@@ -52,6 +71,7 @@ func (r *mutationResolver) CreateMenuItem(ctx context.Context, input model.NewMe
 		Price:              item.Price,
 		Category:           item.Category,
 		Discount:           item.Discount,
+		DiscountedPrice:    float64(discountedPrice),
 		AvailabilityStatus: item.AvailabilityStatus,
 		ImageURL:           item.ImageURL,
 		CreatedAt:          item.CreatedAt,
@@ -61,20 +81,34 @@ func (r *mutationResolver) CreateMenuItem(ctx context.Context, input model.NewMe
 
 // UpdateMenuItem - Update an existing menu item
 func (r *mutationResolver) UpdateMenuItem(ctx context.Context, id string, input model.UpdateMenuItem) (*model.MenuItemFull, error) {
+	var discountedPrice float32
+	if *input.Discount > 0 {
+		resp, err := service.MenuClient.CalculateDiscount(ctx, &pb.DiscountRequest{Price: float32(*input.Price), Discount: float32(*input.Discount)})
+		if err != nil {
+			return nil, fmt.Errorf("failed to calculate discounted price: %v", err)
+
+		}
+		discountedPrice = resp.DiscountedPrice
+	} else {
+		discountedPrice = float32(*input.Price)
+	}
+
 	query := `UPDATE public.menu_list
 	SET name = $1, description = $2, price = $3, category = $4, discount = $5,
-	    availability_status = $6, image_url = $7, updated_at = NOW()
-	WHERE id = $8
-	RETURNING id, name, description, price, category, discount, availability_status, image_url, created_at, updated_at`
+	    discounted_price = $6, availability_status = $7, image_url = $8, updated_at = NOW()
+	WHERE id = $9
+	RETURNING id, name, description, price, discounted_price, category, discount, 
+	          availability_status, image_url, created_at, updated_at`
 
-	var item model.MenuItem
+	var item model.MenuItemFull
 	err := r.Resolver.DB2.QueryRow(query,
 		input.Name, input.Description, input.Price, input.Category,
-		input.Discount, input.AvailabilityStatus, input.ImageURL, id,
+		input.Discount, discountedPrice, input.AvailabilityStatus,
+		input.ImageURL, id,
 	).Scan(
-		&item.ID, &item.Name, &item.Description, &item.Price, &item.Category,
-		&item.Discount, &item.AvailabilityStatus, &item.ImageURL,
-		&item.CreatedAt, &item.UpdatedAt,
+		&item.ID, &item.Name, &item.Description, &item.Price, &item.DiscountedPrice,
+		&item.Category, &item.Discount, &item.AvailabilityStatus,
+		&item.ImageURL, &item.CreatedAt, &item.UpdatedAt,
 	)
 
 	if err != nil {
@@ -88,6 +122,7 @@ func (r *mutationResolver) UpdateMenuItem(ctx context.Context, id string, input 
 		Price:              item.Price,
 		Category:           item.Category,
 		Discount:           item.Discount,
+		DiscountedPrice:    item.DiscountedPrice,
 		AvailabilityStatus: item.AvailabilityStatus,
 		ImageURL:           item.ImageURL,
 		CreatedAt:          item.CreatedAt,
@@ -107,24 +142,27 @@ func (r *mutationResolver) DeleteMenuItem(ctx context.Context, id string) (bool,
 
 // GetAllMenuItems - Fetch all menu items
 func (r *queryResolver) GetAllMenuItems(ctx context.Context) ([]*model.MenuItemFull, error) {
-	query := `SELECT id, name, description, price, category, discount, availability_status, image_url, created_at, updated_at FROM public.menu_list`
+	var discountedPrice float32
+	query := `SELECT id, name, description, price, category, discount, discounted_price, availability_status, image_url, created_at, updated_at FROM public.menu_list`
 	rows, err := r.Resolver.DB2.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var menuItems []*model.MenuItem
+	var menuItems []*model.MenuItemFull
 	for rows.Next() {
-		var item model.MenuItem
+		var item model.MenuItemFull
+
 		err := rows.Scan(
 			&item.ID, &item.Name, &item.Description, &item.Price, &item.Category,
-			&item.Discount, &item.AvailabilityStatus, &item.ImageURL,
+			&item.Discount, &discountedPrice, &item.AvailabilityStatus, &item.ImageURL,
 			&item.CreatedAt, &item.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
 		}
+		item.DiscountedPrice = float64(discountedPrice)
 		menuItems = append(menuItems, &item)
 	}
 
@@ -141,11 +179,13 @@ func (r *queryResolver) GetAllMenuItems(ctx context.Context) ([]*model.MenuItemF
 			Price:              item.Price,
 			Category:           item.Category,
 			Discount:           item.Discount,
+			DiscountedPrice:    item.DiscountedPrice,
 			AvailabilityStatus: item.AvailabilityStatus,
 			ImageURL:           item.ImageURL,
 			CreatedAt:          item.CreatedAt,
 			UpdatedAt:          item.UpdatedAt,
 		})
+
 	}
 	return menuItemsFull, nil
 }
@@ -153,13 +193,14 @@ func (r *queryResolver) GetAllMenuItems(ctx context.Context) ([]*model.MenuItemF
 // GetMenuItemByID is the resolver for the getMenuItemById field.
 // GetMenuItemByID - Fetch a single menu item by ID
 func (r *queryResolver) GetMenuItemByID(ctx context.Context, id string) (*model.MenuItemFull, error) {
-	query := `SELECT id, name, description, price, category, discount, availability_status, image_url, created_at, updated_at 
+	query := `SELECT id, name, description, price, category, discount, discounted_price, availability_status, image_url, created_at, updated_at 
 	          FROM public.menu_list WHERE id = $1`
 
 	var item model.MenuItem
+	var discountedPrice float32
 	err := r.Resolver.DB2.QueryRow(query, id).Scan(
 		&item.ID, &item.Name, &item.Description, &item.Price, &item.Category,
-		&item.Discount, &item.AvailabilityStatus, &item.ImageURL,
+		&item.Discount, &discountedPrice, &item.AvailabilityStatus, &item.ImageURL,
 		&item.CreatedAt, &item.UpdatedAt,
 	)
 
@@ -174,6 +215,7 @@ func (r *queryResolver) GetMenuItemByID(ctx context.Context, id string) (*model.
 		Price:              item.Price,
 		Category:           item.Category,
 		Discount:           item.Discount,
+		DiscountedPrice:    float64(discountedPrice),
 		AvailabilityStatus: item.AvailabilityStatus,
 		ImageURL:           item.ImageURL,
 		CreatedAt:          item.CreatedAt,

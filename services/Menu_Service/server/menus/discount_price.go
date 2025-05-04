@@ -3,7 +3,7 @@ package menu
 import (
 	"context"
 
-	"Menu_Service/pb"
+	"github.com/CallenCaracy/ByteBites/services/Menu_Service/pb"
 )
 
 type Server struct {

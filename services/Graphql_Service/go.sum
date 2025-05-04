@@ -1,5 +1,7 @@
 github.com/99designs/gqlgen v0.17.70 h1:xgLIgQuG+Q2L/AE9cW595CT7xCWCe/bpPIFGSfsGSGs=
 github.com/99designs/gqlgen v0.17.70/go.mod h1:fvCiqQAu2VLhKXez2xFvLmE47QgAPf/KTPN5XQ4rsHQ=
+github.com/CallenCaracy/ByteBites/services/Menu_Service v0.0.0-20250504035637-a31e065246c8 h1:CsJDzPnPzQm+giryJk4NQrsaXY3PD3mXMb+L/1CuN5M=
+github.com/CallenCaracy/ByteBites/services/Menu_Service v0.0.0-20250504035637-a31e065246c8/go.mod h1:RDpfqQeirRN6Eot7XALkPBc61jE1/DCgBC9JkBZH4mo=
 github.com/CallenCaracy/ByteBites/services/User_Service v0.0.0-20250401094800-3da278d121ba h1:ytgyPqIlftXnRw7KWqwFtD1D0wzwCBnIz0guGGXobLw=
 github.com/CallenCaracy/ByteBites/services/User_Service v0.0.0-20250401094800-3da278d121ba/go.mod h1:+WvQS6RA8PuifhSt6gr97rnUI3049m+KXAosoqWNSN4=
 github.com/PuerkitoBio/goquery v1.10.2 h1:7fh2BdHcG6VFZsK7toXBT/Bh1z5Wmy8Q9MV9HqT2AM8=

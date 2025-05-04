@@ -4,11 +4,11 @@ import (
 	"net"
 	"os"
 
-	"Menu_Service/utils"
+	"github.com/CallenCaracy/ByteBites/services/Menu_Service/utils"
 
-	"Menu_Service/pb"
+	"github.com/CallenCaracy/ByteBites/services/Menu_Service/pb"
 
-	menu "Menu_Service/server/menus"
+	menu "github.com/CallenCaracy/ByteBites/services/Menu_Service/server/menus"
 
 	"google.golang.org/grpc"
 )

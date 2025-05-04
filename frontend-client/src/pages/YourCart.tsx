@@ -84,6 +84,10 @@ const YourCart: React.FC = () => {
         }
     };
 
+    const totalPrice = cartItems.reduce((total: number, item: { price: number; quantity: number; }) => {
+        return total + item.price * item.quantity;
+    }, 0).toFixed(2);
+
     return (
         <>
             <Navbar />
@@ -111,9 +115,11 @@ const YourCart: React.FC = () => {
                         </div>
                     ))}
                 </div>
+                <div className="mt-6 border-t pt-6">
+                    <h3 className="text-xl text-black font-semibold mb-4">Total: ₱{totalPrice}</h3>
+                </div>
 
                 <div className="mt-6 border-t pt-6">
-                    <h3 className="text-xl font-semibold mb-4">Place Your Order</h3>
                     <form
                         className="fixed bottom-0 left-0 w-full bg-white shadow-lg p-4 flex flex-wrap gap-4 items-end border-t z-50"
                         onSubmit={(e) => {
