@@ -37,7 +37,7 @@ export const GET_MENU_ITEM_BY_ID = gql`
 `;
 
 export const GET_MENU_ITEM_BY_ID_FOR_CART = gql`
-  query GetMenuItemById($id: [ID!]!) {
+  query GetMenuItemById($id: ID!) {
     getMenuItemById(id: $id) {
       id
       name

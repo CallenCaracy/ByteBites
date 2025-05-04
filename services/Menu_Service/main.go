@@ -26,7 +26,7 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	pb.RegisterMenuServiceServer(grpcServer, &menu.Server{})
+	pb.RegisterMenuServiceServer(grpcServer, &menu.MenuServiceServer{})
 
 	log.Info("Menu Service running on port 50051...")
 	if err := grpcServer.Serve(lis); err != nil {

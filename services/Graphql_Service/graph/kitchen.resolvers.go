@@ -28,19 +28,23 @@ func (r *mutationResolver) CreateInventory(ctx context.Context, menuID string, a
 // UpdateInventory is the resolver for the updateInventory field.
 func (r *mutationResolver) UpdateInventory(ctx context.Context, id string, availableServings *int32, lowStockThreshold *int32) (*model.Inventory, error) {
 	query := `
-        UPDATE public.menu_stock
-        SET available_servings = COALESCE($1, available_servings),
-            low_stock_threshold = COALESCE($2, low_stock_threshold),
-            last_updated = NOW()
-        WHERE id = $3
-        RETURNING id, menu_id, available_servings, low_stock_threshold, last_updated
-    `
+		UPDATE public.menu_stock
+		SET 
+			available_servings = COALESCE($2, available_servings),
+			low_stock_threshold = COALESCE($3, low_stock_threshold),
+			last_updated = NOW()
+		WHERE menu_id = $1
+		RETURNING id, menu_id, available_servings, low_stock_threshold, last_updated
+	`
+
 	var inv model.Inventory
-	err := r.Resolver.DB7.QueryRow(query, availableServings, lowStockThreshold, id).
+	err := r.Resolver.DB7.QueryRow(query, id, availableServings, lowStockThreshold).
 		Scan(&inv.ID, &inv.MenuID, &inv.AvailableServings, &inv.LowStockThreshold, &inv.LastUpdated)
+
 	if err != nil {
 		return nil, err
 	}
+
 	return &inv, nil
 }
 

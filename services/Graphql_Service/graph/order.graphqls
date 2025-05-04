@@ -18,6 +18,34 @@ type CartItem {
   updated_at: String
 }
 
+type CartWithMenu {
+  id: ID!
+  user_id: ID!
+  created_at: String!
+  updated_at: String
+  items: [CartItemWithMenuItem!]!
+}
+
+type CartItemWithMenuItem {
+  id: ID!
+  cart_id: ID!
+  menu_item_id: ID!
+  quantity: Int!
+  price: Float!
+  customizations: String
+  created_at: String!
+  updated_at: String
+  menuItem: MenuItemForCart
+}
+
+type MenuItemForCart {
+  id: ID!
+  name: String!
+  description: String!
+  price: Float!
+  image_url: String
+}
+
 # Input for adding a cart item
 input AddCartItemInput {
   user_id: ID!
@@ -40,6 +68,7 @@ type Query {
   getCart(user_id: ID!): Cart
   getCartItemsByCartId(cart_id: ID!): [CartItem!]!
   getUserOrders(userID: String!): [Order!]!
+  getCartAndMenuItems(user_id: ID!): CartWithMenu!
 }
 
 # Mutations
