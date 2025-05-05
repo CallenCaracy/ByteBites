@@ -11,7 +11,7 @@
 - **Kitchen Operations**: Order fulfillment based on priority and status.
 
 ## Architecture Diagram
-![Architecture Diagram](https://github.com/CallenCaracy/ByteBites/blob/main/documents/diagrams/SIA_Final_Project.drawio.png)
+![Architecture Diagram](https://github.com/CallenCaracy/ByteBites/blob/main/documents/diagrams/SIA_FINAL_PROJECT_DIAGRAM.png)
 
 ## Tech Stack
 - **Frontend**: React with Tailwind CSS (Vite as build tool)
