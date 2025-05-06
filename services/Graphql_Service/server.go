@@ -77,7 +77,7 @@ func main() {
 
 	// Connect to Supabase DB PAYMENT
 	db3, err := sql.Open("pgx", db3URL)
-	if err!= nil {
+	if err != nil {
 		logger.Fatal("Failed to connect to Supabase DB3: %v", err)
 	}
 	defer db3.Close()
@@ -97,14 +97,15 @@ func main() {
 	defer db7.Close()
 
 	resolver := &graph.Resolver{
-		DB1:             db1,
-		DB2:             db2,
-		DB3:             db3,
-		DB5:             db5,
-		DB7:             db7,
-		AuthClient:      client,
-		Logger:          logger,
-		MenuItemCreated: make(chan *model.MenuItem),
+		DB1:                        db1,
+		DB2:                        db2,
+		DB3:                        db3,
+		DB5:                        db5,
+		DB7:                        db7,
+		AuthClient:                 client,
+		Logger:                     logger,
+		MenuItemCreatedObservers:   make(map[string]chan *model.MenuItem),
+		OrderQueueCreatedObservers: make(map[string]chan *model.OrderQueue),
 	}
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))

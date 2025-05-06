@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/CallenCaracy/ByteBites/services/Menu_Service/pb"
+	"github.com/google/uuid"
 )
 
 // CreateMenuItem - Insert a new menu item
@@ -62,7 +63,18 @@ func (r *mutationResolver) CreateMenuItem(ctx context.Context, input model.NewMe
 		return nil, err
 	}
 
-	r.MenuItemCreated <- item
+	r.Resolver.mu.Lock()
+	for id, ch := range r.Resolver.MenuItemCreatedObservers {
+		select {
+		case ch <- item:
+			// Sent successfully
+		default:
+			// Channel likely dead or slow reader — clean up
+			close(ch)
+			delete(r.Resolver.MenuItemCreatedObservers, id)
+		}
+	}
+	r.Resolver.mu.Unlock()
 
 	return &model.MenuItemFull{
 		ID:                 item.ID,
@@ -225,24 +237,19 @@ func (r *queryResolver) GetMenuItemByID(ctx context.Context, id string) (*model.
 
 // MenuItemCreated is the resolver for the menuItemCreated field.
 func (r *subscriptionResolver) MenuItemCreated(ctx context.Context) (<-chan *model.MenuItem, error) {
-	ch := make(chan *model.MenuItem)
+	id := uuid.New().String()
+	ch := make(chan *model.MenuItem, 1)
+
+	r.Resolver.mu.Lock()
+	r.Resolver.MenuItemCreatedObservers[id] = ch
+	r.Resolver.mu.Unlock()
 
 	go func() {
-		defer close(ch)
-		for {
-			select {
-			case item := <-r.Resolver.MenuItemCreated:
-				ch <- item
-			case <-ctx.Done():
-				return
-			}
-		}
+		<-ctx.Done()
+		r.Resolver.mu.Lock()
+		delete(r.Resolver.MenuItemCreatedObservers, id)
+		r.Resolver.mu.Unlock()
 	}()
 
 	return ch, nil
 }
-
-// Subscription returns SubscriptionResolver implementation.
-func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
-
-type subscriptionResolver struct{ *Resolver }

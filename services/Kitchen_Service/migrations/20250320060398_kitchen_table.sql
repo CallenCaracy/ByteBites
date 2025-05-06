@@ -2,7 +2,6 @@
 -- +goose StatementBegin
 CREATE TABLE order_queue (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    menu_id UUID NOT NULL,
     order_id UUID NOT NULL,
     status TEXT CHECK (status IN ('preparing', 'ready', 'complete')) NOT NULL DEFAULT 'preparing',
     created_at TIMESTAMPTZ DEFAULT NOW()

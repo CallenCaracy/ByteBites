@@ -293,7 +293,7 @@ const Account: React.FC = () => {
                                 <div className="mb-4">
                                 <button
                                     type="submit"
-                                    className={`px-4 py-2 rounded-md ${
+                                    className={`px-4 py-2 rounded-md text-white ${
                                         Object.values(formErrors).some((error) => error) 
                                             ? 'bg-gray-400 cursor-not-allowed' 
                                             : 'bg-blue-500 hover:bg-blue-600'
@@ -305,7 +305,7 @@ const Account: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => setIsEditing(false)}
-                                        className="px-4 py-2 bg-gray-500 rounded-md ml-2">
+                                        className="px-4 py-2 bg-gray-500 text-white rounded-md ml-2">
                                         Close
                                     </button>
                                 </div>
@@ -326,7 +326,7 @@ const Account: React.FC = () => {
                             <p className="text-black"><strong>Role:</strong> {data?.getUserById?.role || "No role available"}</p>
                             <p className="text-black"><strong>Address:</strong> {data?.getUserById?.address || "No address available"}</p>
                             <p className="text-black"><strong>Phone:</strong> {data?.getUserById?.phone || "No phone number available"}</p>
-                            <button onClick={handleEditClick} className="mt-2 text-white">Update Profile</button>
+                            <button onClick={handleEditClick} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Update Profile</button>
                         </>
                     )}
                 </div>

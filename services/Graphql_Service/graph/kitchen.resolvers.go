@@ -6,7 +6,12 @@ package graph
 
 import (
 	"Graphql_Service/graph/model"
+	service "Graphql_Service/grpc_clients"
 	"context"
+	"fmt"
+
+	"github.com/CallenCaracy/ByteBites/services/Kitchen_Service/pb"
+	"github.com/google/uuid"
 )
 
 // CreateInventory is the resolver for the createInventory field.
@@ -27,6 +32,19 @@ func (r *mutationResolver) CreateInventory(ctx context.Context, menuID string, a
 
 // UpdateInventory is the resolver for the updateInventory field.
 func (r *mutationResolver) UpdateInventory(ctx context.Context, id string, availableServings *int32, lowStockThreshold *int32) (*model.Inventory, error) {
+	resp, err := service.KitchenClient.DeductStock(ctx, &pb.DeductStockRequest{
+		MenuItemId: id,
+		Quantity: func() int32 {
+			if availableServings != nil {
+				return *availableServings
+			}
+			return 0
+		}(),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to deduct inventory: %v, message: %s", err, resp.Message)
+	}
+
 	query := `
 		UPDATE public.menu_stock
 		SET 
@@ -38,7 +56,7 @@ func (r *mutationResolver) UpdateInventory(ctx context.Context, id string, avail
 	`
 
 	var inv model.Inventory
-	err := r.Resolver.DB7.QueryRow(query, id, availableServings, lowStockThreshold).
+	err = r.Resolver.DB7.QueryRow(query, id, availableServings, lowStockThreshold).
 		Scan(&inv.ID, &inv.MenuID, &inv.AvailableServings, &inv.LowStockThreshold, &inv.LastUpdated)
 
 	if err != nil {
@@ -59,18 +77,33 @@ func (r *mutationResolver) DeleteInventory(ctx context.Context, id string) (bool
 }
 
 // CreateOrderQueue is the resolver for the createOrderQueue field.
-func (r *mutationResolver) CreateOrderQueue(ctx context.Context, menuID string, orderID string, status *model.KitchenStatus) (*model.OrderQueue, error) {
+func (r *mutationResolver) CreateOrderQueue(ctx context.Context, orderID string, status *model.KitchenStatus) (*model.OrderQueue, error) {
 	query := `
-        INSERT INTO public.order_queue (menu_id, order_id, status, created_at)
-        VALUES ($1, $2, COALESCE($3, 'preparing'), NOW())
-        RETURNING id, menu_id, order_id, status, created_at
+        INSERT INTO public.order_queue (order_id, status, created_at)
+        VALUES ($1, COALESCE($2, 'preparing'), NOW())
+        RETURNING id, order_id, status, created_at
     `
 	var order model.OrderQueue
-	err := r.Resolver.DB7.QueryRow(query, menuID, orderID, status).
-		Scan(&order.ID, &order.MenuID, &order.OrderID, &order.Status, &order.CreatedAt)
+	err := r.Resolver.DB7.QueryRow(query, orderID, status).
+		Scan(&order.ID, &order.OrderID, &order.Status, &order.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
+
+	// 🔔 Broadcast to all observers
+	r.Resolver.mu.Lock()
+	for key, ch := range r.Resolver.OrderQueueCreatedObservers {
+		select {
+		case ch <- &order:
+			// sent successfully
+		default:
+			// channel is blocked or dead, clean it up
+			close(ch)
+			delete(r.Resolver.OrderQueueCreatedObservers, key)
+		}
+	}
+	r.Resolver.mu.Unlock()
+
 	return &order, nil
 }
 
@@ -81,11 +114,11 @@ func (r *mutationResolver) UpdateOrderQueue(ctx context.Context, id string, stat
         SET status = COALESCE($1, status),
             created_at = NOW()
         WHERE id = $2
-        RETURNING id, menu_id, order_id, status, created_at
+        RETURNING id, order_id, status, created_at
     `
 	var order model.OrderQueue
 	err := r.Resolver.DB7.QueryRow(query, status, id).
-		Scan(&order.ID, &order.MenuID, &order.OrderID, &order.Status, &order.CreatedAt)
+		Scan(&order.ID, &order.OrderID, &order.Status, &order.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +170,7 @@ func (r *queryResolver) Inventory(ctx context.Context, id string) (*model.Invent
 
 // OrderQueues is the resolver for the orderQueues field.
 func (r *queryResolver) OrderQueues(ctx context.Context) ([]*model.OrderQueue, error) {
-	query := `SELECT id, menu_id, order_id, status, created_at FROM public.order_queue`
+	query := `SELECT id, order_id, status, created_at FROM public.order_queue`
 	rows, err := r.Resolver.DB7.Query(query)
 	if err != nil {
 		return nil, err
@@ -147,7 +180,7 @@ func (r *queryResolver) OrderQueues(ctx context.Context) ([]*model.OrderQueue, e
 	var orders []*model.OrderQueue
 	for rows.Next() {
 		var order model.OrderQueue
-		err := rows.Scan(&order.ID, &order.MenuID, &order.OrderID, &order.Status, &order.CreatedAt)
+		err := rows.Scan(&order.ID, &order.OrderID, &order.Status, &order.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -158,12 +191,36 @@ func (r *queryResolver) OrderQueues(ctx context.Context) ([]*model.OrderQueue, e
 
 // OrderQueue is the resolver for the orderQueue field.
 func (r *queryResolver) OrderQueue(ctx context.Context, id string) (*model.OrderQueue, error) {
-	query := `SELECT id, menu_id, order_id, status, created_at FROM public.order_queue WHERE id = $1`
+	query := `SELECT id, order_id, status, created_at FROM public.order_queue WHERE id = $1`
 	var order model.OrderQueue
 	err := r.Resolver.DB7.QueryRow(query, id).
-		Scan(&order.ID, &order.MenuID, &order.OrderID, &order.Status, &order.CreatedAt)
+		Scan(&order.ID, &order.OrderID, &order.Status, &order.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return &order, nil
 }
+
+// OrderQueueCreated is the resolver for the orderQueueCreated field.
+func (r *subscriptionResolver) OrderQueueCreated(ctx context.Context) (<-chan *model.OrderQueue, error) {
+	id := uuid.New().String()
+	ch := make(chan *model.OrderQueue, 1)
+
+	r.mu.Lock()
+	r.OrderQueueCreatedObservers[id] = ch
+	r.mu.Unlock()
+
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.OrderQueueCreatedObservers, id)
+		r.mu.Unlock()
+	}()
+
+	return ch, nil
+}
+
+// Subscription returns SubscriptionResolver implementation.
+func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
+
+type subscriptionResolver struct{ *Resolver }

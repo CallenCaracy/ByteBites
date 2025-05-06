@@ -209,12 +209,17 @@ const MenuItem: React.FC = () => {
                     {customError && <p className="text-red-500 text-md">{customError}</p>}
 
                     <div className="flex gap-4">
-                        <button
-                            type="submit"
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                        >
-                            Submit Order
-                        </button>
+                    <button
+                        type="submit"
+                        className={`px-6 py-3 rounded-lg text-white transition ${
+                            item.availability_status
+                                ? "bg-blue-600 hover:bg-blue-700"
+                                : "bg-gray-400 cursor-not-allowed"
+                        }`}
+                        disabled={!item.availability_status || inventory.availableServings < 0}
+                    >
+                        Submit Order
+                    </button>
                         <button
                             type="button"
                             onClick={() => navigate("/dashboard")}
@@ -222,6 +227,9 @@ const MenuItem: React.FC = () => {
                         >
                             Cancel
                         </button>
+                        {(!item.availability_status || inventory.availableServings < 0) && (
+                            <p className="text-red-500 text-md">Item is currently unavailable and out of stock</p>
+                        )}
                     </div>
                 </form>
             </div>
