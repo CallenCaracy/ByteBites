@@ -10,6 +10,7 @@ import UpdatePassword from './pages/UpdatePassword';
 import MenuItem from './pages/MenuItems';
 import AddMenu from './pages/AddMenu';
 import MakeInventory from './pages/MakeInventory';
+import OrderQueues from './pages/OrderQueues'
 import { supabase } from './utils/supabaseClient';
 
 function App() {
@@ -94,6 +95,7 @@ function App() {
             <Route path="/menu-item/:menuId" element={<MenuItem/>} />
             <Route path="/add-menu/:userId" element={<AddMenu/>} />
             <Route path="/add-inventory/:menuId" element={<MakeInventory/>} />
+            <Route path="/order-queues" element={<OrderQueues/>} />
           </Route>
       </Routes>
     </Router>
