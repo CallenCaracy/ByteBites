@@ -23,5 +23,5 @@
     "noUncheckedSideEffectImports": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"]
+  "include": ["src", "../frontend-client/src/components/AuthContext.tsx"]
 }

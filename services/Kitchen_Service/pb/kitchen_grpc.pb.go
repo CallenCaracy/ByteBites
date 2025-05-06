@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	KitchenService_CheckStock_FullMethodName  = "/kitchen.KitchenService/CheckStock"
-	KitchenService_DeductStock_FullMethodName = "/kitchen.KitchenService/DeductStock"
+	KitchenService_CheckStock_FullMethodName       = "/kitchen.KitchenService/CheckStock"
+	KitchenService_DeductStock_FullMethodName      = "/kitchen.KitchenService/DeductStock"
+	KitchenService_CreateOrderQueue_FullMethodName = "/kitchen.KitchenService/CreateOrderQueue"
 )
 
 // KitchenServiceClient is the client API for KitchenService service.
@@ -29,6 +30,7 @@ const (
 type KitchenServiceClient interface {
 	CheckStock(ctx context.Context, in *CheckStockRequest, opts ...grpc.CallOption) (*CheckStockResponse, error)
 	DeductStock(ctx context.Context, in *DeductStockRequest, opts ...grpc.CallOption) (*DeductStockResponse, error)
+	CreateOrderQueue(ctx context.Context, in *CreateOrderQueueRequest, opts ...grpc.CallOption) (*CreateOrderQueueResponse, error)
 }
 
 type kitchenServiceClient struct {
@@ -59,12 +61,23 @@ func (c *kitchenServiceClient) DeductStock(ctx context.Context, in *DeductStockR
 	return out, nil
 }
 
+func (c *kitchenServiceClient) CreateOrderQueue(ctx context.Context, in *CreateOrderQueueRequest, opts ...grpc.CallOption) (*CreateOrderQueueResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateOrderQueueResponse)
+	err := c.cc.Invoke(ctx, KitchenService_CreateOrderQueue_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // KitchenServiceServer is the server API for KitchenService service.
 // All implementations must embed UnimplementedKitchenServiceServer
 // for forward compatibility.
 type KitchenServiceServer interface {
 	CheckStock(context.Context, *CheckStockRequest) (*CheckStockResponse, error)
 	DeductStock(context.Context, *DeductStockRequest) (*DeductStockResponse, error)
+	CreateOrderQueue(context.Context, *CreateOrderQueueRequest) (*CreateOrderQueueResponse, error)
 	mustEmbedUnimplementedKitchenServiceServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedKitchenServiceServer) CheckStock(context.Context, *CheckStock
 }
 func (UnimplementedKitchenServiceServer) DeductStock(context.Context, *DeductStockRequest) (*DeductStockResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeductStock not implemented")
+}
+func (UnimplementedKitchenServiceServer) CreateOrderQueue(context.Context, *CreateOrderQueueRequest) (*CreateOrderQueueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateOrderQueue not implemented")
 }
 func (UnimplementedKitchenServiceServer) mustEmbedUnimplementedKitchenServiceServer() {}
 func (UnimplementedKitchenServiceServer) testEmbeddedByValue()                        {}
@@ -138,6 +154,24 @@ func _KitchenService_DeductStock_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _KitchenService_CreateOrderQueue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateOrderQueueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KitchenServiceServer).CreateOrderQueue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: KitchenService_CreateOrderQueue_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KitchenServiceServer).CreateOrderQueue(ctx, req.(*CreateOrderQueueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // KitchenService_ServiceDesc is the grpc.ServiceDesc for KitchenService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var KitchenService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeductStock",
 			Handler:    _KitchenService_DeductStock_Handler,
+		},
+		{
+			MethodName: "CreateOrderQueue",
+			Handler:    _KitchenService_CreateOrderQueue_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

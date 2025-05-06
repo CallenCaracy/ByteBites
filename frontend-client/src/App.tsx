@@ -93,7 +93,7 @@ function App() {
             <Route path="/account/:userId" element={<Account/>} />
             <Route path="/menu-item/:userId/:menuId" element={<MenuItem/>} />
             <Route path="/cart/:userId" element={<YourCart/>} />
-            <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/payment/:orderId" element={<PaymentPage />} />
           </Route>
       </Routes>
     </Router>

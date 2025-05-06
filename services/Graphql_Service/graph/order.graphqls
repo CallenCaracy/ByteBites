@@ -58,6 +58,7 @@ input AddCartItemInput {
 # Input for updating a cart item
 input UpdateCartItemInput {
   id: ID!
+  menu_item_id: ID!
   quantity: Int
   price: Float
   customizations: String

@@ -245,6 +245,102 @@ func (x *DeductStockResponse) GetRemainingQuantity() int32 {
 	return 0
 }
 
+type CreateOrderQueueRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OrderId       string                 `protobuf:"bytes,1,opt,name=orderId,proto3" json:"orderId,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateOrderQueueRequest) Reset() {
+	*x = CreateOrderQueueRequest{}
+	mi := &file_kitchen_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateOrderQueueRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateOrderQueueRequest) ProtoMessage() {}
+
+func (x *CreateOrderQueueRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_kitchen_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateOrderQueueRequest.ProtoReflect.Descriptor instead.
+func (*CreateOrderQueueRequest) Descriptor() ([]byte, []int) {
+	return file_kitchen_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *CreateOrderQueueRequest) GetOrderId() string {
+	if x != nil {
+		return x.OrderId
+	}
+	return ""
+}
+
+type CreateOrderQueueResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	OrderId       string                 `protobuf:"bytes,2,opt,name=orderId,proto3" json:"orderId,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateOrderQueueResponse) Reset() {
+	*x = CreateOrderQueueResponse{}
+	mi := &file_kitchen_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateOrderQueueResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateOrderQueueResponse) ProtoMessage() {}
+
+func (x *CreateOrderQueueResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_kitchen_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateOrderQueueResponse.ProtoReflect.Descriptor instead.
+func (*CreateOrderQueueResponse) Descriptor() ([]byte, []int) {
+	return file_kitchen_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CreateOrderQueueResponse) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *CreateOrderQueueResponse) GetOrderId() string {
+	if x != nil {
+		return x.OrderId
+	}
+	return ""
+}
+
 var File_kitchen_proto protoreflect.FileDescriptor
 
 const file_kitchen_proto_rawDesc = "" +
@@ -265,11 +361,17 @@ const file_kitchen_proto_rawDesc = "" +
 	"\x13DeductStockResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12-\n" +
-	"\x12remaining_quantity\x18\x03 \x01(\x05R\x11remainingQuantity2\xa1\x01\n" +
+	"\x12remaining_quantity\x18\x03 \x01(\x05R\x11remainingQuantity\"3\n" +
+	"\x17CreateOrderQueueRequest\x12\x18\n" +
+	"\aorderId\x18\x01 \x01(\tR\aorderId\"D\n" +
+	"\x18CreateOrderQueueResponse\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
+	"\aorderId\x18\x02 \x01(\tR\aorderId2\xfa\x01\n" +
 	"\x0eKitchenService\x12E\n" +
 	"\n" +
 	"CheckStock\x12\x1a.kitchen.CheckStockRequest\x1a\x1b.kitchen.CheckStockResponse\x12H\n" +
-	"\vDeductStock\x12\x1b.kitchen.DeductStockRequest\x1a\x1c.kitchen.DeductStockResponseB\x06Z\x04./pbb\x06proto3"
+	"\vDeductStock\x12\x1b.kitchen.DeductStockRequest\x1a\x1c.kitchen.DeductStockResponse\x12W\n" +
+	"\x10CreateOrderQueue\x12 .kitchen.CreateOrderQueueRequest\x1a!.kitchen.CreateOrderQueueResponseB\x06Z\x04./pbb\x06proto3"
 
 var (
 	file_kitchen_proto_rawDescOnce sync.Once
@@ -283,20 +385,24 @@ func file_kitchen_proto_rawDescGZIP() []byte {
 	return file_kitchen_proto_rawDescData
 }
 
-var file_kitchen_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_kitchen_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_kitchen_proto_goTypes = []any{
-	(*CheckStockRequest)(nil),   // 0: kitchen.CheckStockRequest
-	(*CheckStockResponse)(nil),  // 1: kitchen.CheckStockResponse
-	(*DeductStockRequest)(nil),  // 2: kitchen.DeductStockRequest
-	(*DeductStockResponse)(nil), // 3: kitchen.DeductStockResponse
+	(*CheckStockRequest)(nil),        // 0: kitchen.CheckStockRequest
+	(*CheckStockResponse)(nil),       // 1: kitchen.CheckStockResponse
+	(*DeductStockRequest)(nil),       // 2: kitchen.DeductStockRequest
+	(*DeductStockResponse)(nil),      // 3: kitchen.DeductStockResponse
+	(*CreateOrderQueueRequest)(nil),  // 4: kitchen.CreateOrderQueueRequest
+	(*CreateOrderQueueResponse)(nil), // 5: kitchen.CreateOrderQueueResponse
 }
 var file_kitchen_proto_depIdxs = []int32{
 	0, // 0: kitchen.KitchenService.CheckStock:input_type -> kitchen.CheckStockRequest
 	2, // 1: kitchen.KitchenService.DeductStock:input_type -> kitchen.DeductStockRequest
-	1, // 2: kitchen.KitchenService.CheckStock:output_type -> kitchen.CheckStockResponse
-	3, // 3: kitchen.KitchenService.DeductStock:output_type -> kitchen.DeductStockResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	4, // 2: kitchen.KitchenService.CreateOrderQueue:input_type -> kitchen.CreateOrderQueueRequest
+	1, // 3: kitchen.KitchenService.CheckStock:output_type -> kitchen.CheckStockResponse
+	3, // 4: kitchen.KitchenService.DeductStock:output_type -> kitchen.DeductStockResponse
+	5, // 5: kitchen.KitchenService.CreateOrderQueue:output_type -> kitchen.CreateOrderQueueResponse
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -313,7 +419,7 @@ func file_kitchen_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kitchen_proto_rawDesc), len(file_kitchen_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

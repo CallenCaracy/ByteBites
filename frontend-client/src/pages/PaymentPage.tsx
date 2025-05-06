@@ -12,13 +12,14 @@ import {
   ShoppingBag,
   AlertCircle,
 } from "lucide-react";
-import { useMutation, useQuery } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 import { CREATE_TRANSACTION, CREATE_RECEIPT } from "../graphql/Paymentqueries";
-import { GET_AUTHENTICATED_USER } from "../graphql/Userqueries";
-import { v4 as uuidv4 } from "uuid";
 import Navbar from "../components/NavBar";
+import { useAuth } from "../components/AuthContext";
+import { useParams } from "react-router-dom";
 
 export default function PaymentPage() {
+  const { orderId } = useParams<{ orderId: string }>();
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [onlineMethod, setOnlineMethod] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -33,7 +34,10 @@ export default function PaymentPage() {
   });
 
   // Get authenticated user
-  const { data: userData } = useQuery(GET_AUTHENTICATED_USER);
+  const { user, loading: userLoading, error: userError } = useAuth();
+
+  if (userLoading) return <p className="text-center text-gray-600">Loading...</p>;
+  if (userError) return <p className="text-center text-red-500">Error loading data.</p>;
 
   // GraphQL mutations
   const [createTransaction, { loading: transactionLoading }] =
@@ -125,10 +129,10 @@ export default function PaymentPage() {
       // Instead of creating a random UUID, we should use an actual order ID
       // If you don't have an actual order system yet, we can add more error handling
       // to make the API call more robust
-      const mockOrderId = uuidv4();
+      const order_id = orderId;
 
       // Get user ID from authenticated user
-      const userId = userData?.getAuthenticatedUser?.id;
+      const userId = user?.id;
 
       if (!userId) {
         setErrorMessage("User authentication required");
@@ -147,7 +151,7 @@ export default function PaymentPage() {
 
       // Add error handling and logging for better debugging
       console.log("Creating transaction with:", {
-        orderId: mockOrderId,
+        orderId: order_id,
         userId: userId,
         amountPaid: total,
         paymentMethod: paymentMethodEnum,
@@ -157,7 +161,7 @@ export default function PaymentPage() {
       // and might be causing issues with the enum parsing
       const transactionResult = await createTransaction({
         variables: {
-          orderId: mockOrderId,
+          orderId: order_id,
           userId: userId,
           amountPaid: total,
           paymentMethod: paymentMethodEnum,

@@ -11,16 +11,15 @@ enum KitchenStatus {
 # Inventory type corresponding to the menu_stock table
 type Inventory {
   id: ID!                   
-  menuId: ID!                # Maps to menu_id
-  availableServings: Int!   # Maps to available_servings
-  lowStockThreshold: Int!   # Maps to low_stock_threshold
-  lastUpdated: DateTime!    # Maps to last_updated
+  menuId: ID!                # Still maps to menu_id in inventory table
+  availableServings: Int!   
+  lowStockThreshold: Int!   
+  lastUpdated: DateTime!    
 }
 
 # OrderQueue type corresponding to the order_queue table
 type OrderQueue {
   id: ID!
-  menuId: ID!
   orderId: ID!
   status: KitchenStatus!
   createdAt: DateTime!
@@ -56,7 +55,6 @@ extend type Mutation {
 
   # OrderQueue mutations
   createOrderQueue(
-    menuId: ID!
     orderId: ID!
     status: KitchenStatus
   ): OrderQueue!
@@ -67,4 +65,8 @@ extend type Mutation {
   ): OrderQueue!
 
   deleteOrderQueue(id: ID!): Boolean!
+}
+
+extend type Subscription {
+  orderQueueCreated: OrderQueue!
 }

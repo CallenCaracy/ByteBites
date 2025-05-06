@@ -6,12 +6,15 @@ package graph
 
 import (
 	"Graphql_Service/graph/model"
+	service "Graphql_Service/grpc_clients"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/CallenCaracy/ByteBites/services/Kitchen_Service/pb"
 )
 
 // CreateCart is the resolver for the createCart field.
@@ -125,41 +128,50 @@ func (r *mutationResolver) AddCartItem(ctx context.Context, input model.AddCartI
 
 // UpdateCartItem is the resolver for the updateCartItem field.
 func (r *mutationResolver) UpdateCartItem(ctx context.Context, input model.UpdateCartItemInput) (*model.CartItem, error) {
-	var cartItem model.CartItem
+	if input.Quantity == nil {
+		return nil, errors.New("quantity must be provided")
+	}
 
-	// Retrieve the current cart item details
-	err := r.DB5.QueryRowContext(ctx,
-		`SELECT id, cart_id, menu_item_id, quantity, price, customizations, created_at, updated_at
+	resp, err := service.KitchenClient.CheckStock(ctx, &pb.CheckStockRequest{
+		MenuItemId: input.MenuItemID,
+		Quantity:   *input.Quantity,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to check inventory: %w", err)
+	}
+	if !resp.Available || resp.AvailableQuantity < int32(*input.Quantity) {
+		return nil, fmt.Errorf("not enough stock for menu item %s, available: %d, requested: %d",
+			input.ID, resp.AvailableQuantity, *input.Quantity)
+	}
+
+	var cartItem model.CartItem
+	err = r.DB5.QueryRowContext(ctx, `
+		SELECT id, cart_id, menu_item_id, quantity, price, customizations, created_at, updated_at
 		FROM cart_items
-		WHERE id = $1`,
-		input.ID).Scan(
-		&cartItem.ID, &cartItem.CartID, &cartItem.MenuItemID, &cartItem.Quantity, &cartItem.Price,
-		&cartItem.Customizations, &cartItem.CreatedAt, &cartItem.UpdatedAt,
+		WHERE id = $1
+	`, input.ID).Scan(
+		&cartItem.ID, &cartItem.CartID, &cartItem.MenuItemID,
+		&cartItem.Quantity, &cartItem.Price, &cartItem.Customizations,
+		&cartItem.CreatedAt, &cartItem.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("cart item not found: %w", err)
 	}
 
-	// Update the fields that were provided in the input
-	if input.Quantity != nil {
-		cartItem.Quantity = *input.Quantity
-	}
+	cartItem.Quantity = *input.Quantity
 	if input.Customizations != nil {
 		cartItem.Customizations = input.Customizations
 	}
 
-	// Prepare the query to update the cart item in the database
-	updateQuery := `
-    UPDATE cart_items
-    SET quantity = $1, customizations = $2, updated_at = NOW()
-    WHERE id = $3
-    RETURNING id, cart_id, menu_item_id, quantity, price, customizations, created_at, updated_at;
-  `
-
-	// Execute the update query and scan the result into the cartItem struct
-	err = r.DB5.QueryRowContext(ctx, updateQuery, cartItem.Quantity, cartItem.Customizations, cartItem.ID).Scan(
-		&cartItem.ID, &cartItem.CartID, &cartItem.MenuItemID, &cartItem.Quantity, &cartItem.Price,
-		&cartItem.Customizations, &cartItem.CreatedAt, &cartItem.UpdatedAt,
+	err = r.DB5.QueryRowContext(ctx, `
+		UPDATE cart_items
+		SET quantity = $1, customizations = $2, updated_at = NOW()
+		WHERE id = $3
+		RETURNING id, cart_id, menu_item_id, quantity, price, customizations, created_at, updated_at
+	`, cartItem.Quantity, cartItem.Customizations, cartItem.ID).Scan(
+		&cartItem.ID, &cartItem.CartID, &cartItem.MenuItemID,
+		&cartItem.Quantity, &cartItem.Price, &cartItem.Customizations,
+		&cartItem.CreatedAt, &cartItem.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error updating cart item: %w", err)
@@ -193,9 +205,11 @@ func (r *mutationResolver) CreateOrderFromCart(ctx context.Context, cartID strin
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
+
+	committed := false
 	defer func() {
-		if err != nil {
-			tx.Rollback()
+		if !committed {
+			_ = tx.Rollback() // ignore rollback error
 		}
 	}()
 
@@ -213,6 +227,7 @@ func (r *mutationResolver) CreateOrderFromCart(ctx context.Context, cartID strin
 		Customizations *string
 	}
 	var totalPrice float64
+
 	for rows.Next() {
 		var item struct {
 			MenuItemID     string
@@ -223,9 +238,28 @@ func (r *mutationResolver) CreateOrderFromCart(ctx context.Context, cartID strin
 		if err := rows.Scan(&item.MenuItemID, &item.Quantity, &item.Price, &item.Customizations); err != nil {
 			return nil, fmt.Errorf("failed to scan cart item: %w", err)
 		}
+
+		// Check stock AFTER scanning values
+		resp, err := service.KitchenClient.CheckStock(ctx, &pb.CheckStockRequest{
+			MenuItemId: item.MenuItemID,
+			Quantity:   int32(item.Quantity),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to check inventory for item %s: %w", item.MenuItemID, err)
+		}
+		if !resp.Available || resp.AvailableQuantity < int32(item.Quantity) {
+			return nil, fmt.Errorf("not enough stock for menu item %s, available: %d, requested: %d",
+				item.MenuItemID, resp.AvailableQuantity, item.Quantity)
+		}
+
 		items = append(items, item)
 		totalPrice += item.Price * float64(item.Quantity)
 	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error reading cart items: %w", err)
+	}
+
 	if len(items) == 0 {
 		return nil, fmt.Errorf("cart is empty")
 	}
@@ -262,8 +296,9 @@ func (r *mutationResolver) CreateOrderFromCart(ctx context.Context, cartID strin
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
+	committed = true
 
-	// Return the order (can fetch full order data if you want)
+	// Step 6: Return order
 	return &model.Order{
 		ID:              orderID,
 		UserID:          userID,
@@ -272,51 +307,13 @@ func (r *mutationResolver) CreateOrderFromCart(ctx context.Context, cartID strin
 		OrderType:       &orderType,
 		DeliveryAddress: deliveryAddress,
 		SpecialRequests: specialRequests,
-		// CreatedAt and UpdatedAt would be added if you fetch them here
+		// Timestamps could be populated here if needed
 	}, nil
 }
 
-// UpdateOrderStatus is the resolver for the updateOrderStatus field.
+// UpdateOrderStatus implements MutationResolver.
 func (r *mutationResolver) UpdateOrderStatus(ctx context.Context, orderID string, orderStatus string) (*model.Order, error) {
-	// Ensure the status is valid
-	validStatuses := []string{"pending", "in-progress", "completed", "cancelled"}
-	isValid := false
-	for _, status := range validStatuses {
-		if orderStatus == status {
-			isValid = true
-			break
-		}
-	}
-
-	if !isValid {
-		return nil, fmt.Errorf("invalid order status: %s", orderStatus)
-	}
-
-	// Update the order status in the database
-	var updatedOrder model.Order
-	err := r.DB5.QueryRowContext(ctx, `
-		UPDATE orders
-		SET order_status = $1, updated_at = NOW()
-		WHERE id = $2
-		RETURNING id, user_id, total_price, order_status, order_type, delivery_address, special_requests, created_at, updated_at
-	`, orderStatus, orderID).Scan(
-		&updatedOrder.ID,
-		&updatedOrder.UserID,
-		&updatedOrder.TotalPrice,
-		&updatedOrder.OrderStatus,
-		&updatedOrder.OrderType,
-		&updatedOrder.DeliveryAddress,
-		&updatedOrder.SpecialRequests,
-		&updatedOrder.CreatedAt,
-		&updatedOrder.UpdatedAt,
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to update order status: %w", err)
-	}
-
-	// Return the updated order
-	return &updatedOrder, nil
+	panic("unimplemented")
 }
 
 // GetCart is the resolver for the getCart field.
@@ -510,6 +507,5 @@ func (r *queryResolver) GetCartAndMenuItems(ctx context.Context, userID string) 
 	}, nil
 }
 
-// Mutation returns MutationResolver implementation.
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

@@ -153,7 +153,6 @@ type OrderItem struct {
 
 type OrderQueue struct {
 	ID        string        `json:"id"`
-	MenuID    string        `json:"menuId"`
 	OrderID   string        `json:"orderId"`
 	Status    KitchenStatus `json:"status"`
 	CreatedAt string        `json:"createdAt"`
@@ -222,6 +221,7 @@ type Transaction struct {
 
 type UpdateCartItemInput struct {
 	ID             string   `json:"id"`
+	MenuItemID     string   `json:"menu_item_id"`
 	Quantity       *int32   `json:"quantity,omitempty"`
 	Price          *float64 `json:"price,omitempty"`
 	Customizations *string  `json:"customizations,omitempty"`

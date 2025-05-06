@@ -115,3 +115,24 @@ export const CREATE_ORDER_FROM_CART = gql`
     }
   }
 `;
+
+export const UPDATE_CART_ITEM = gql`
+  mutation UpdateCartItem($input: UpdateCartItemInput!) {
+    updateCartItem(input: $input) {
+      id
+      cart_id
+      menu_item_id
+      quantity
+      price
+      customizations
+      created_at
+      updated_at
+    }
+  }
+`;
+
+export const REMOVE_CART_ITEM = gql`
+    mutation RemoveCartItem($id: ID!) {
+        removeCartItem(id: $id)
+    }
+`;
