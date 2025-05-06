@@ -66,6 +66,10 @@ const Navbar: React.FC = () => {
         navigate(`/add-menu/${userId}`);
     }
 
+    const handleOrderQueueClick = () => {
+        navigate(`/order-queues`);
+    }
+
     return (
         <nav className="bg-blue-950 text-white p-4 shadow-md">
             <div className="container mx-auto flex justify-between items-center">
@@ -87,6 +91,13 @@ const Navbar: React.FC = () => {
                                 onClick={handleAddMenuClick}
                                 className="block px-4 py-2 text-white hover:bg-gray-600 w-full text-left"
                             >Add Menu
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                onClick={handleOrderQueueClick}
+                                className="block px-4 py-2 text-white hover:bg-gray-600 w-full text-left"
+                            >Order Queues
                             </button>
                         </li>
                         <li className="relative">
