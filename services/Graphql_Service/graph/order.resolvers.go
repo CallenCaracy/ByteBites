@@ -405,12 +405,32 @@ func (r *queryResolver) GetUserOrders(ctx context.Context, userID string) ([]*mo
 		}
 
 		// Step 3: Get order items for the current order
-		items, err := r.getOrderItems(ctx, order.ID)
+		itemRows, err := r.DB5.QueryContext(ctx, `
+			SELECT id, order_id, menu_item_id, quantity, price, customizations, created_at
+			FROM order_items
+			WHERE order_id = $1
+			ORDER BY created_at DESC
+		`, order.ID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch order items: %w", err)
 		}
-		order.Items = items
+		defer itemRows.Close()
 
+		var orderItems []*model.OrderItem
+		for itemRows.Next() {
+			var item model.OrderItem
+			err := itemRows.Scan(&item.ID, &item.OrderID, &item.MenuItemID, &item.Quantity, &item.Price, &item.Customizations, &item.CreatedAt)
+			if err != nil {
+				return nil, fmt.Errorf("failed to scan order item: %w", err)
+			}
+			orderItems = append(orderItems, &item)
+		}
+
+		if err := itemRows.Err(); err != nil {
+			return nil, fmt.Errorf("error with order items rows: %w", err)
+		}
+
+		order.Items = orderItems
 		orders = append(orders, &order)
 	}
 
@@ -490,34 +510,6 @@ func (r *queryResolver) GetCartAndMenuItems(ctx context.Context, userID string) 
 	}, nil
 }
 
-func (r *queryResolver) getOrderItems(ctx context.Context, orderID string) ([]*model.OrderItem, error) {
-	rows, err := r.DB5.QueryContext(ctx, `
-		SELECT id, order_id, menu_item_id, quantity, price, customizations, created_at
-		FROM order_items
-		WHERE order_id = $1
-		ORDER BY created_at DESC
-	`, orderID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch order items: %w", err)
-	}
-	defer rows.Close()
-
-	var items []*model.OrderItem
-	for rows.Next() {
-		var item model.OrderItem
-		err := rows.Scan(&item.ID, &item.OrderID, &item.MenuItemID, &item.Quantity, &item.Price, &item.Customizations, &item.CreatedAt)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan order item: %w", err)
-		}
-		items = append(items, &item)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error with order items rows: %w", err)
-	}
-
-	return items, nil
-}
-
+// Mutation returns MutationResolver implementation.
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

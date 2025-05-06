@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type AddCartItemInput struct {
@@ -146,6 +148,7 @@ type OrderItem struct {
 	Price          float64 `json:"price"`
 	Customizations *string `json:"customizations,omitempty"`
 	CreatedAt      string  `json:"createdAt"`
+	UpdatedAt      *string `json:"updated_at,omitempty"`
 }
 
 type OrderQueue struct {
@@ -154,6 +157,27 @@ type OrderQueue struct {
 	OrderID   string        `json:"orderId"`
 	Status    KitchenStatus `json:"status"`
 	CreatedAt string        `json:"createdAt"`
+}
+
+type PaymentReceipt struct {
+	ID            uuid.UUID           `json:"id"`
+	TransactionID uuid.UUID           `json:"transactionId"`
+	UserID        uuid.UUID           `json:"userId"`
+	Amount        float64             `json:"amount"`
+	PaymentMethod string              `json:"paymentMethod"`
+	Timestamp     string              `json:"timestamp"`
+	Transaction   *PaymentTransaction `json:"transaction,omitempty"`
+}
+
+type PaymentTransaction struct {
+	ID                   uuid.UUID         `json:"id"`
+	OrderID              uuid.UUID         `json:"orderId"`
+	UserID               uuid.UUID         `json:"userId"`
+	AmountPaid           float64           `json:"amountPaid"`
+	PaymentMethod        *PaymentMethod    `json:"paymentMethod,omitempty"`
+	TransactionStatus    TransactionStatus `json:"transactionStatus"`
+	TransactionTimestamp *string           `json:"transactionTimestamp,omitempty"`
+	Receipt              *PaymentReceipt   `json:"receipt,omitempty"`
 }
 
 type Query struct {
@@ -282,5 +306,97 @@ func (e *KitchenStatus) UnmarshalGQL(v any) error {
 }
 
 func (e KitchenStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type PaymentMethod string
+
+const (
+	PaymentMethodCash       PaymentMethod = "cash"
+	PaymentMethodCreditCard PaymentMethod = "credit_card"
+	PaymentMethodGcash      PaymentMethod = "gcash"
+	PaymentMethodPaymaya    PaymentMethod = "paymaya"
+	PaymentMethodPaypal     PaymentMethod = "paypal"
+)
+
+var AllPaymentMethod = []PaymentMethod{
+	PaymentMethodCash,
+	PaymentMethodCreditCard,
+	PaymentMethodGcash,
+	PaymentMethodPaymaya,
+	PaymentMethodPaypal,
+}
+
+func (e PaymentMethod) IsValid() bool {
+	switch e {
+	case PaymentMethodCash, PaymentMethodCreditCard, PaymentMethodGcash, PaymentMethodPaymaya, PaymentMethodPaypal:
+		return true
+	}
+	return false
+}
+
+func (e PaymentMethod) String() string {
+	return string(e)
+}
+
+func (e *PaymentMethod) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PaymentMethod(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PaymentMethod", str)
+	}
+	return nil
+}
+
+func (e PaymentMethod) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type TransactionStatus string
+
+const (
+	TransactionStatusPending   TransactionStatus = "pending"
+	TransactionStatusCompleted TransactionStatus = "completed"
+	TransactionStatusFailed    TransactionStatus = "failed"
+	TransactionStatusRefunded  TransactionStatus = "refunded"
+)
+
+var AllTransactionStatus = []TransactionStatus{
+	TransactionStatusPending,
+	TransactionStatusCompleted,
+	TransactionStatusFailed,
+	TransactionStatusRefunded,
+}
+
+func (e TransactionStatus) IsValid() bool {
+	switch e {
+	case TransactionStatusPending, TransactionStatusCompleted, TransactionStatusFailed, TransactionStatusRefunded:
+		return true
+	}
+	return false
+}
+
+func (e TransactionStatus) String() string {
+	return string(e)
+}
+
+func (e *TransactionStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TransactionStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TransactionStatus", str)
+	}
+	return nil
+}
+
+func (e TransactionStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
