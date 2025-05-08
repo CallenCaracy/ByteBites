@@ -7,7 +7,7 @@ CREATE TABLE users (
     last_name TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'customer',
     address TEXT DEFAULT NULL,
-    phone TEXT DEFAULT NULL,
+    phone TEXT UNIQUE DEFAULT NULL,
     is_active TEXT NOT NULL DEFAULT 'active',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ

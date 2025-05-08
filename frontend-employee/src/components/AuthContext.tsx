@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useQuery } from "@apollo/client";
-import { GET_AUTHENTICATED_USER } from "../../../frontend-client/src/graphql/Userqueries";
+import { GET_AUTHENTICATED_USER } from "../graphql/Userqueries";
 
 export const AuthContext = createContext<any>(null);
 

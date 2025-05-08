@@ -1,7 +1,5 @@
 github.com/99designs/gqlgen v0.17.70 h1:xgLIgQuG+Q2L/AE9cW595CT7xCWCe/bpPIFGSfsGSGs=
 github.com/99designs/gqlgen v0.17.70/go.mod h1:fvCiqQAu2VLhKXez2xFvLmE47QgAPf/KTPN5XQ4rsHQ=
-github.com/CallenCaracy/ByteBites/services/Kitchen_Service v0.0.0-20250506013008-29b6495a3756 h1:GjG2PPejGeykI48eYnzJMyOGg2g2FhX6O0MfDrafiIM=
-github.com/CallenCaracy/ByteBites/services/Kitchen_Service v0.0.0-20250506013008-29b6495a3756/go.mod h1:NPWJZkFzJ1I9GPYpGhnbP2X0K6un5UqJOKCCwUrLv8E=
 github.com/CallenCaracy/ByteBites/services/Kitchen_Service v0.0.0-20250506063314-9a05bbdbe002 h1:IOOqIcSyzHRvoWuWMuVkGjBXLCnK70r+umF5a8YEbFg=
 github.com/CallenCaracy/ByteBites/services/Kitchen_Service v0.0.0-20250506063314-9a05bbdbe002/go.mod h1:NPWJZkFzJ1I9GPYpGhnbP2X0K6un5UqJOKCCwUrLv8E=
 github.com/CallenCaracy/ByteBites/services/Menu_Service v0.0.0-20250504035637-a31e065246c8 h1:CsJDzPnPzQm+giryJk4NQrsaXY3PD3mXMb+L/1CuN5M=
@@ -52,6 +50,8 @@ github.com/jackc/puddle/v2 v2.2.2 h1:PR8nw+E/1w0GLuRFSmiioY6UooMp6KJv0/61nB7icHo
 github.com/jackc/puddle/v2 v2.2.2/go.mod h1:vriiEXHvEE654aYKXXjOvZM39qJ0q+azkZFrfEOc3H4=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
 github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
+github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
+github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/nedpals/supabase-go v0.5.0 h1:1334oH3sGOiWTIqpXQzVY6CLcfcxjuuxkoOjTuXBrAM=
 github.com/nedpals/supabase-go v0.5.0/go.mod h1:zi3jOkDGxUWmf9onKgQ3KlVPCDSgL/C8s9t7jNp4We0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

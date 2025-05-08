@@ -50,6 +50,15 @@ export const GET_MENU_ITEM_BY_ID_FOR_CART = gql`
   }
 `;
 
+export const GET_MENU_ITEM_BY_ID_FOR_GETTING_MENU_NAME = gql`
+  query GetMenuItemsByIds($ids: [ID!]!) {
+    getMenuItemsByIds(ids: $ids) {
+      id
+      name
+    }
+  }
+`;
+
 export const MENU_ITEM_CREATED = gql`
   subscription {
     menuItemCreated {
@@ -57,11 +66,13 @@ export const MENU_ITEM_CREATED = gql`
       name
       description
       price
+      discounted_price
       category
       discount
       availability_status
       image_url
       created_at
+      updated_at
     }
   }
 `;

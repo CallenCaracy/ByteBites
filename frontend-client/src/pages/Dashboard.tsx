@@ -52,7 +52,7 @@ const Dashboard: React.FC = () => {
       <div className="container p-8 flex-1 overflow-y-auto scrollbar-hide">
           <h1 className="text-3xl font-semibold text-gray-800 mb-6">Menu</h1>
           <h2 className="text-3xl font-semibold text-gray-800 mb-6">
-          Welcome {user?.userType?.charAt(0).toUpperCase() + user?.userType?.slice(1) || "Employee"} {user?.firstName || "Unknown"}!
+          Welcome {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1) || "Costumer"} {user?.firstName || "Unknown"}!
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

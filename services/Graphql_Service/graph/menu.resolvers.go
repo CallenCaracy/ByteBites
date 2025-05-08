@@ -12,6 +12,7 @@ import (
 
 	"github.com/CallenCaracy/ByteBites/services/Menu_Service/pb"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 // CreateMenuItem - Insert a new menu item
@@ -66,7 +67,19 @@ func (r *mutationResolver) CreateMenuItem(ctx context.Context, input model.NewMe
 	r.Resolver.mu.Lock()
 	for id, ch := range r.Resolver.MenuItemCreatedObservers {
 		select {
-		case ch <- item:
+		case ch <- &model.MenuItemFull{
+			ID:                 item.ID,
+			Name:               item.Name,
+			Description:        item.Description,
+			Price:              item.Price,
+			Category:           item.Category,
+			Discount:           item.Discount,
+			DiscountedPrice:    float64(discountedPrice),
+			AvailabilityStatus: item.AvailabilityStatus,
+			ImageURL:           item.ImageURL,
+			CreatedAt:          item.CreatedAt,
+			UpdatedAt:          item.UpdatedAt,
+		}:
 			// Sent successfully
 		default:
 			// Channel likely dead or slow reader — clean up
@@ -235,10 +248,66 @@ func (r *queryResolver) GetMenuItemByID(ctx context.Context, id string) (*model.
 	}, nil
 }
 
+// GetMenuItemsByIds is the resolver for the getMenuItemsByIds field.
+func (r *queryResolver) GetMenuItemsByIds(ctx context.Context, ids []string) ([]*model.MenuItemFull, error) {
+	// Build the query with `IN` to fetch multiple items
+	query := `SELECT id, name, description, price, category, discount, discounted_price, availability_status, image_url, created_at, updated_at
+              FROM public.menu_list
+              WHERE id = ANY($1::uuid[])`
+
+	// Create a slice to hold the results
+	var items []*model.MenuItemFull
+
+	// Execute the query with the list of IDs
+	rows, err := r.Resolver.DB2.Query(query, pq.Array(ids)) // Assuming you're using pq for UUID arrays
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Loop through the results and map them to your model
+	for rows.Next() {
+		var item model.MenuItem
+		var discountedPrice float32
+
+		// Scan the row into the item struct
+		err := rows.Scan(
+			&item.ID, &item.Name, &item.Description, &item.Price, &item.Category,
+			&item.Discount, &discountedPrice, &item.AvailabilityStatus, &item.ImageURL,
+			&item.CreatedAt, &item.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Append the item to the results list
+		items = append(items, &model.MenuItemFull{
+			ID:                 item.ID,
+			Name:               item.Name,
+			Description:        item.Description,
+			Price:              item.Price,
+			Category:           item.Category,
+			Discount:           item.Discount,
+			DiscountedPrice:    float64(discountedPrice),
+			AvailabilityStatus: item.AvailabilityStatus,
+			ImageURL:           item.ImageURL,
+			CreatedAt:          item.CreatedAt,
+			UpdatedAt:          item.UpdatedAt,
+		})
+	}
+
+	// Check for any errors during the iteration
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // MenuItemCreated is the resolver for the menuItemCreated field.
-func (r *subscriptionResolver) MenuItemCreated(ctx context.Context) (<-chan *model.MenuItem, error) {
+func (r *subscriptionResolver) MenuItemCreated(ctx context.Context) (<-chan *model.MenuItemFull, error) {
 	id := uuid.New().String()
-	ch := make(chan *model.MenuItem, 1)
+	ch := make(chan *model.MenuItemFull, 1)
 
 	r.Resolver.mu.Lock()
 	r.Resolver.MenuItemCreatedObservers[id] = ch

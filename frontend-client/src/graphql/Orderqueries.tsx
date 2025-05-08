@@ -136,3 +136,30 @@ export const REMOVE_CART_ITEM = gql`
         removeCartItem(id: $id)
     }
 `;
+
+export const GET_USER_ORDERS = gql`
+  query GetUserOrders($userID: String!) {
+    getUserOrders(userID: $userID) {
+      id
+      userID
+      totalPrice
+      orderStatus
+      orderType
+      deliveryAddress
+      specialRequests
+      createdAt
+      updatedAt
+      items {
+        id
+        orderID
+        menuItemID
+        quantity
+        price
+        customizations
+        createdAt
+        __typename
+      }
+      __typename
+    }
+  }
+`;
