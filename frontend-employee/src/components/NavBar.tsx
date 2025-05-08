@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/ByteBitesLogo/logo-transparent.png";
-import { useApolloClient, useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 import { SIGN_OUT_USER } from "../graphql/Userqueries";
 import { supabase } from "../utils/supabaseClient";
 
@@ -13,7 +13,6 @@ const Navbar: React.FC = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
     const [logoutInProgress, setLogoutInProgress] = useState(false);
-    const client = useApolloClient();
 
     useEffect(() => {
         const token = localStorage.getItem("accessToken");
@@ -32,27 +31,49 @@ const Navbar: React.FC = () => {
 
         setLogoutInProgress(true);
 
+        const token = localStorage.getItem("accessToken");
+    
         try {
-            const { data } = await signOut();
-            if (data?.signOut) {
-                localStorage.removeItem("accessToken");
-                localStorage.removeItem("refreshToken");
-                localStorage.removeItem("expiresAt");
-
-                await supabase.auth.signOut();
-                await client.resetStore();
-
-                console.log("User signed out cleanly.");
-                navigate("/login");
-            } else {
-                console.error("SignOut mutation failed");
+            // 🧠 Check if token is already gone or clearly invalid
+            if (token) {
+                try {
+                    // Attempt to decode the payload just to confirm it's valid
+                    JSON.parse(atob(token.split(".")[1]));
+                    
+                    // ✅ Only call SIGN_OUT_USER if token seems legit
+                    const { data } = await signOut();
+    
+                    if (!data?.signOut) {
+                        console.warn("SIGN_OUT_USER mutation returned false or null");
+                    }
+                } catch (decodeErr) {
+                    console.warn("Token looks invalid, skipping SIGN_OUT_USER");
+                }
             }
+    
+            // 🚪 Clear localStorage regardless
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("expiresAt");
+            localStorage.removeItem("sb-hzjjmfwrtvqjwxunfcue-auth-token")
+    
+            // 🧼 Sign out of Supabase
+            try {
+                await supabase.auth.signOut();
+                console.log("Signed out of Supabase.");
+            } catch (signOutErr) {
+                console.warn("Supabase sign out failed:", signOutErr);
+            }
+    
+            console.log("User fully logged out.");
+            navigate("/login");
+    
         } catch (err) {
-            console.error("Logout error:", err);
+            console.error("Logout flow error:", err);
         } finally {
             setLogoutInProgress(false);
         }
-    };
+    };    
 
     const handleViewAccountClick = () => {
         if (userId) navigate(`/account/${userId}`);

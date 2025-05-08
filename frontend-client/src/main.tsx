@@ -5,13 +5,16 @@ import { ApolloProvider } from "@apollo/client";
 import { client } from './apolloClient';
 import { AuthProvider } from "./components/AuthContext";
 import App from './App.tsx'
+import { BrowserRouter } from 'react-router-dom';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ApolloProvider client={client}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
     </ApolloProvider>
   </StrictMode>,
 )

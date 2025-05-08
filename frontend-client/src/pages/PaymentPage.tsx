@@ -12,8 +12,10 @@ import {
   ShoppingBag,
   AlertCircle,
 } from "lucide-react";
-import { useMutation } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import { CREATE_TRANSACTION, CREATE_RECEIPT } from "../graphql/Paymentqueries";
+import { GET_USER_ORDERS } from "../graphql/Orderqueries";
+import { GET_MENU_ITEM_BY_ID_FOR_GETTING_MENU_NAME } from "../graphql/Menuqueries"; 
 import Navbar from "../components/NavBar";
 import { useAuth } from "../components/AuthContext";
 import { useParams } from "react-router-dom";
@@ -36,9 +38,11 @@ export default function PaymentPage() {
   // Get authenticated user
   const { user, loading: userLoading, error: userError } = useAuth();
 
-  if (userLoading) return <p className="text-center text-gray-600">Loading...</p>;
-  if (userError) return <p className="text-center text-red-500">Error loading data.</p>;
-
+  const { data: orderData, loading: orderLoading, error: orderError } = useQuery(GET_USER_ORDERS, {
+    variables: { userID: user?.id },
+    skip: !user?.id, // wait for user to be available
+  });
+  
   // GraphQL mutations
   const [createTransaction, { loading: transactionLoading }] =
     useMutation(CREATE_TRANSACTION);
@@ -46,11 +50,37 @@ export default function PaymentPage() {
     useMutation(CREATE_RECEIPT);
   // const [updateTransactionStatus, { loading: updateStatusLoading }] = useMutation(UPDATE_TRANSACTION_STATUS)
 
-  // You can set this to an empty array to test the empty cart functionality
-  const items = [{ name: "Premium Steak", qty: 2, price: 12345678.99 }];
+  const order = orderData?.getUserOrders?.[0];  // Get the first order (assuming there's only one)
+  const items = order?.items || [];  // Default to an empty array if no items
 
-  // This will work even if items is undefined, null, or empty
-  const isCartEmpty = !items || items.length === 0;
+  const menuItemIDs = items.map((item: { menuItemID: any; }) => item.menuItemID);
+
+  const uniqueIDs = [...new Set(menuItemIDs)];
+
+  const { data: menuData, loading: menuLoading, error: menuError } = useQuery(GET_MENU_ITEM_BY_ID_FOR_GETTING_MENU_NAME, {
+    variables: { ids: uniqueIDs },
+    skip: uniqueIDs.length === 0, 
+  });
+
+  if (userLoading || orderLoading) {
+    return <p>Loading...</p>;
+  }
+  
+  if (userError || orderError) {
+    return <p>Error: {userError?.message || orderError?.message}</p>;
+  }
+
+  if (menuLoading) {
+    return <p>Loading...</p>;
+  }
+  
+  if (menuError) {
+    return <p>Error: {userError?.message || "Error"}</p>;
+  }
+
+  const menuMap = Object.fromEntries(
+    menuData?.getMenuItemsByIds?.map((item: { id: string; name: string }) => [item.id, item.name]) ?? []
+  );
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "");
@@ -89,13 +119,6 @@ export default function PaymentPage() {
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    // Check if cart is empty
-    if (isCartEmpty) {
-      setErrorMessage("There's no order selected. Order now!");
-      setTimeout(() => setErrorMessage(null), 3000);
-      return;
-    }
-
     // Check if payment method is selected
     if (!selectedPayment) {
       setErrorMessage("Please choose payment option first.");
@@ -123,6 +146,9 @@ export default function PaymentPage() {
         return;
       }
     }
+
+    if (userLoading || orderLoading) return <p className="text-center text-gray-600">Loading...</p>;
+    if (userError || orderError) return <p className="text-center text-red-500">Error loading data.</p>;
 
     // If all validations pass, proceed with payment
     try {
@@ -192,7 +218,7 @@ export default function PaymentPage() {
   };
 
   // Safely calculate totals even if items is not defined
-  const subtotal = items?.reduce((sum, item) => sum + item.price, 0) || 0;
+  const subtotal = order?.totalPrice || 0;
   const taxRate = 0.1;
   const tax = subtotal * taxRate;
   const total = subtotal + tax;
@@ -497,7 +523,8 @@ export default function PaymentPage() {
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-              {isCartEmpty ? (
+
+              {!items.length ? (
                 <div className="flex flex-col items-center justify-center py-6 text-gray-500">
                   <ShoppingBag className="h-12 w-12 mb-2" />
                   <p>Your cart is empty</p>
@@ -505,32 +532,43 @@ export default function PaymentPage() {
               ) : (
                 <>
                   <div className="space-y-4 mb-6">
-                    {items.map((item, index) => (
-                      <div key={index} className="flex justify-between">
-                        <div>
-                          <span className="font-medium">{item.name}</span>
-                          <span className="text-gray-500 text-sm ml-2">
-                            x{item.qty}
-                          </span>
+                    {items.map((item: { menuItemID: string | number; quantity: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; price: number; }, index: React.Key | null | undefined) => {
+                      const itemName = menuMap[item.menuItemID] ?? 'Unknown Item';
+
+                      return (
+                        <div key={index} className="flex justify-between">
+                          <div>
+                            <span className="font-medium">{itemName}</span>
+                            <span className="text-gray-500 text-sm ml-2">x{item.quantity}</span>
+                          </div>
+                          <span>${item.price.toFixed(2)}</span>
                         </div>
-                        <span>${item.price.toFixed(2)}</span>
+                      );
+                    })}
+                  </div>
+
+                  {/* Calculate subtotal/tax/total here */}
+                  {(() => {
+                    const subtotal = order?.totalPrice || 0;
+                    const tax = subtotal * 0.1;
+                    const total = subtotal + tax;
+                    return (
+                      <div className="border-t border-gray-200 pt-4 space-y-2">
+                        <div className="flex justify-between">
+                          <span>Subtotal</span>
+                          <span>${subtotal.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Tax (10%)</span>
+                          <span>${tax.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between font-bold text-lg">
+                          <span>Total</span>
+                          <span>${total.toFixed(2)}</span>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="border-t border-gray-200 pt-4 space-y-2">
-                    <div className="flex justify-between">
-                      <span>Subtotal</span>
-                      <span>${subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Tax (10%)</span>
-                      <span>${tax.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>Total</span>
-                      <span>${total.toFixed(2)}</span>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </>
               )}
 

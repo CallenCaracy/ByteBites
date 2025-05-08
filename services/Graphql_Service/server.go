@@ -104,7 +104,7 @@ func main() {
 		DB7:                        db7,
 		AuthClient:                 client,
 		Logger:                     logger,
-		MenuItemCreatedObservers:   make(map[string]chan *model.MenuItem),
+		MenuItemCreatedObservers:   make(map[string]chan *model.MenuItemFull),
 		OrderQueueCreatedObservers: make(map[string]chan *model.OrderQueue),
 	}
 

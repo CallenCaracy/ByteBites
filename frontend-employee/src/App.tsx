@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
@@ -14,6 +14,10 @@ import OrderQueues from './pages/OrderQueues'
 import { supabase } from './utils/supabaseClient';
 
 function App() {
+  const location = useLocation();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const protectedPaths = ["/dashboard", "/account", "/menu-item", "/order-queues", "/add-inventory", "/add-menu"];
+  
   useEffect(() => {
     const accessToken  = localStorage.getItem("accessToken");
     const refreshToken = localStorage.getItem("refreshToken");
@@ -46,40 +50,44 @@ function App() {
   }, []);
 
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
+    if (!protectedPaths.some(path => location.pathname.startsWith(path))) return;
+
+    console.log("🔐 You're in a protected route");
 
     const scheduleRefresh = () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
       const expiresAt = Number(localStorage.getItem("expiresAt") || "0");
       const msUntilExpiry = expiresAt * 1000 - Date.now();
-      const refreshIn = Math.max(msUntilExpiry - 60_000, 0);
+      const refreshIn = Math.max(msUntilExpiry - 60_000, 0); // refresh 1 min before
 
-      timeoutId = setTimeout(async () => {
+      timeoutRef.current = setTimeout(async () => {
         const { data, error } = await supabase.auth.refreshSession();
         if (error) {
-          console.error("Failed to refresh session:", error);
+          console.error("❌ Failed to refresh session:", error);
         } else {
           console.log("💧 Token refreshed", data.session);
+          // Optional: Update expiresAt in localStorage here if needed
         }
       }, refreshIn);
     };
 
+    // Initial setup
     scheduleRefresh();
 
-    // Also re-schedule when session changes
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         scheduleRefresh();
       }
     });
 
     return () => {
-      clearTimeout(timeoutId);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       sub.subscription.unsubscribe();
     };
-  }, []);
+  }, [location.pathname]);
 
   return (
-    <Router>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Navigate to="/login"/>} />
@@ -98,7 +106,6 @@ function App() {
             <Route path="/order-queues" element={<OrderQueues/>} />
           </Route>
       </Routes>
-    </Router>
   );
 }
 

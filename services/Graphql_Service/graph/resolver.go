@@ -20,7 +20,7 @@ type Resolver struct {
 	DB7                        *sql.DB // Supabase Database KITCHEN
 	AuthClient                 auth.Client
 	Logger                     *utils.Logger
-	MenuItemCreatedObservers   map[string]chan *model.MenuItem
+	MenuItemCreatedObservers   map[string]chan *model.MenuItemFull
 	OrderQueueCreatedObservers map[string]chan *model.OrderQueue
 	mu                         sync.Mutex
 }

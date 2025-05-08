@@ -68,7 +68,7 @@ func main() {
 	pb.RegisterAuthServiceServer(grpcServer, userService)
 
 	go func() {
-		log.Info("gRPC Service running on port %s...", port)
+		log.Info("User Service running on port %s...", port)
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatal("Failed to serve gRPC: %v", err)
 		}

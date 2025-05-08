@@ -48,6 +48,7 @@ input UpdateMenuItem {
 extend type Query {
   getAllMenuItems: [MenuItemFull!]!
   getMenuItemById(id: ID!): MenuItemFull
+  getMenuItemsByIds(ids: [ID!]!): [MenuItemFull!]!
 }
 
 extend type Mutation {
@@ -57,5 +58,5 @@ extend type Mutation {
 }
 
 extend type Subscription {
-  menuItemCreated: MenuItem!
+  menuItemCreated: MenuItemFull!
 }

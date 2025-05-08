@@ -30,7 +30,7 @@ func main() {
 	// Make an .env file for private api supabase connection
 	// to run: go run main.go
 
-	log.Info("Order Service running on port 50052...")
+	log.Info("Kitchen Service running on port 50052...")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatal("Failed to serve: %v", err)
 		os.Exit(1)
