@@ -19,19 +19,19 @@ const gqlEndpoint = "http://localhost:8080/query"
 
 func (s *OrderServiceServer) CreateCart(ctx context.Context, req *pb.CreateCartRequest) (*pb.CartResponse, error) {
 	query := `
-	mutation CreateCart($userID: String!) {
-		createCart(userID: $userID) {
+	mutation CreateCart($user_id: ID!) {
+		createCart(user_id: $user_id) {
 			id
-			userID
-			createdAt
-			updatedAt
+			user_id
+			created_at
+			updated_at
 		}
 	}`
 
 	payload := map[string]interface{}{
 		"query": query,
 		"variables": map[string]interface{}{
-			"userID": req.UserID,
+			"user_id": req.UserID,
 		},
 	}
 
@@ -55,9 +55,9 @@ func (s *OrderServiceServer) CreateCart(ctx context.Context, req *pb.CreateCartR
 		Data struct {
 			CreateCart struct {
 				ID        string `json:"id"`
-				UserID    string `json:"userID"`
-				CreatedAt string `json:"createdAt"`
-				UpdatedAt string `json:"updatedAt"`
+				UserID    string `json:"user_id"`
+				CreatedAt string `json:"created_at"`
+				UpdatedAt string `json:"updated_at"`
 			} `json:"createCart"`
 		} `json:"data"`
 		Errors []struct {

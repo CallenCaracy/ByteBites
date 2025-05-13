@@ -10,6 +10,8 @@ import (
 
 	kitchenpb "github.com/CallenCaracy/ByteBites/services/Kitchen_Service/pb"
 	menupb "github.com/CallenCaracy/ByteBites/services/Menu_Service/pb"
+	orderpd "github.com/CallenCaracy/ByteBites/services/Order_Service/pb"
+	paymentpb "github.com/CallenCaracy/ByteBites/services/Payment_Service/pb"
 	userpb "github.com/CallenCaracy/ByteBites/services/User_Service/pb"
 )
 
@@ -22,6 +24,12 @@ var (
 
 	kitchenOnce   sync.Once
 	KitchenClient kitchenpb.KitchenServiceClient
+
+	orderOnce   sync.Once
+	OrderClient orderpd.OrderServiceClient
+
+	paymentOnce   sync.Once
+	PaymentClient paymentpb.PaymentServiceClient
 )
 
 func InitGRPCClients() {
@@ -47,5 +55,21 @@ func InitGRPCClients() {
 			log.Fatalf("failed to connect to kitchen gRPC: %v", err)
 		}
 		KitchenClient = kitchenpb.NewKitchenServiceClient(conn)
+	})
+
+	orderOnce.Do(func() {
+		conn, err := grpc.NewClient("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			log.Fatalf("failed to connect to order gRPC: %v", err)
+		}
+		OrderClient = orderpd.NewOrderServiceClient(conn)
+	})
+
+	paymentOnce.Do(func() {
+		conn, err := grpc.NewClient("localhost:50054", grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			log.Fatalf("failed to connect to order gRPC: %v", err)
+		}
+		PaymentClient = paymentpb.NewPaymentServiceClient(conn)
 	})
 }

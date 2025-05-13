@@ -18,6 +18,8 @@ require github.com/google/go-querystring v1.1.0 // indirect
 require (
 	github.com/CallenCaracy/ByteBites/services/Kitchen_Service v0.0.0-20250506063314-9a05bbdbe002
 	github.com/CallenCaracy/ByteBites/services/Menu_Service v0.0.0-20250504035637-a31e065246c8
+	github.com/CallenCaracy/ByteBites/services/Order_Service v0.0.0-20250513040843-1c45eba3cbf8
+	github.com/CallenCaracy/ByteBites/services/Payment_Service v0.0.0-20250513040843-1c45eba3cbf8
 	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/google/uuid v1.6.0

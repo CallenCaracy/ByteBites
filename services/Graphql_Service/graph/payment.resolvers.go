@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/CallenCaracy/ByteBites/services/Kitchen_Service/pb"
+	paymentpb "github.com/CallenCaracy/ByteBites/services/Payment_Service/pb"
 	"github.com/google/uuid"
 )
 
@@ -50,6 +51,16 @@ func (r *mutationResolver) CreateTransaction(ctx context.Context, orderID uuid.U
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create order queue: %v", err)
+	}
+
+	_, err = service.PaymentClient.CreateTransaction(ctx, &paymentpb.CreateTransactionRequest{
+		OrderID:       orderID.String(),
+		UserID:        userID.String(),
+		AmountPaid:    float32(amountPaid),
+		PaymentMethod: string(*paymentMethod),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create transaction via PaymentService: %v", err)
 	}
 
 	return &transaction, nil

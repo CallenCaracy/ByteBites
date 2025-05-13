@@ -20,35 +20,35 @@ const gqlEndpoint = "http://localhost:8080/query"
 func (s *PaymentServiceServer) CreateTransaction(ctx context.Context, req *pb.CreateTransactionRequest) (*pb.TransactionResponse, error) {
 	query := `
 	mutation CreateTransaction(
-		$amountPaid: Float!,
-		$paymentMethod: String!,
-		$transactionStatus: String!,
-		$userID: String!,
-		$orderID: String!
+		$amount_paid: Float!,
+		$payment_method: String!,
+		$transaction_status: String!,
+		$user_id: ID!,
+		$order_id: ID!
 	) {
 		createTransactionRecords(
-			amountPaid: $amountPaid,
-			paymentMethod: $paymentMethod,
-			transactionStatus: $transactionStatus,
-			userID: $userID,
-			orderID: $orderID
+			amount_paid: $amount_paid,
+			payment_method: $payment_method,
+			transaction_status: $transaction_status,
+			user_id: $user_id,
+			order_id: $order_id
 		) {
-			transactionID
-			amountPaid
-			paymentMethod
-			transactionStatus
-			userID
-			orderID
+			transaction_id
+			amount_paid
+			payment_method
+			transaction_status
+			user_id
+			order_id
 			timestamp
 		}
 	}`
 
 	variables := map[string]interface{}{
-		"amountPaid":        req.AmountPaid,
-		"paymentMethod":     req.PaymentMethod,
-		"transactionStatus": "success", // hardcoded
-		"userID":            req.UserID,
-		"orderID":           req.OrderID,
+		"amount_paid":        req.AmountPaid,
+		"payment_method":     req.PaymentMethod,
+		"transaction_status": "success", // still hardcoded, still victorious
+		"user_id":            req.UserID,
+		"order_id":           req.OrderID,
 	}
 
 	payload := map[string]interface{}{
@@ -75,12 +75,12 @@ func (s *PaymentServiceServer) CreateTransaction(ctx context.Context, req *pb.Cr
 	var gqlResp struct {
 		Data struct {
 			CreateTransactionRecords struct {
-				TransactionID     string  `json:"transactionID"`
-				UserID            string  `json:"userID"`
-				OrderID           string  `json:"orderID"`
-				AmountPaid        float64 `json:"amountPaid"`
-				PaymentMethod     string  `json:"paymentMethod"`
-				TransactionStatus string  `json:"transactionStatus"`
+				TransactionID     string  `json:"transaction_id"`
+				UserID            string  `json:"user_id"`
+				OrderID           string  `json:"order_id"`
+				AmountPaid        float64 `json:"amount_paid"`
+				PaymentMethod     string  `json:"payment_method"`
+				TransactionStatus string  `json:"transaction_status"`
 				Timestamp         string  `json:"timestamp"`
 			} `json:"createTransactionRecords"`
 		} `json:"data"`

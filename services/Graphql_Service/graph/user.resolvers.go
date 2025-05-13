@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	orderpb "github.com/CallenCaracy/ByteBites/services/Order_Service/pb"
 	"github.com/CallenCaracy/ByteBites/services/User_Service/pb"
 	supabase "github.com/nedpals/supabase-go"
 	"github.com/supabase-community/auth-go/types"
@@ -62,6 +63,14 @@ func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) 
 		}
 		birthDate = parsedBirthDate.Format("2006-01-02")
 	}
+
+	cart, err := service.OrderClient.CreateCart(ctx, &orderpb.CreateCartRequest{UserID: res.ID.String()})
+	if err != nil {
+		r.Logger.Error("Error creating cart for %s: %v", input.Email, err)
+		return nil, fmt.Errorf("failed to create cart: %v", err)
+	}
+
+	r.Logger.Info("Cart created for user %s: CartID=%s", input.Email, cart.Id)
 
 	_, err = r.DB1.Exec(`
 		INSERT INTO public.users (id, email, first_name, last_name, role, address, phone, user_type, pfp, gender, birth_date)

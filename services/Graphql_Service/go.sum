@@ -4,6 +4,10 @@ github.com/CallenCaracy/ByteBites/services/Kitchen_Service v0.0.0-20250506063314
 github.com/CallenCaracy/ByteBites/services/Kitchen_Service v0.0.0-20250506063314-9a05bbdbe002/go.mod h1:NPWJZkFzJ1I9GPYpGhnbP2X0K6un5UqJOKCCwUrLv8E=
 github.com/CallenCaracy/ByteBites/services/Menu_Service v0.0.0-20250504035637-a31e065246c8 h1:CsJDzPnPzQm+giryJk4NQrsaXY3PD3mXMb+L/1CuN5M=
 github.com/CallenCaracy/ByteBites/services/Menu_Service v0.0.0-20250504035637-a31e065246c8/go.mod h1:RDpfqQeirRN6Eot7XALkPBc61jE1/DCgBC9JkBZH4mo=
+github.com/CallenCaracy/ByteBites/services/Order_Service v0.0.0-20250513040843-1c45eba3cbf8 h1:UmUfjrmwbCPVjT5kBiQ85vWGg7//smfXkEGOcbP0ksE=
+github.com/CallenCaracy/ByteBites/services/Order_Service v0.0.0-20250513040843-1c45eba3cbf8/go.mod h1:MD+5dmLJ855zcG1uWjxuqBYeKruZMXvWG2YfjxHQJ5k=
+github.com/CallenCaracy/ByteBites/services/Payment_Service v0.0.0-20250513040843-1c45eba3cbf8 h1:e8K3jsxunnHobLjuf4MI+P8LfVgMLGqUp8+I0OcGr6c=
+github.com/CallenCaracy/ByteBites/services/Payment_Service v0.0.0-20250513040843-1c45eba3cbf8/go.mod h1:U8HUum1hXWF1pUeyVAWhCD6wTAWaAwbGtv3pJNZ+pvc=
 github.com/CallenCaracy/ByteBites/services/User_Service v0.0.0-20250401094800-3da278d121ba h1:ytgyPqIlftXnRw7KWqwFtD1D0wzwCBnIz0guGGXobLw=
 github.com/CallenCaracy/ByteBites/services/User_Service v0.0.0-20250401094800-3da278d121ba/go.mod h1:+WvQS6RA8PuifhSt6gr97rnUI3049m+KXAosoqWNSN4=
 github.com/PuerkitoBio/goquery v1.10.2 h1:7fh2BdHcG6VFZsK7toXBT/Bh1z5Wmy8Q9MV9HqT2AM8=
