@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"order-service/pb"
+
+	"github.com/CallenCaracy/ByteBites/services/Order_Service/pb"
 )
 
 type OrderServiceServer struct {

@@ -1,4 +1,4 @@
-module order-service
+module github.com/CallenCaracy/ByteBites/services/Order_Service
 
 go 1.24.0
 

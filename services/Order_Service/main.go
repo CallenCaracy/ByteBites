@@ -4,9 +4,9 @@ import (
 	"net"
 	"os"
 
-	"order-service/pb"
-	order "order-service/server/orders"
-	"order-service/utils"
+	"github.com/CallenCaracy/ByteBites/services/Order_Service/pb"
+	order "github.com/CallenCaracy/ByteBites/services/Order_Service/server/orders"
+	"github.com/CallenCaracy/ByteBites/services/Order_Service/utils"
 
 	"google.golang.org/grpc"
 )

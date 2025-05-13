@@ -4,9 +4,9 @@ import (
 	"net"
 	"os"
 
-	"payment-service/pb"
-	payment "payment-service/server/payments"
-	"payment-service/utils"
+	"github.com/CallenCaracy/ByteBites/services/Payment_Service/pb"
+	payment "github.com/CallenCaracy/ByteBites/services/Payment_Service/server/payments"
+	"github.com/CallenCaracy/ByteBites/services/Payment_Service/utils"
 
 	"google.golang.org/grpc"
 )

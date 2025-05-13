@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"payment-service/pb"
+
+	"github.com/CallenCaracy/ByteBites/services/Payment_Service/pb"
 )
 
 type PaymentServiceServer struct {
