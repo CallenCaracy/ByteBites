@@ -4,5 +4,23 @@ package payment;
 
 option go_package = "./pb";
 
-// Here make your proto to generate pb
-// protoc --go_out=. --go-grpc_out=. --proto_path=protobuf proto/payments.proto
+service PaymentService {
+  rpc CreateTransaction(CreateTransactionRequest) returns (TransactionResponse);
+}
+
+message CreateTransactionRequest {
+  string userID = 1;
+  string orderID = 2;
+  string paymentMethod = 3;
+  float amountPaid = 4;
+}
+
+message TransactionResponse {
+  string transactionID = 1;
+  string userID = 2;
+  string orderID = 3;
+  float amountPaid = 4;
+  string paymentMethod = 5;
+  string transactionStatus = 6;
+  string timestamp = 7;
+}

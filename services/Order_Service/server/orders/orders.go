@@ -1,79 +1,83 @@
 package server
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 
-	"order-service/pb"
-
-	"time"
-
-	"github.com/jackc/pgx/v5"
-	"google.golang.org/protobuf/types/known/timestamppb"
+	"github.com/CallenCaracy/ByteBites/services/Order_Service/pb"
 )
 
 type OrderServiceServer struct {
 	pb.UnimplementedOrderServiceServer
-	DB                        *pgx.Conn
-	GuestSessionServiceServer pb.GuestSessionServiceServer
 }
 
-func (s *OrderServiceServer) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
-	CheckGuestStatusResponse, errReq := s.GuestSessionServiceServer.CheckGuestStatus(ctx, &pb.CheckGuestStatusRequest{
-		GuestId: req.GuestSessionId,
-	})
-	if errReq != nil {
-		return nil, errReq
-	}
+const gqlEndpoint = "http://localhost:8080/query"
 
-	if CheckGuestStatusResponse.Status != "active" {
-		return nil, fmt.Errorf("guest session is not active")
-	}
-
-	query := `INSERT INTO orders (guest_session_id, menu_item_id, quantity) VALUES ($1, $2, $3) RETURNING id`
-	var orderID string
-	err := s.DB.QueryRow(ctx, query, req.GuestSessionId, req.MenuItemId, req.Quantity).Scan(&orderID)
-	if err != nil {
-		return nil, err
-	}
-	return &pb.CreateOrderResponse{Status: "Created"}, nil
-}
-
-func (s *OrderServiceServer) GetOrders(ctx context.Context, req *pb.GetOrdersRequest) (*pb.GetOrdersResponse, error) {
-	rows, err := s.DB.Query(ctx, `SELECT id, guest_session_id, menu_item_id, quantity, order_time FROM orders WHERE guest_session_id=$1`, req.GuestSessionId)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var orders []*pb.Order
-	for rows.Next() {
-		var order pb.Order
-		var orderTime time.Time
-		err := rows.Scan(&order.Id, &order.GuestSessionId, &order.MenuItemId, &order.Quantity, &orderTime)
-		if err != nil {
-			return nil, err
+func (s *OrderServiceServer) CreateCart(ctx context.Context, req *pb.CreateCartRequest) (*pb.CartResponse, error) {
+	query := `
+	mutation CreateCart($userID: String!) {
+		createCart(userID: $userID) {
+			id
+			userID
+			createdAt
+			updatedAt
 		}
-		order.OrderTime = timestamppb.New(orderTime)
-		orders = append(orders, &order)
-	}
-	return &pb.GetOrdersResponse{Orders: orders}, nil
-}
+	}`
 
-func (s *OrderServiceServer) UpdateOrder(ctx context.Context, req *pb.UpdateOrderRequest) (*pb.UpdateOrderResponse, error) {
-	query := `UPDATE orders SET quantity=$1 WHERE id=$2 AND guest_session_id=$3`
-	_, err := s.DB.Exec(ctx, query, req.Quantity, req.OrderId, req.GuestSessionId)
-	if err != nil {
-		return nil, err
+	payload := map[string]interface{}{
+		"query": query,
+		"variables": map[string]interface{}{
+			"userID": req.UserID,
+		},
 	}
-	return &pb.UpdateOrderResponse{Status: "Updated"}, nil
-}
 
-func (s *OrderServiceServer) DeleteOrder(ctx context.Context, req *pb.DeleteOrderRequest) (*pb.DeleteOrderResponse, error) {
-	query := `DELETE FROM orders WHERE id=$1 AND guest_session_id=$2`
-	_, err := s.DB.Exec(ctx, query, req.OrderId, req.GuestSessionId)
+	body, err := json.Marshal(payload)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal GraphQL payload: %v", err)
 	}
-	return &pb.DeleteOrderResponse{Status: "Deleted"}, nil
+
+	res, err := http.Post(gqlEndpoint, "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to make GraphQL request: %v", err)
+	}
+	defer res.Body.Close()
+
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	var response struct {
+		Data struct {
+			CreateCart struct {
+				ID        string `json:"id"`
+				UserID    string `json:"userID"`
+				CreatedAt string `json:"createdAt"`
+				UpdatedAt string `json:"updatedAt"`
+			} `json:"createCart"`
+		} `json:"data"`
+		Errors []struct {
+			Message string `json:"message"`
+		} `json:"errors"`
+	}
+
+	if err := json.Unmarshal(data, &response); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal GraphQL response: %v", err)
+	}
+
+	if len(response.Errors) > 0 {
+		return nil, fmt.Errorf("GraphQL error: %s", response.Errors[0].Message)
+	}
+
+	cart := response.Data.CreateCart
+	return &pb.CartResponse{
+		Id:        cart.ID,
+		UserID:    cart.UserID,
+		CreatedAt: cart.CreatedAt,
+		UpdatedAt: cart.UpdatedAt,
+	}, nil
 }
