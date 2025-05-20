@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ByteBites</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Poppins', Arial, sans-serif; /* Modern font */
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f4f8; /* Softer background */
+            color: #333;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #003366;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 3em; /* Larger title */
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+            color: #444;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #ddd;
+            padding-bottom: 8px;
+            font-size: 2em;
+        }
+        h3 {
+            color: #003366;
+            font-size: 1.6em;
+            margin-bottom: 10px;
+        }
+        .price-list {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #e8f4fc; /* Softer blue */
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .price-list:hover {
+            transform: scale(1.02);
+        }
+        .price-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        .price-list li {
+            margin-bottom: 8px;
+            font-size: 1.4em;
+            color: #555;
+        }
+
+        /* Order Form */
+        #order-form {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        #order-form:hover {
+            transform: scale(1.02);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        select, input, button {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1.1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        select:focus, input:focus {
+            border-color: #003366;
+            box-shadow: 0 0 6px rgba(0, 51, 102, 0.5);
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 14px;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+            transform: scale(1.03);
+        }
+
+        /* Food Tray */
+        #food-tray {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            margin-top: 0 !important; /* Forcefully remove any margin above the Food Tray area */
+        }
+        #food-tray:hover {
+            transform: scale(1.02);
+        }
+        .tray-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 12px;
+            background-color: #f9ffe6; /* Light yellow */
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .tray-item:hover {
+            transform: scale(1.02);
+        }
+        .tray-item button {
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .tray-item button:hover {
+            background-color: #b71c1c;
+        }
+
+        /* Confirm Order Button */
+        #confirm-order {
+            background-color: #003366;
+            color: white;
+            border: none;
+            padding: 18px;
+            margin-top: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            width: 100%;
+            font-size: 1.3em;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+        #confirm-order:hover {
+            background-color: #002244;
+            transform: scale(1.03);
+        }
+
+        /* Purchase History */
+        #purchases-container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        #purchases-container:hover {
+            transform: scale(1.02);
+        }
+        .purchase {
+            background-color: #f1f8e9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .purchase:hover {
+            transform: scale(1.02);
+        }
+
+        /* Add subtle hover effects */
+        .tray-item:hover, .purchase:hover {
+            background-color: #f0f8ff; /* Light blue hover effect */
+            transition: background-color 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <h1>ByteBites</h1>
+
+    <div class="price-list">
+        <h3>Menu Prices:</h3>
+        <ul>
+            <li>Hamburger - P520</li>
+            <li>Chicken - P520</li>
+            <li>Charles - P5,000</li>
+        </ul>
+    </div>
+
+    <!-- Order Form -->
+    <div id="order-form">
+        <h2>Place Your Order</h2>
+        <div class="form-group">
+            <label for="food-item">Select Food Item:</label>
+            <select id="food-item" required>
+                <option value="">-- Select an item --</option>
+                <option value="Hamburger">Hamburger (P520)</option>
+                <option value="Chicken">Chicken (P520)</option>
+                <option value="Charles">Charles (P5,000)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" min="1" value="1" required>
+        </div>
+        <button id="add-to-tray">Add to Tray</button> <!-- New button to add items to the tray -->
+        <div class="order-summary" id="order-summary">
+            <h3>Order Summary</h3>
+            <p>Item: <span id="summary-item"></span></p>
+            <p>Quantity: <span id="summary-quantity"></span></p>
+            <p>Total Price: <span id="summary-price"></span></p>
+        </div>
+    </div>
+
+    <!-- Food Tray -->
+    <div id="food-tray">
+        <h2>Food Tray</h2>
+        <div id="tray-container">
+            <p>No items in the tray.</p> <!-- Default message when tray is empty -->
+        </div>
+        <button id="confirm-order" style="display: none;">Confirm Order</button> <!-- Confirm all items in the tray -->
+    </div>
+
+    <h3 id="add-to-cart" style="text-align: left; cursor: pointer;">Purchase History</h3>
+
+    <!-- Purchase History -->
+    <div id="purchases-container">
+        <h2>Purchase History</h2> <!-- Existing heading -->
+        <p style="font-weight: bold; margin-bottom: 10px;">Purchase History</p> <!-- Added label -->
+        <!-- Purchases will be added here dynamically -->
+    </div>
+
+    <script>
+        // Menu items with prices
+        const menuItems = {
+            "Hamburger": 520,
+            "Chicken": 520,
+            "Charles": 5000
+        };
+
+        // Purchase history data
+        let purchases = []; // Cleared default entries
+
+        // Temporary storage for food tray
+        let foodTray = [];
+
+        // DOM elements
+        const purchasesContainer = document.getElementById('purchases-container');
+        const foodItemSelect = document.getElementById('food-item');
+        const quantityInput = document.getElementById('quantity');
+        const addToCartBtn = document.getElementById('add-to-cart');
+        const orderSummary = document.getElementById('order-summary');
+        const summaryItem = document.getElementById('summary-item');
+        const summaryQuantity = document.getElementById('summary-quantity');
+        const summaryPrice = document.getElementById('summary-price');
+        const trayContainer = document.getElementById('tray-container');
+        const confirmOrderBtn = document.getElementById('confirm-order');
+
+        // Get the current date and time in "Month Day, Year, HH:MM AM/PM" format
+        function getCurrentDateTime() {
+            const now = new Date();
+            const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+            const timeOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
+            const date = now.toLocaleDateString('en-US', dateOptions);
+            const time = now.toLocaleTimeString('en-US', timeOptions);
+            return `${date}, ${time}`;
+        }
+
+        // Format price with commas
+        function formatPrice(amount) {
+            return 'P' + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Calculate total price
+        function calculateTotal(item, quantity) {
+            return menuItems[item] * quantity;
+        }
+
+        // Show order summary
+        function showOrderSummary(item, quantity) {
+            const totalPrice = calculateTotal(item, quantity);
+            summaryItem.textContent = item;
+            summaryQuantity.textContent = quantity;
+            summaryPrice.textContent = formatPrice(totalPrice);
+            orderSummary.style.display = 'block';
+        }
+
+        // Render all purchases, grouping by date and time
+        function renderPurchases() {
+            purchasesContainer.innerHTML = '';
+
+            if (purchases.length === 0) {
+                purchasesContainer.innerHTML = '<p>No purchases yet.</p>';
+                return;
+            }
+
+            // Group purchases by batch ID
+            const groupedPurchases = purchases.reduce((groups, purchase) => {
+                if (!groups[purchase.id]) {
+                    groups[purchase.id] = [];
+                }
+                groups[purchase.id].push(purchase);
+                return groups;
+            }, {});
+
+            // Render grouped purchases
+            Object.keys(groupedPurchases).forEach(batchId => {
+                const group = groupedPurchases[batchId];
+                const batch = group[0]; // Use the first item in the group for batch details
+
+                const batchEl = document.createElement('div');
+                batchEl.className = 'purchase';
+                batchEl.style.border = '2px solid #003366';
+                batchEl.style.borderRadius = '12px';
+                batchEl.style.marginBottom = '20px';
+                batchEl.style.padding = '20px';
+                batchEl.style.backgroundColor = '#e8f4fc'; // Light blue background for better visibility
+                batchEl.style.boxShadow = '0 6px 10px rgba(0, 0, 0, 0.1)';
+
+                const headerContent = `
+                    <div style="background-color: #003366; color: white; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                        <h3 style="margin: 0; font-size: 1.4em; font-weight: bold; color: white;">Order #${batchId}</h3>
+                        <p style="margin: 5px 0 0; font-size: 1em; color: white;">Date: ${batch.date}</p>
+                    </div>
+                `;
+
+                const itemsContent = group.map(purchase => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background-color: #ffffff; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                        <p style="margin: 0; font-size: 1em; color: #555;">${purchase.items} x ${purchase.item}</p>
+                        <p style="margin: 0; font-size: 1em; font-weight: bold; color: #333;">${purchase.total}</p>
+                    </div>
+                `).join('');
+
+                const footerContent = `
+                    <div style="text-align: right; margin-top: 15px; font-size: 1.1em; font-weight: bold; color: #003366;">
+                        Total: ${formatPrice(group.reduce((sum, item) => sum + parseFloat(item.total.replace(/[^0-9.-]+/g, '')), 0))}
+                    </div>
+                `;
+
+                batchEl.innerHTML = `
+                    ${headerContent}
+                    <div>${itemsContent}</div>
+                    ${footerContent}
+                `;
+
+                purchasesContainer.appendChild(batchEl);
+            });
+        }
+
+        // Render food tray
+        function renderFoodTray() {
+            trayContainer.innerHTML = '';
+            if (foodTray.length === 0) {
+                trayContainer.innerHTML = '<p>No items in the tray.</p>';
+                confirmOrderBtn.style.display = 'none';
+                return;
+            }
+
+            foodTray.forEach((item, index) => {
+                const trayItem = document.createElement('div');
+                trayItem.className = 'tray-item';
+                trayItem.innerHTML = `
+                    <p>${item.quantity} x ${item.name} - ${formatPrice(item.total)}</p>
+                    <button onclick="removeFromTray(${index})">Remove</button>
+                `;
+                trayContainer.appendChild(trayItem);
+            });
+
+            confirmOrderBtn.style.display = 'block';
+        }
+
+        // Add a new purchase
+        function addPurchase(e) {
+            e.preventDefault(); 
+            
+            const item = foodItemSelect.value;
+            const quantity = parseInt(quantityInput.value);
+            
+            if (!item || isNaN(quantity)) { // Fixed missing closing parenthesis
+                alert('Please select an item and quantity');
+                return;
+            }
+            
+            const currentDate = getCurrentDateTime();
+            const unitPrice = menuItems[item];
+            const totalPrice = calculateTotal(item, quantity);
+            
+            // Add new purchase
+            const newId = purchases.length > 0 ? Math.max(...purchases.map(p => p.id)) + 1 : 1;
+            purchases.push({
+                id: newId,
+                item: item,
+                date: currentDate, // Use the current date and time
+                price: formatPrice(unitPrice),
+                items: quantity,
+                total: formatPrice(totalPrice)
+            });
+            
+            // Re-render purchases
+            renderPurchases();
+            
+            // Show confirmation
+            alert(`Added to purchase history: ${quantity} ${item}(s) for ${formatPrice(totalPrice)}`);
+        }
+
+        // Add item to food tray
+        document.getElementById('add-to-tray').addEventListener('click', function (e) {
+            e.preventDefault();
+            const item = foodItemSelect.value;
+            const quantity = parseInt(quantityInput.value);
+
+            if (!item || isNaN(quantity)) {
+                alert('Please select an item and quantity');
+                return;
+            }
+
+            const unitPrice = menuItems[item];
+            const totalPrice = calculateTotal(item, quantity);
+
+            // Check if the item already exists in the tray
+            const existingItem = foodTray.find(trayItem => trayItem.name === item);
+            if (existingItem) {
+                // Update the quantity and total price of the existing item
+                existingItem.quantity += quantity;
+                existingItem.total += totalPrice;
+            } else {
+                // Add new item to the tray
+                foodTray.push({
+                    name: item,
+                    quantity: quantity,
+                    total: totalPrice
+                });
+            }
+
+            // Reset form and render tray
+            foodItemSelect.value = '';
+            quantityInput.value = 1;
+            orderSummary.style.display = 'none';
+            renderFoodTray();
+        });
+
+        // Remove item from food tray
+        function removeFromTray(index) {
+            foodTray.splice(index, 1);
+            renderFoodTray();
+        }
+
+        // Confirm all items in the food tray
+        confirmOrderBtn.addEventListener('click', function () {
+            const currentDateTime = getCurrentDateTime();
+
+            // Treat the entire tray as a single batch
+            const batchId = purchases.length > 0 ? Math.max(...purchases.map(p => p.id)) + 1 : 1;
+
+            foodTray.forEach(item => {
+                purchases.push({
+                    id: batchId, // Assign the same batch ID to all items in the tray
+                    item: item.name,
+                    date: currentDateTime,
+                    price: formatPrice(menuItems[item.name]),
+                    items: item.quantity,
+                    total: formatPrice(item.total)
+                });
+            });
+
+            // Clear tray and re-render purchases
+            foodTray = [];
+            renderFoodTray();
+            renderPurchases();
+
+            alert('Order confirmed and added to purchase history!');
+        });
+
+        // Automatically show order summary when item or quantity changes
+        foodItemSelect.addEventListener('change', function () {
+            const item = this.value;
+            const quantity = parseInt(quantityInput.value) || 1;
+            if (item) {
+                showOrderSummary(item, quantity);
+            } else {
+                orderSummary.style.display = 'none';
+            }
+        });
+
+        quantityInput.addEventListener('input', function () {
+            const item = foodItemSelect.value;
+            const quantity = parseInt(this.value) || 1;
+            if (item) {
+                showOrderSummary(item, quantity);
+            }
+        });
+
+        // Add a new purchase upon confirmation
+        document.getElementById('confirm-order').addEventListener('click', function (e) {
+            e.preventDefault();
+            const item = foodItemSelect.value;
+            const quantity = parseInt(quantityInput.value);
+
+            if (!item || isNaN(quantity)) {
+                alert('Please select an item and quantity');
+                return;
+            }
+
+            const currentDateTime = getCurrentDateTime(); // Get current date and time
+            const unitPrice = menuItems[item];
+            const totalPrice = calculateTotal(item, quantity);
+
+            // Add new purchase
+            const newId = purchases.length > 0 ? Math.max(...purchases.map(p => p.id)) + 1 : 1;
+            purchases.push({
+                id: newId,
+                item: item,
+                date: currentDateTime, // Use the current date and time
+                price: formatPrice(unitPrice),
+                items: quantity,
+                total: formatPrice(totalPrice)
+            });
+
+            // Re-render purchases
+            renderPurchases();
+
+            // Reset form and hide summary
+            foodItemSelect.value = '';
+            quantityInput.value = 1;
+            orderSummary.style.display = 'none';
+
+            // Show confirmation
+            alert(`Order confirmed: ${quantity} ${item}(s) for ${formatPrice(totalPrice)}`);
+        });
+
+        // Initial render
+        renderFoodTray();
+        renderPurchases();
+    </script>
+</body>
+</html>
